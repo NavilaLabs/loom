@@ -1,5 +1,5 @@
 {
-  "name": "rust-layers",
+  "name": "gyst",
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
   "workspaceFolder": "/workspaces/logica",
