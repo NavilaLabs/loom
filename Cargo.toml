@@ -1,0 +1,25 @@
+[workspace]
+members = [
+    "crates/domain",
+    "crates/application",
+    "crates/infrastructure",
+    "crates/adapters",
+]
+
+[workspace.package]
+name = "rust-layers"
+version = "0.1.0"
+edition = "2024"
+
+[workspace.dependencies]
+
+[workspace.lints.clippy]
+# Enforce correctness and best practices
+all = { level = "deny" }
+correctness = { level = "deny" }
+complexity = { level = "deny" }
+perf = { level = "deny" }
+style = { level = "deny" }
+# Strict: pedantic + nursery for consistency and future-proofing
+pedantic = { level = "warn" }
+nursery = { level = "warn" }
