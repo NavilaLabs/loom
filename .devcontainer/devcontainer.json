@@ -2,7 +2,11 @@
   "name": "gyst",
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
-  "workspaceFolder": "/workspaces/logica",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "initializeCommand": "cp -u .env.dev .env && source .env",
+  "forwardPorts": [
+    "${localEnv:DB_PORT}:${localEnv:DB_PORT}"
+  ],
   "customizations": {
     "vscode": {
       "extensions": [

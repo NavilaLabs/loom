@@ -32,3 +32,9 @@ RUN cargo binstall cargo-tarpaulin
 RUN cargo binstall prek --git https://github.com/j178/prek
 
 RUN git remote add template git@github.com:NavilaLabs/rust-layers.git 2>/dev/null || true
+
+##########
+# GYST #
+##########
+
+cargo binstall diesel_cli
