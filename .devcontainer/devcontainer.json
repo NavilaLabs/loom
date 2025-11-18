@@ -3,9 +3,9 @@
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-  "initializeCommand": "cp -u .env.dev .env && source .env",
+  "initializeCommand": "cp -u .env.dev .env && set -a && source .env && set +a",
   "forwardPorts": [
-    "${localEnv:DB_PORT}:${localEnv:DB_PORT}"
+    "5432:5432"
   ],
   "customizations": {
     "vscode": {

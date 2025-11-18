@@ -37,4 +37,4 @@ RUN git remote add template git@github.com:NavilaLabs/rust-layers.git 2>/dev/nul
 # GYST #
 ##########
 
-cargo binstall diesel_cli
+RUN cargo binstall diesel_cli

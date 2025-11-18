@@ -4,24 +4,21 @@ services:
       context: ..
       dockerfile: .devcontainer/Dockerfile
     command: sleep infinity
-    volumes:
-      - ../..:/workspaces/${localWorkspaceFolderBasename}:cached
+    env_file: ../.env
     networks:
       - local
+    volumes:
+      - ../..:/workspaces:cached
 
   db:
     image: postgres:18-trixie
     env_file: ../.env
-    environment:
-      POSTGRES_DB: $DB_HOST
-      POSTGRES_USER: $DB_USER
-      POSTGRES_PASSWORD: $DB_PASSWORD
     ports:
-      - $DB_PORT:5432
+      - "5432:5432"
     networks:
       - local
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - db-data:/var/lib/postgresql
 
 volumes:
   db-data:
