@@ -1,0 +1,3 @@
+application:
+  name: Gyst
+  project_root: ${APP_PROJECT_ROOT}

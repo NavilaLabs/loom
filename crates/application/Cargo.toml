@@ -4,6 +4,10 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+async-trait = { workspace = true }
+
+infrastructure = { path = "../infrastructure" }
+domain = { path = "../domain" }
 
 [lints]
 workspace = true

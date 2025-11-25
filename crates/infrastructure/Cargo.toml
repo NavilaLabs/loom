@@ -4,6 +4,16 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+async-trait = { workspace = true }
+dotenvy = { workspace = true }
+log = { workspace = true }
+regex = { workspace = true }
+serde = { workspace = true }
+serde-vars = "0.2.0"
+serde_yaml = "0.9.34"
+sqlx = "0.8.6"
+thiserror = { workspace = true }
+url = { workspace = true }
 
 [lints]
 workspace = true

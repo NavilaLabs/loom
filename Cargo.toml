@@ -1,10 +1,12 @@
 [workspace]
 members = [
-    "crates/domain",
-    "crates/application",
-    "crates/infrastructure",
     "crates/adapters",
+    "crates/application",
+    "crates/domain",
+    "crates/infrastructure",
+    "crates/interfaces/app",
 ]
+resolver = "3"
 
 [workspace.package]
 name = "gyst"
@@ -12,6 +14,13 @@ version = "0.1.0"
 edition = "2024"
 
 [workspace.dependencies]
+async-trait = "0.1.89"
+dotenvy = "0.15.7"
+log = "0.4.28"
+regex = "1.12.2"
+serde = "1.0"
+thiserror = "2.0.17"
+url = "2.5.7"
 
 [workspace.lints.clippy]
 # Enforce correctness and best practices

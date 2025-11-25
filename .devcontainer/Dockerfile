@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y \
   build-essential \
   curl \
   wget \
+  libpq-dev \
   pkg-config
 
 # Install rust-analyzer (latest release)
