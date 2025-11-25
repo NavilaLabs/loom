@@ -6,6 +6,7 @@ pub struct Database {
     uri: Uri,
     users: Users,
     databases: Databases,
+    pool: Option<Pool>,
 }
 
 impl Database {
@@ -47,6 +48,10 @@ impl Database {
 
     pub fn get_databases(&self) -> &Databases {
         &self.databases
+    }
+
+    pub fn get_pool(&self) -> &Option<Pool> {
+        &self.pool
     }
 }
 
@@ -171,22 +176,23 @@ impl TenantCredentials {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Pool {
-    max_size: u32,
-    min_size: u32,
-    timeout_seconds: u64,
+    max_size: Option<u32>,
+    min_size: Option<u32>,
+    timeout_seconds: Option<u64>,
 }
 
 impl Pool {
-    pub fn get_max_size(&self) -> u32 {
+    pub fn get_max_size(&self) -> Option<u32> {
         self.max_size
     }
 
-    pub fn get_min_size(&self) -> u32 {
+    pub fn get_min_size(&self) -> Option<u32> {
         self.min_size
     }
 
-    pub fn get_timeout_seconds(&self) -> u64 {
+    pub fn get_timeout_seconds(&self) -> Option<u64> {
         self.timeout_seconds
     }
 }

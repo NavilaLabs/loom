@@ -1,4 +1,7 @@
+use std::time::Duration;
+
 use infrastructure::CONFIG;
+use sqlx::postgres::PgPoolOptions;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -17,12 +20,24 @@ impl infrastructure::Database<sqlx::PgPool> for Database {
     type Error = Error;
 
     async fn establish_connection(&self, database: &str) -> Result<sqlx::PgPool, Self::Error> {
-        let mut url = CONFIG.get_database().get_postgres_admin_uri()?;
+        let database_config = CONFIG.get_database();
+        let mut url = database_config.get_postgres_admin_uri()?;
         url.set_path(database);
 
-        let pool = sqlx::PgPool::connect(url.as_str()).await?;
+        let mut pool = PgPoolOptions::new();
+        if let Some(pool_config) = database_config.get_pool() {
+            if let Some(max_size) = pool_config.get_max_size() {
+                pool = pool.max_connections(max_size);
+            }
+            if let Some(min_size) = pool_config.get_min_size() {
+                pool = pool.min_connections(min_size);
+            }
+            if let Some(timeout_seconds) = pool_config.get_timeout_seconds() {
+                pool = pool.idle_timeout(Duration::from_secs(timeout_seconds));
+            }
+        }
 
-        Ok(pool)
+        Ok(pool.connect(url.as_str()).await?)
     }
 }
 
