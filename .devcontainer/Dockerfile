@@ -39,3 +39,5 @@ RUN git remote add template git@github.com:NavilaLabs/rust-layers.git 2>/dev/nul
 ##########
 
 RUN cargo binstall diesel_cli
+RUN cargo install sqlx-cli
+RUN cargo binstall wasm-pack

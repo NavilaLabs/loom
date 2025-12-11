@@ -7,7 +7,7 @@ database:
     admin:
       name: gyst_admin
     tenant:
-      name_prefix: gyst_tenant_
+      name_prefix: gyst_tenant
 
   users:
     admin:
@@ -17,7 +17,7 @@ database:
 
     tenant:
       credentials:
-        username_prefix: tenant_
+        username_prefix: tenant
 
   pool:
     max_size: 20

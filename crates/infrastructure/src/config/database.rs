@@ -10,30 +10,14 @@ pub struct Database {
 }
 
 impl Database {
-    pub fn get_postgres_admin_uri(&self) -> super::Result<Url> {
+    pub fn get_postgres_uri(&self, database: &str) -> super::Result<Url> {
         Ok(format!(
-            "postgres://{}:{}@{}:{}/",
+            "postgres://{}:{}@{}:{}/{}",
             self.users.get_admin().get_credentials().get_username(),
             self.users.get_admin().get_credentials().get_password(),
             self.uri.get_host(),
             self.uri.get_port(),
-        )
-        .parse()?)
-    }
-
-    pub fn get_postgres_tenant_uri(&self, tenant_token: &str) -> super::Result<Url> {
-        Ok(format!(
-            "postgres://{}@{}:{}/",
-            format!(
-                "{}{}",
-                self.users
-                    .get_tenant()
-                    .get_credentials()
-                    .get_username_prefix(),
-                tenant_token
-            ),
-            self.uri.get_host(),
-            self.uri.get_port(),
+            database
         )
         .parse()?)
     }
@@ -74,7 +58,7 @@ impl Uri {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Users {
     admin: AdminUser,
-    tenant: TenantUser,
+    // tenant: TenantUser,
 }
 
 impl Users {
@@ -82,9 +66,9 @@ impl Users {
         &self.admin
     }
 
-    pub fn get_tenant(&self) -> &TenantUser {
-        &self.tenant
-    }
+    // pub fn get_tenant(&self) -> &TenantUser {
+    //     &self.tenant
+    // }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -137,17 +121,17 @@ impl AdminUser {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "tenant")]
-pub struct TenantUser {
-    credentials: TenantCredentials,
-}
+// #[derive(Debug, Clone, Serialize, Deserialize)]
+// #[serde(tag = "tenant")]
+// pub struct TenantUser {
+//     credentials: TenantCredentials,
+// }
 
-impl TenantUser {
-    pub fn get_credentials(&self) -> &TenantCredentials {
-        &self.credentials
-    }
-}
+// impl TenantUser {
+//     pub fn get_credentials(&self) -> &TenantCredentials {
+//         &self.credentials
+//     }
+// }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AdminCredentials {
@@ -165,16 +149,16 @@ impl AdminCredentials {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TenantCredentials {
-    username_prefix: String,
-}
+// #[derive(Debug, Clone, Serialize, Deserialize)]
+// pub struct TenantCredentials {
+//     username_prefix: String,
+// }
 
-impl TenantCredentials {
-    pub fn get_username_prefix(&self) -> &str {
-        &self.username_prefix
-    }
-}
+// impl TenantCredentials {
+//     pub fn get_username_prefix(&self) -> &str {
+//         &self.username_prefix
+//     }
+// }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Pool {

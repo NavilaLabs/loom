@@ -1,3 +1,6 @@
+mod migrate;
+pub use migrate::*;
+
 use std::time::Duration;
 
 use infrastructure::CONFIG;
@@ -21,8 +24,7 @@ impl infrastructure::Database<sqlx::PgPool> for Database {
 
     async fn establish_connection(&self, database: &str) -> Result<sqlx::PgPool, Self::Error> {
         let database_config = CONFIG.get_database();
-        let mut url = database_config.get_postgres_admin_uri()?;
-        url.set_path(database);
+        let url = database_config.get_postgres_uri(database)?;
 
         let mut pool = PgPoolOptions::new();
         if let Some(pool_config) = database_config.get_pool() {
@@ -39,16 +41,62 @@ impl infrastructure::Database<sqlx::PgPool> for Database {
 
         Ok(pool.connect(url.as_str()).await?)
     }
+
+    async fn close_connection(&self, pool: sqlx::PgPool) {
+        pool.close().await;
+    }
+}
+
+#[async_trait::async_trait]
+impl infrastructure::database::Initialize<sqlx::PgPool, Database> for Database {
+    async fn create_admin_database(&self, pool: &sqlx::PgPool) -> Result<(), Self::Error> {
+        let database_name = CONFIG.get_database().get_databases().get_admin().get_name();
+
+        let query = format!(r#"CREATE DATABASE "{}""#, database_name);
+        sqlx::query(&query).execute(pool).await?;
+
+        Ok(())
+    }
+
+    async fn create_tenant_database_template(
+        &self,
+        pool: &sqlx::PgPool,
+    ) -> Result<(), Self::Error> {
+        let template_name = CONFIG
+            .get_database()
+            .get_databases()
+            .get_tenant()
+            .get_name_prefix();
+
+        let query = format!(r#"CREATE DATABASE "{}_template""#, template_name,);
+        sqlx::query(&query).execute(pool).await?;
+
+        Ok(())
+    }
+
+    async fn drop_default_database(&self, pool: &sqlx::PgPool) -> Result<(), Self::Error> {
+        let query = r#"DROP DATABASE "postgres""#;
+        sqlx::query(query).execute(pool).await?;
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use infrastructure::{CONFIG, Database};
+    use infrastructure::{Database, database::Initialize};
+
+    #[tokio::test]
+    async fn test_initialize_database() {
+        let db = super::Database;
+
+        db.initialize_database(&db).await.unwrap();
+    }
 
     #[tokio::test]
     async fn test_establish_admin_connection() {
         let db = super::Database;
 
-        let admin_pool = db.establish_admin_connection().await.unwrap();
+        db.establish_admin_connection().await.unwrap();
     }
 }
