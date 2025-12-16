@@ -6,7 +6,13 @@ RUN apt-get update && apt-get install -y \
   curl \
   wget \
   libpq-dev \
-  pkg-config
+  pkg-config \
+  file \
+  libxdo-dev \
+  libssl-dev \
+  libayatana-appindicator3-dev \
+  librsvg2-dev \
+  lld
 
 # Install rust-analyzer (latest release)
 RUN curl -L https://github.com/rust-lang/rust-analyzer/releases/latest/download/rust-analyzer-$(uname -m)-unknown-linux-gnu.gz \
@@ -38,6 +44,6 @@ RUN git remote add template git@github.com:NavilaLabs/rust-layers.git 2>/dev/nul
 # GYST #
 ##########
 
-RUN cargo binstall diesel_cli
-RUN cargo install sqlx-cli
+RUN cargo install sea-orm-cli@^2.0.0-rc
 RUN cargo binstall wasm-pack
+RUN cargo binstall dioxus-cli --force

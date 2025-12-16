@@ -4,7 +4,8 @@ members = [
     "crates/application",
     "crates/domain",
     "crates/infrastructure",
-    "crates/interfaces/app",
+    "crates/migrations/admin", "crates/migrations/shared",
+    "crates/migrations/tenant",
 ]
 resolver = "3"
 
@@ -16,7 +17,7 @@ edition = "2024"
 [workspace.dependencies]
 async-trait = "0.1.89"
 dotenvy = "0.15.7"
-log = "0.4.28"
+log = "0.4.29"
 regex = "1.12.2"
 serde = "1.0"
 thiserror = "2.0.17"

@@ -9,8 +9,9 @@ services:
       - local
     volumes:
       - ../..:/workspaces:cached
+      - sqlite-data:/sqlite
 
-  db:
+  postgres:
     image: postgres:18-trixie
     env_file: ../.env
     ports:
@@ -18,10 +19,12 @@ services:
     networks:
       - local
     volumes:
-      - db-data:/var/lib/postgresql
+      - postgres-data:/var/lib/postgresql
+    restart: unless-stopped
 
 volumes:
-  db-data:
+  postgres-data:
+  sqlite-data:
 
 networks:
   local:
