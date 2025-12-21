@@ -16,8 +16,8 @@ features = [
 
 [features]
 default = []
-postgres = ["sea-orm-migration/sqlx-postgres"]
-sqlite = ["sea-orm-migration/sqlx-sqlite"]
+sea-orm-sqlx-postgres = ["sea-orm-migration/sqlx-postgres"]
+sea-orm-sqlx-sqlite = ["sea-orm-migration/sqlx-sqlite"]
 
 [lints]
 workspace = true

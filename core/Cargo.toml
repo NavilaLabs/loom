@@ -4,7 +4,8 @@ members = [
     "crates/application",
     "crates/domain",
     "crates/infrastructure",
-    "crates/migrations/admin", "crates/migrations/shared",
+    "crates/migrations/admin", 
+    "crates/migrations/shared",
     "crates/migrations/tenant",
 ]
 resolver = "3"

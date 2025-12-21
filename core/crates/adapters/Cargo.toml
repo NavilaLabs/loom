@@ -4,21 +4,22 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+infrastructure = { path = "../infrastructure" }
+
 async-trait = { workspace = true }
 sea-query = { version = "0.32.7", optional = true }
-sea-query-sqlx = { version = "0.8.0-rc.9", features = ["sqlx-postgres", "runtime-tokio"], optional = true }
+sea-query-sqlx = { version = "0.8.0-rc.9", features = ["runtime-tokio"], optional = true }
 sqlx = { version = "0.8.6", optional = true }
 thiserror = { workspace = true }
 url = { workspace = true }
-
-infrastructure = { path = "../infrastructure" }
 
 [dev-dependencies]
 tokio = { version = "1.48.0", features = ["full"] }
 
 [features]
-default = ["sea-query-sqlx"]
-sea-query-sqlx = ["sea-query", "dep:sea-query-sqlx", "sqlx"]
+default = []
+sea-query-sqlx-postgres = ["dep:sea-query", "dep:sea-query-sqlx", "dep:sqlx", "sea-query-sqlx/sqlx-postgres"]
+sea-query-sqlx-sqlite = ["dep:sea-query", "dep:sea-query-sqlx", "dep:sqlx", "sea-query-sqlx/sqlx-sqlite"]
 
 [lints]
 workspace = true
