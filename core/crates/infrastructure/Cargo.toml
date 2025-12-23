@@ -6,6 +6,7 @@ edition.workspace = true
 [dependencies]
 async-trait = { workspace = true }
 dotenvy = { workspace = true }
+embassy-futures = { workspace = true }
 log = { workspace = true }
 regex = { workspace = true }
 serde = { workspace = true }

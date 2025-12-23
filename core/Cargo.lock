@@ -8,6 +8,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "infrastructure",
+ "log",
  "sea-query 0.32.7",
  "sea-query-sqlx",
  "sqlx",
@@ -563,6 +564,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "embassy-futures"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc2d050bdc5c21e0862a89256ed8029ae6c290a93aecefc73084b3002cdebb01"
+
+[[package]]
 name = "equivalent"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -970,6 +977,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "dotenvy",
+ "embassy-futures",
  "log",
  "regex",
  "serde",

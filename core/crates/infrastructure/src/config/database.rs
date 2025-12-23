@@ -34,8 +34,8 @@ impl Database {
         &self.databases
     }
 
-    pub fn get_pool(&self) -> &Option<Pool> {
-        &self.pool
+    pub fn get_pool(&self) -> Option<&Pool> {
+        self.pool.as_ref()
     }
 }
 

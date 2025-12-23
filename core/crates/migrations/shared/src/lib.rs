@@ -1,5 +1,6 @@
 use sea_orm_migration::{prelude::*, schema::*};
 
+#[must_use]
 pub fn create_events_table_migration(name: Option<&'static str>) -> TableCreateStatement {
     Table::create()
         .if_not_exists()
@@ -60,6 +61,7 @@ pub fn create_events_table_migration(name: Option<&'static str>) -> TableCreateS
         .to_owned()
 }
 
+#[must_use]
 pub fn create_snapshots_table_migration(name: Option<&'static str>) -> TableCreateStatement {
     Table::create()
         .if_not_exists()

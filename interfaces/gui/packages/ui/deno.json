@@ -1,0 +1,10 @@
+{
+  "nodeModulesDir": "auto",
+  "tasks": {
+    "tailwind": "deno run -A npm:@tailwindcss/cli -i ./input.css -o ./assets/tailwind.css --watch"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@1",
+    "tailwindcss": "npm:tailwindcss@^4.1.18"
+  }
+}

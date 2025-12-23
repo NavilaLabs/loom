@@ -7,8 +7,9 @@ edition.workspace = true
 infrastructure = { path = "../infrastructure" }
 
 async-trait = { workspace = true }
+log = { workspace = true }
 sea-query = { version = "0.32.7", optional = true }
-sea-query-sqlx = { version = "0.8.0-rc.9", features = ["runtime-tokio"], optional = true }
+sea-query-sqlx = { version = "0.8.0-rc.9", features = ["runtime-tokio-rustls", "with-chrono", "with-json", "with-uuid", "with-rust_decimal", "with-bigdecimal", "with-time"], optional = true }
 sqlx = { version = "0.8.6", optional = true }
 thiserror = { workspace = true }
 url = { workspace = true }
@@ -17,7 +18,7 @@ url = { workspace = true }
 tokio = { version = "1.48.0", features = ["full"] }
 
 [features]
-default = []
+default = ["sea-query-sqlx-postgres"]
 sea-query-sqlx-postgres = ["dep:sea-query", "dep:sea-query-sqlx", "dep:sqlx", "sea-query-sqlx/sqlx-postgres"]
 sea-query-sqlx-sqlite = ["dep:sea-query", "dep:sea-query-sqlx", "dep:sqlx", "sea-query-sqlx/sqlx-sqlite"]
 

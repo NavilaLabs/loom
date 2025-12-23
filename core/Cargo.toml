@@ -18,6 +18,7 @@ edition = "2024"
 [workspace.dependencies]
 async-trait = "0.1.89"
 dotenvy = "0.15.7"
+embassy-futures = "0.1.2"
 log = "0.4.29"
 regex = "1.12.2"
 serde = "1.0"

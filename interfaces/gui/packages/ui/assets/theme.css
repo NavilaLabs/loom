@@ -29,39 +29,52 @@ body {
 }
 
 :root {
-  /* Primary colors */
-  --primary-color: var(--dark, #080808) var(--light, #f6f6f6);
-  --primary-color-1: var(--dark, #0e0e0e) var(--light, #fbfbfb);
-  --primary-color-2: var(--dark, #0a0a0a) var(--light, #fff);
-  --primary-color-3: var(--dark, #141313) var(--light, #f8f8f8);
-  --primary-color-4: var(--dark, #1a1a1a) var(--light, #f8f8f8);
-  --primary-color-5: var(--dark, #262626) var(--light, #f5f5f5);
-  --primary-color-6: var(--dark, #232323) var(--light, #e5e5e5);
-  --primary-color-7: var(--dark, #3e3e3e) var(--light, #b0b0b0);
+  /* Primary Surface Colors (Backgrounds and Layers) */
+  /* Dark: Deep Earthy Olive / Light: Matcha Foam Cream */
+  --primary-color: var(--dark, #1b1d1a) var(--light, #f5f7f2);
+  --primary-color-1: var(--dark, #232621) var(--light, #eef1e9);
+  --primary-color-2: var(--dark, #2a2e27) var(--light, #e4e9de);
+  --primary-color-3: var(--dark, #33382f) var(--light, #dae1d3);
+  --primary-color-4: var(--dark, #3d4238) var(--light, #ced7c4);
+  --primary-color-5: var(--dark, #474d41) var(--light, #bec9b3);
+  --primary-color-6: var(--dark, #545b4d) var(--light, #adbba0);
+  --primary-color-7: var(--dark, #666e5e) var(--light, #9cae8d);
 
-  /* Secondary colors */
-  --secondary-color: var(--dark, #f395ff) var(--light, #f395ff);
-  --secondary-color-1: var(--dark, #f395ff) var(--light, #f395ff);
-  --secondary-color-2: var(--dark, #f395ff) var(--light, #f395ff);
-  --secondary-color-3: var(--dark, #dcdcdc) var(--light, #2b2b2b);
-  --secondary-color-4: var(--dark, #d4d4d4) var(--light, #111);
-  --secondary-color-5: var(--dark, #a1a1a1) var(--light, #848484); /* disabled */
-  --secondary-color-6: var(--dark, #5d5d5d) var(--light, #d0d0d0);
+  /* Secondary Colors (The Matcha Accents) */
+  /* Sage Green & Forest Moss */
+  --secondary-color: var(--dark, #a3b18a) var(--light, #588157);
+  --secondary-color-1: var(--dark, #96a37b) var(--light, #4a6d49);
+  --secondary-color-2: var(--dark, #b7c3a1) var(--light, #3a5a40);
+  
+  /* Text Colors */
+  /* Dark: Soft Tea Leaf / Light: Deep Bark Brown */
+  --secondary-color-3: var(--dark, #e1e3d9) var(--light, #2d302b);
+  --secondary-color-4: var(--dark, #f0f1eb) var(--light, #1c1e1c);
+  
+  /* Muted Text / UI Elements */
+  --secondary-color-5: var(--dark, #8a917f) var(--light, #717768);
+  --secondary-color-6: var(--dark, #717768) var(--light, #8a917f);
 
-  /* Highlight colors */
-  --focused-border-color: var(--dark, #2b7fff) var(--light, #2b7fff);
-  --primary-success-color: var(--dark, #02271c) var(--light, #ecfdf5);
-  --secondary-success-color: var(--dark, #b6fae3) var(--light, #10b981);
-  --primary-warning-color: var(--dark, #342203) var(--light, #fffbeb);
-  --secondary-warning-color: var(--dark, #feeac7) var(--light, #f59e0b);
-  --primary-error-color: var(--dark, #a22e2e) var(--light, #dc2626);
-  --secondary-error-color: var(--dark, #9b1c1c) var(--light, #ef4444);
-  --contrast-error-color: var(--dark, var(--secondary-color-3))
-    var(--light, var(--primary-color));
-  --primary-info-color: var(--dark, var(--primary-color-5))
-    var(--light, var(--primary-color));
-  --secondary-info-color: var(--dark, var(--primary-color-7))
-    var(--light, var(--secondary-color-3));
+  /* Functional Colors */
+  /* Deep Forest Focus */
+  --focused-border-color: var(--dark, #a3b18a) var(--light, #3a5a40);
+  
+  /* Success: Fresh Mint */
+  --primary-success-color: var(--dark, #222e23) var(--light, #f0f5f0);
+  --secondary-success-color: var(--dark, #84cc16) var(--light, #166534);
+  
+  /* Warning: Clay/Ochre */
+  --primary-warning-color: var(--dark, #2e261a) var(--light, #fdf8f0);
+  --secondary-warning-color: var(--dark, #eab308) var(--light, #a16207);
+  
+  /* Error: Terracotta */
+  --primary-error-color: var(--dark, #331d1d) var(--light, #fff5f5);
+  --secondary-error-color: var(--dark, #f87171) var(--light, #991b1b);
+
+  /* Contrast & Info */
+  --contrast-error-color: var(--dark, var(--secondary-color-3)) var(--light, var(--primary-color));
+  --primary-info-color: var(--dark, var(--primary-color-5)) var(--light, var(--primary-color));
+  --secondary-info-color: var(--dark, var(--primary-color-7)) var(--light, var(--secondary-color-3));
 }
 
 /* Modern browsers with `scrollbar-*` support */

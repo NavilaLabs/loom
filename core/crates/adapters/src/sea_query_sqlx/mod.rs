@@ -1,4 +1,5 @@
 mod migrate;
+use log::info;
 pub use migrate::*;
 
 use std::time::Duration;
@@ -11,7 +12,9 @@ pub enum Error {
     #[error("Configuration error: {0}")]
     ConfigError(#[from] infrastructure::config::Error),
     #[error("Database error: {0}")]
-    DatabaseError(#[from] sqlx::Error),
+    DatabaseError(#[from] infrastructure::database::Error),
+    #[error("SQLx error: {0}")]
+    SqlxError(#[from] sqlx::Error),
     #[error("URL parse error: {0}")]
     UrlParseError(#[from] url::ParseError),
 }
@@ -20,11 +23,16 @@ pub struct Database;
 
 #[async_trait::async_trait]
 impl infrastructure::Database<sqlx::PgPool> for Database {
+    #[cfg(feature = "sea-query-sqlx-postgres")]
+    const DEFAULT_DATABASE_NAME: &'static str = "postgres";
+    #[cfg(feature = "sea-query-sqlx-sqlite")]
+    const DEFAULT_DATABASE_NAME: &'static str = "???";
     type Error = Error;
 
     async fn establish_connection(&self, database: &str) -> Result<sqlx::PgPool, Self::Error> {
         let database_config = CONFIG.get_database();
         let url = database_config.get_postgres_uri(database)?;
+        info!("Establishing connection to database at URL: {}", url);
 
         let mut pool = PgPoolOptions::new();
         if let Some(pool_config) = database_config.get_pool() {
@@ -68,15 +76,8 @@ impl infrastructure::database::Initialize<sqlx::PgPool, Database> for Database {
             .get_tenant()
             .get_name_prefix();
 
-        let query = format!(r#"CREATE DATABASE "{}_template""#, template_name,);
+        let query = format!(r#"CREATE DATABASE "{}_template""#, template_name);
         sqlx::query(&query).execute(pool).await?;
-
-        Ok(())
-    }
-
-    async fn drop_default_database(&self, pool: &sqlx::PgPool) -> Result<(), Self::Error> {
-        let query = r#"DROP DATABASE "postgres""#;
-        sqlx::query(query).execute(pool).await?;
 
         Ok(())
     }

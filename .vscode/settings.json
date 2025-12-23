@@ -1,0 +1,10 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "core/Cargo.toml",
+        "interfaces/gui/Cargo.toml"
+    ],
+    "tailwindCSS.experimental.classRegex": ["class: \"(.*)\""],
+    "tailwindCSS.includeLanguages": {
+        "rust": "html"
+    }
+}

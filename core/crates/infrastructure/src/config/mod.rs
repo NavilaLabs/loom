@@ -30,10 +30,12 @@ pub struct Config {
 }
 
 impl Config {
+    #[must_use]
     pub fn get_application(&self) -> &application::Application {
         &self.application
     }
 
+    #[must_use]
     pub fn get_database(&self) -> &database::Database {
         &self.database
     }
@@ -41,12 +43,12 @@ impl Config {
 
 pub fn load_config() -> Result<Config> {
     let project_root = var("APP_PROJECT_ROOT")?;
-    let config_path = format!("{}/config", project_root);
+    let config_path = format!("{project_root}/config");
 
     let mut file_string = String::new();
-    let application_config_path = format!("{}/application.yaml", config_path);
-    let database_config_path = format!("{}/database.yaml", config_path);
-    let logging_config_path = format!("{}/logging.yaml", config_path);
+    let application_config_path = format!("{config_path}/application.yaml");
+    let database_config_path = format!("{config_path}/database.yaml");
+    let logging_config_path = format!("{config_path}/logging.yaml");
     file_string.push_str(&std::fs::read_to_string(&application_config_path)?);
     file_string.push('\n');
     file_string.push_str(&std::fs::read_to_string(&database_config_path)?);
