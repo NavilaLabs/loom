@@ -1,18 +1,18 @@
 [package]
-name = "migrations_admin"
+name = "admin-migrations"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.85.0"
 publish = false
 
 [lib]
-name = "migration_admin"
+name = "admin_migrations"
 path = "src/lib.rs"
 
 [dependencies]
-migrations-shared = { path = "../shared" }
+shared-migrations = { path = "../shared" }
 
-tokio = { version = "1", features = ["macros", "rt", "rt-multi-thread"] }
+tokio = { version = "1", features = ["sync", "macros", "rt"] }
 
 [dependencies.sea-orm-migration]
 version = "2.0.0-rc.20"

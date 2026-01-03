@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+use admin_migrations::{IntoSchemaManagerConnection, MigratorTrait};
 use embassy_futures::join::join;
 use log::info;
 
@@ -11,10 +12,12 @@ pub enum Error {
     AlreadyInitialized,
     #[error("Failed to initialize database")]
     FailedToInitialize,
+    #[error("Failed to migrate database: {0}")]
+    FailedToMigrate(#[from] shared_migrations::Error),
 }
 
 #[async_trait::async_trait]
-pub trait Database<T>
+pub trait Connection<T>
 where
     T: Send + Sync,
 {
@@ -37,7 +40,7 @@ where
                 .get_name_prefix(),
             tenant_token
         );
-        info!("Establishing connection to tenant database: {}", tenant_db);
+        info!("Establishing connection to tenant database: {tenant_db}");
 
         self.establish_connection(&tenant_db).await
     }
@@ -52,16 +55,19 @@ where
 }
 
 #[async_trait::async_trait]
-pub trait Initialize<Pool, T>: Database<Pool>
+pub trait Initialize<Pool, T>
 where
     Pool: Send + Sync,
-    T: Database<Pool> + Send + Sync,
+    T: Connection<Pool> + Send + Sync,
 {
     async fn is_initialized(&self, database: &T) -> bool {
         database.establish_admin_connection().await.is_ok()
     }
 
-    async fn initialize_database(&self, database: &T) -> Result<(), Self::Error> {
+    async fn initialize_database(
+        &self,
+        database: &T,
+    ) -> Result<(), <T as Connection<Pool>>::Error> {
         let (is_initialized, pool) = join(
             self.is_initialized(database),
             database.establish_default_connection(),
@@ -70,47 +76,72 @@ where
 
         match (is_initialized, pool) {
             (false, Ok(pool)) => {
-            self.create_admin_database(&pool).await?;
-            self.create_tenant_database_template(&pool).await?;
-            self.close_connection(pool).await;
-            Ok(())
+                self.create_admin_database(&pool).await?;
+                self.create_tenant_database_template(&pool).await?;
+                database.close_connection(pool).await;
+                Ok(())
             }
             (true, _) => Err(Error::AlreadyInitialized.into()),
             (false, Err(_)) => Err(Error::FailedToInitialize.into()),
         }
     }
 
-    async fn create_admin_database(&self, pool: &Pool) -> Result<(), Self::Error>;
+    async fn create_admin_database(
+        &self,
+        pool: &Pool,
+    ) -> Result<(), <T as Connection<Pool>>::Error>;
 
-    async fn create_tenant_database_template(&self, pool: &Pool) -> Result<(), Self::Error>;
+    async fn create_tenant_database_template(
+        &self,
+        pool: &Pool,
+    ) -> Result<(), <T as Connection<Pool>>::Error>;
 }
 
 #[async_trait::async_trait]
-pub trait Migrate<Pool, T>: MigrateAdmin<Pool, T> + MigrateTenant<Pool, T>
+pub trait Migrate<'a, Pool, T>: MigrateAdmin<'a, Pool, T> + MigrateTenant<'a, Pool, T>
 where
-    Pool: Send + Sync,
-    T: Database<Pool> + Send + Sync,
+    Pool: Send + Sync + IntoSchemaManagerConnection<'a>,
+    T: Connection<Pool> + Send + Sync,
 {
-    async fn migrate_database(&self, pool: &T) -> Result<(), Self::Error> {
+    async fn migrate_database(&self, pool: &T) -> Result<(), <T as Connection<Pool>>::Error> {
         self.run_admin_migrations(pool).await?;
         self.run_tenant_migrations(pool).await
     }
 }
 
 #[async_trait::async_trait]
-pub trait MigrateAdmin<Pool, T>: Database<Pool>
+pub trait MigrateAdmin<'a, Pool, T>
 where
-    Pool: Send + Sync,
-    T: Database<Pool> + Send + Sync,
+    Pool: Send + Sync + IntoSchemaManagerConnection<'a>,
+    T: Connection<Pool> + Send + Sync,
 {
-    async fn run_admin_migrations(&self, pool: &T) -> Result<(), Self::Error>;
+    async fn run_admin_migrations(
+        &self,
+        database: &T,
+    ) -> Result<(), <T as Connection<Pool>>::Error> {
+        let pool = database.establish_admin_connection().await?;
+
+        admin_migrations::Migrator::up(pool, None)
+            .await
+            .map_err(|e| Error::FailedToMigrate(e.into()))?;
+        Ok(())
+    }
 }
 
 #[async_trait::async_trait]
-pub trait MigrateTenant<Pool, T>: Database<Pool>
+pub trait MigrateTenant<'a, Pool, T>
 where
-    Pool: Send + Sync,
-    T: Database<Pool> + Send + Sync,
+    Pool: Send + Sync + IntoSchemaManagerConnection<'a>,
+    T: Connection<Pool> + Send + Sync,
 {
-    async fn run_tenant_migrations(&self, pool: &T) -> Result<(), Self::Error>;
+    async fn run_tenant_migrations(
+        &self,
+        database: &T,
+    ) -> Result<(), <T as Connection<Pool>>::Error> {
+        let pool = database.establish_tenant_connection("tenant").await?;
+        tenant_migrations::Migrator::up(pool, None)
+            .await
+            .map_err(|e| Error::FailedToMigrate(e.into()))?;
+        Ok(())
+    }
 }

@@ -1,5 +1,11 @@
 use sea_orm_migration::{prelude::*, schema::*};
 
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error("Database error: {0}")]
+    DbError(#[from] DbErr),
+}
+
 #[must_use]
 pub fn create_events_table_migration(name: Option<&'static str>) -> TableCreateStatement {
     Table::create()

@@ -1,10 +1,10 @@
 {
-  "name": "gyst",
+  "name": "loom",
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "initializeCommand": "cp -u .env.dev .env && set -a && source .env && set +a",
-  "postStartCommand": "curl -fsSL https://deno.land/install.sh | sh && ~/.deno/bin/deno install -g npm:tailwind npm:@tailwindcss/cli",
+  "postStartCommand": "chmod +x .devcontainer/scripts/post-start.sh && .devcontainer/scripts/post-start.sh",
   "forwardPorts": [
     "5432:5432"
   ],

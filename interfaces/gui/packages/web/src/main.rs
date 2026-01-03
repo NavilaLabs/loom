@@ -1,6 +1,9 @@
 use dioxus::prelude::*;
 
-use ui::views::Login;
+use ui::{
+    views::{Developer, Login},
+    FAVICON,
+};
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
@@ -8,9 +11,10 @@ enum Route {
     #[layout(DefaultLayout)]
     #[route("/login")]
     Login {},
+    #[layout(DefaultLayout)]
+    #[route("/developer")]
+    Developer {},
 }
-
-const FAVICON: Asset = asset!("/assets/favicon.ico");
 
 fn main() {
     dioxus::launch(App);
@@ -22,6 +26,9 @@ fn App() -> Element {
 
     rsx! {
         // Global app resources
+        document::Title { "Loom" }
+        document::Meta { name: "description", content: "Loom" }
+        document::Meta { name: "viewport", content: "width=device-width, initial-scale=1" }
         document::Link { rel: "icon", href: FAVICON }
 
         Router::<Route> {}
@@ -33,8 +40,6 @@ fn App() -> Element {
 #[component]
 fn DefaultLayout() -> Element {
     rsx! {
-        // document::Link { rel: "stylesheet", href: asset!("/../../ui/assets/theme.css") }
-
         Outlet::<Route> {}
     }
 }

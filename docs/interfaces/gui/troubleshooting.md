@@ -4,7 +4,7 @@
 
 ```bash
 cargo clean
-# cargo update
-# cargo fetch
+cargo update
+cargo fetch
 cargo check
 ```

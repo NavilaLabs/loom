@@ -1,1 +1,1 @@
-pub struct AdminMigrator {}
+pub struct Admin {}

@@ -7,7 +7,7 @@ pub struct Migration;
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .create_table(migrations_shared::create_snapshots_table_migration(None))
+            .create_table(shared_migrations::create_snapshots_table_migration(None))
             .await
     }
 

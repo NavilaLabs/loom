@@ -41,7 +41,7 @@ RUN cargo binstall prek --git https://github.com/j178/prek
 RUN git remote add template git@github.com:NavilaLabs/rust-layers.git 2>/dev/null || true
 
 ##########
-# GYST #
+# loom #
 ##########
 
 RUN cargo install sea-orm-cli@^2.0.0-rc

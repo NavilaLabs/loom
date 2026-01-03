@@ -5,9 +5,9 @@ database:
 
   databases:
     admin:
-      name: gyst_admin
+      name: loom_admin
     tenant:
-      name_prefix: gyst_tenant
+      name_prefix: loom_tenant
 
   users:
     admin:

@@ -72,7 +72,7 @@ mod tests {
     fn test_load_config() {
         dotenv().ok();
         let config = load_config().unwrap();
-        assert_eq!(config.get_application().get_name(), "Gyst");
+        assert_eq!(config.get_application().get_name(), "Loom");
         assert_eq!(config.get_database().get_uri().get_port(), 5432);
     }
 }

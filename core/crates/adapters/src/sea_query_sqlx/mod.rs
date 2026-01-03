@@ -4,34 +4,38 @@ pub use migrate::*;
 
 use std::time::Duration;
 
-use infrastructure::CONFIG;
+use infrastructure::{config, database};
 use sqlx::postgres::PgPoolOptions;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("Configuration error: {0}")]
-    ConfigError(#[from] infrastructure::config::Error),
+    ConfigError(#[from] config::Error),
     #[error("Database error: {0}")]
-    DatabaseError(#[from] infrastructure::database::Error),
+    DatabaseError(#[from] database::Error),
     #[error("SQLx error: {0}")]
     SqlxError(#[from] sqlx::Error),
     #[error("URL parse error: {0}")]
     UrlParseError(#[from] url::ParseError),
 }
 
+#[derive(Debug)]
+pub struct Pool;
+
+#[derive(Debug)]
 pub struct Database;
 
 #[async_trait::async_trait]
-impl infrastructure::Database<sqlx::PgPool> for Database {
+impl database::Connection<sqlx::PgPool> for Pool {
     #[cfg(feature = "sea-query-sqlx-postgres")]
     const DEFAULT_DATABASE_NAME: &'static str = "postgres";
     #[cfg(feature = "sea-query-sqlx-sqlite")]
     const DEFAULT_DATABASE_NAME: &'static str = "???";
     type Error = Error;
 
-    async fn establish_connection(&self, database: &str) -> Result<sqlx::PgPool, Self::Error> {
-        let database_config = CONFIG.get_database();
-        let url = database_config.get_postgres_uri(database)?;
+    async fn establish_connection(&self, database_url: &str) -> Result<sqlx::PgPool, Self::Error> {
+        let database_config = config::CONFIG.get_database();
+        let url = database_config.get_postgres_uri(database_url)?;
         info!("Establishing connection to database at URL: {}", url);
 
         let mut pool = PgPoolOptions::new();
@@ -56,9 +60,16 @@ impl infrastructure::Database<sqlx::PgPool> for Database {
 }
 
 #[async_trait::async_trait]
-impl infrastructure::database::Initialize<sqlx::PgPool, Database> for Database {
-    async fn create_admin_database(&self, pool: &sqlx::PgPool) -> Result<(), Self::Error> {
-        let database_name = CONFIG.get_database().get_databases().get_admin().get_name();
+impl database::Initialize<sqlx::PgPool, Pool> for Database {
+    async fn create_admin_database(
+        &self,
+        pool: &sqlx::PgPool,
+    ) -> Result<(), <Pool as database::Connection<sqlx::PgPool>>::Error> {
+        let database_name = config::CONFIG
+            .get_database()
+            .get_databases()
+            .get_admin()
+            .get_name();
 
         let query = format!(r#"CREATE DATABASE "{}""#, database_name);
         sqlx::query(&query).execute(pool).await?;
@@ -69,8 +80,8 @@ impl infrastructure::database::Initialize<sqlx::PgPool, Database> for Database {
     async fn create_tenant_database_template(
         &self,
         pool: &sqlx::PgPool,
-    ) -> Result<(), Self::Error> {
-        let template_name = CONFIG
+    ) -> Result<(), <Pool as database::Connection<sqlx::PgPool>>::Error> {
+        let template_name = config::CONFIG
             .get_database()
             .get_databases()
             .get_tenant()
@@ -85,13 +96,14 @@ impl infrastructure::database::Initialize<sqlx::PgPool, Database> for Database {
 
 #[cfg(test)]
 mod tests {
-    use infrastructure::{Database, database::Initialize};
+    use infrastructure::database::{Connection, Initialize};
 
     #[tokio::test]
     async fn test_initialize_database() {
         let db = super::Database;
 
-        db.initialize_database(&db).await.unwrap();
+        // db.initialize_database(&db).await.unwrap();
+        todo!()
     }
 
     #[tokio::test]

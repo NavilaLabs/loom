@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 500 500"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="favicon.svg"
+   inkscape:version="1.4.2 (ebf0e940d0, 2025-05-08)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:bx="https://boxy-svg.com">
+   <sodipodi:namedview
+      id="namedview1"
+      pagecolor="#ffffff"
+      bordercolor="#000000"
+      borderopacity="0.25"
+      inkscape:showpageshadow="2"
+      inkscape:pageopacity="0.0"
+      inkscape:pagecheckerboard="0"
+      inkscape:deskcolor="#d1d1d1"
+      inkscape:zoom="0.83737273"
+      inkscape:cx="353.48656"
+      inkscape:cy="215.55515"
+      inkscape:window-width="1266"
+      inkscape:window-height="760"
+      inkscape:window-x="0"
+      inkscape:window-y="0"
+      inkscape:window-maximized="1"
+      inkscape:current-layer="svg1"
+   />
+   <defs
+      id="defs1">
+      <style
+         bx:fonts="Pacifico"
+         id="style1">@import url(https://fonts.googleapis.com/css2?family=Pacifico=swap);
+      </style>
+   </defs>
+   <path
+      fill="#96a37b"
+      d="m 482.08025,366.35405 q 7.62667,0 11.73334,7.03399 4.69334,7.03401 4.69334,19.3435 0,22.86049 -11.14668,36.34232 -32.85335,39.27316 -63.9467,55.09965 Q 392.90687,500 349.49351,500 318.98683,500 293.17348,492.37984 267.36013,484.75967 230.40011,469.51935 196.96009,454.86519 165.86674,445.48652 135.94673,500 76.106693,500 43.253342,500 23.893331,485.34584 3.9466533,470.10552 3.9466533,446.65886 q 0,-28.72216 27.5733487,-47.47949 27.573349,-19.34349 73.333378,-19.34349 h 7.62667 l 10.56,-170.57444 q 3.52,-58.61665 21.12001,-96.71748 Q 161.76007,74.443143 192.85342,47.479484 219.84011,24.032825 254.45346,12.309495 289.06681,0 327.78683,0 q 63.36004,0 97.38672,32.825322 34.02669,32.825323 34.02669,85.580308 0,35.75615 -12.90667,58.03048 -12.90668,21.68816 -35.78669,21.68816 -16.42668,0 -25.81335,-7.62017 -9.38667,-8.20632 -9.38667,-22.86049 0,-5.27549 2.34667,-19.34349 3.52,-16.41267 3.52,-29.30832 0,-24.618998 -14.66668,-38.686993 -14.08,-14.654162 -43.41335,-14.654162 -51.6267,0 -79.78671,33.997654 -28.16002,33.411491 -35.78669,105.509971 l -13.49334,133.05979 q -2.93334,28.13599 -7.62667,48.65182 37.54669,6.44782 93.86672,20.51582 32.85335,8.20633 50.45336,11.72333 17.60001,3.517 31.09335,3.517 34.02668,0 58.08003,-11.13716 24.64001,-11.72333 46.34669,-36.92849 7.04001,-8.20633 15.84001,-8.20633 z"
+      id="text1"
+      style="font-weight:380;font-size:586.667px;font-family:Pacifico;stroke-width:0.999573;paint-order:fill"
+      aria-label="L"
+   />
+</svg>

@@ -1,4 +1,5 @@
 pub use sea_orm_migration::prelude::*;
+pub use shared_migrations::Error;
 
 mod m20251214_102155_create_events_table;
 mod m20251215_183826_create_snapshots_table;
