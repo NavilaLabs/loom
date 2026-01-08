@@ -19,5 +19,8 @@ pub use label::*;
 pub mod navbar;
 pub use navbar::*;
 
+pub mod tabs;
+pub use tabs::*;
+
 pub mod tooltip;
 pub use tooltip::*;
