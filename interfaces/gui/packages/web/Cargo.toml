@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 dioxus = { workspace = true, features = ["router", "fullstack"] }
+dioxus-motion = { git = "https://github.com/wheregmis/dioxus-motion.git", branch = "main", features = ["web", "transitions"] }
 ui = { workspace = true }
 
 [features]

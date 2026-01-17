@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/adapters",
+members = [
     "crates/application",
     "crates/domain",
     "crates/infrastructure",
@@ -18,11 +18,12 @@ edition = "2024"
 async-trait = "0.1.89"
 dotenvy = "0.15.7"
 embassy-futures = "0.1.2"
-log = "0.4.29"
+tracing = "0.1.44"
 regex = "1.12.2"
 serde = "1.0"
 thiserror = "2.0.17"
 url = "2.5.7"
+tokio = { version = "1.49.0", features = ["full"] }
 
 [workspace.lints.clippy]
 # Enforce correctness and best practices

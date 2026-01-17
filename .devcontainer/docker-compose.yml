@@ -22,8 +22,20 @@ services:
       - postgres-data:/var/lib/postgresql
     restart: unless-stopped
 
+  postgres:
+    image: postgres:18-trixie
+    env_file: ../.env.test
+    ports:
+      - "5433:5432"
+    networks:
+      - local
+    volumes:
+      - postgres-test-data:/var/lib/postgresql
+    restart: unless-stopped
+
 volumes:
   postgres-data:
+  postgres-test-data:
   sqlite-data:
 
 networks:

@@ -1,19 +1,21 @@
 use dioxus::prelude::*;
-
+use dioxus_motion::prelude::*;
 use ui::{
+    components::atoms::{Navbar, NavbarContent, NavbarItem, NavbarNav, NavbarTrigger},
     views::{Database, Login},
     FAVICON,
 };
 
-#[derive(Debug, Clone, Routable, PartialEq)]
+#[derive(Debug, Clone, Routable, PartialEq, MotionTransitions)]
 #[rustfmt::skip]
 enum Route {
     #[layout(DefaultLayout)]
-    #[route("/login")]
-    Login {},
-    #[layout(DefaultLayout)]
-    #[route("/developer/database")]
-    Database {},
+        #[route("/login")]
+        #[transition(SlideDown)]
+        Login {},
+        #[route("/developer/database")]
+        #[transition(Fade)]
+        Database {},
 }
 
 fn main() {
@@ -40,6 +42,6 @@ fn App() -> Element {
 #[component]
 fn DefaultLayout() -> Element {
     rsx! {
-        Outlet::<Route> {}
+        AnimatedOutlet::<Route> {}
     }
 }
