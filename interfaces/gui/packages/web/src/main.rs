@@ -11,10 +11,10 @@ use ui::{
 enum Route {
     #[layout(DefaultLayout)]
         #[route("/login")]
-        #[transition(SlideDown)]
+        #[transition()]
         Login {},
         #[route("/developer/database")]
-        #[transition(Fade)]
+        #[transition()]
         Database {},
 }
 

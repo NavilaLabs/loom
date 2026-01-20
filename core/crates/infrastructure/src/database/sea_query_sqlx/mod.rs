@@ -1,12 +1,11 @@
 mod connection;
-pub use connection::*;
 
 mod initiate;
-pub use initiate::*;
+use sqlx::{Any, pool::PoolConnection};
 
-use std::{marker::PhantomData, time::Duration};
+use std::marker::PhantomData;
 
-use crate::{config, database};
+use crate::config;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -17,6 +16,8 @@ pub enum Error {
     #[error("URL parse error: {0}")]
     UrlParseError(#[from] url::ParseError),
 }
+
+type AcquiredConnection = PoolConnection<Any>;
 
 #[derive(Debug)]
 pub struct ScopeDefault;
@@ -38,6 +39,12 @@ pub struct Pool<Scope, State = StateDisconnected> {
     pool: Option<sqlx::AnyPool>,
     _scope: PhantomData<Scope>,
     _state: PhantomData<State>,
+}
+
+impl AsRef<sqlx::AnyPool> for Pool<ScopeDefault, StateConnected> {
+    fn as_ref(&self) -> &sqlx::AnyPool {
+        self.pool.as_ref().unwrap()
+    }
 }
 
 // #[async_trait::async_trait]

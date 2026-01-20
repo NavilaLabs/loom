@@ -5,6 +5,7 @@ edition.workspace = true
 
 [dependencies]
 admin-migrations = { path = "../migrations/admin" }
+domain = { path = "../domain" }
 shared-migrations = { path = "../migrations/shared" }
 tenant-migrations = { path = "../migrations/tenant" }
 

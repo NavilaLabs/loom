@@ -1,21 +1,23 @@
 use async_trait::async_trait;
+use domain::tenant::value_objects::TenantToken;
 
 #[async_trait]
-pub trait Initialize<Pool>
+pub trait Initialize<Connection>
 where
-    Pool: Send,
+    Connection: Send,
 {
     type Error;
 
-    async fn is_initialized<T>(&self, database: &T) -> bool
-    where
-        T: super::AdminConnection<Pool> + Send;
+    async fn is_initialized(&self, connection: &Connection) -> Result<bool, Self::Error>;
 
-    async fn initialize_admin_database(&self, pool: &Pool) -> Result<(), Self::Error>;
+    async fn initialize_admin_database(
+        &self,
+        connection: &mut Connection,
+    ) -> Result<(), Self::Error>;
 
     async fn initialize_tenant_database(
         &self,
-        pool: &Pool,
-        tenant_token: Option<&str>,
+        connection: &mut Connection,
+        tenant_token: Option<&TenantToken>,
     ) -> Result<(), Self::Error>;
 }

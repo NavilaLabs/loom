@@ -4,7 +4,7 @@ services:
       context: ..
       dockerfile: .devcontainer/Dockerfile
     command: sleep infinity
-    env_file: ../.env
+    env_file: ../.env.dev
     networks:
       - local
     volumes:
@@ -13,7 +13,7 @@ services:
 
   postgres:
     image: postgres:18-trixie
-    env_file: ../.env
+    env_file: ../.env.dev
     ports:
       - "5432:5432"
     networks:
@@ -22,7 +22,7 @@ services:
       - postgres-data:/var/lib/postgresql
     restart: unless-stopped
 
-  postgres:
+  postgres-test:
     image: postgres:18-trixie
     env_file: ../.env.test
     ports:

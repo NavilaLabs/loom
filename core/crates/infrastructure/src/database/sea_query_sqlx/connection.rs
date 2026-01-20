@@ -1,7 +1,7 @@
 use std::{marker::PhantomData, time::Duration};
 
 use async_trait::async_trait;
-use sqlx::{Any, any::AnyPoolOptions, pool::PoolConnection};
+use sqlx::{Connection, any::AnyPoolOptions};
 use tracing::info;
 use url::Url;
 
@@ -9,11 +9,11 @@ use crate::{
     config::CONFIG,
     database::{
         AdminConnection, Pool, TenantConnection,
-        sea_query_sqlx::{Error, ScopeAdmin, ScopeTenant, StateConnected, StateDisconnected},
+        sea_query_sqlx::{
+            AcquiredConnection, Error, ScopeAdmin, ScopeTenant, StateConnected, StateDisconnected,
+        },
     },
 };
-
-type AcquiredConnection = PoolConnection<Any>;
 
 impl<Scope> Pool<Scope, StateDisconnected> {
     pub async fn connect(uri: &Url) -> Result<Pool<Scope, StateConnected>, Error> {
@@ -60,7 +60,7 @@ impl TenantConnection<AcquiredConnection> for Pool<ScopeTenant, StateConnected> 
     type Error = Error;
 
     async fn acquire_connection(&self) -> Result<AcquiredConnection, Self::Error> {
-        Ok(self.pool.as_ref().unwrap().acquire().await?)
+        Ok(self.pool.as_ref().unwrap().try_acquire().unwrap())
     }
 
     async fn close_connection(&self, connection: AcquiredConnection) {

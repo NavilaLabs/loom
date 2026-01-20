@@ -3,7 +3,7 @@
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-  "initializeCommand": "cp -n .env.dev .env || true && set -a && . ./.env && set +a",
+  "initializeCommand": "set -a && . ./.env.dev && set +a",
   "postStartCommand": "chmod +x .devcontainer/scripts/post-start.sh && .devcontainer/scripts/post-start.sh",
   "forwardPorts": ["5432:5432"],
   "customizations": {
