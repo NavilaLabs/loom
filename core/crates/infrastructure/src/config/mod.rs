@@ -8,25 +8,17 @@ mod database;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("YAML deserialization error: {0}")]
-    YamlDeserializationError(#[from] serde_yaml::Error),
-    #[error("Environment variable error: {0}")]
-    EnvVarError(#[from] dotenvy::Error),
-    #[error("I/O error: {0}")]
-    IoError(#[from] std::io::Error),
-    #[error("URL parse error: {0}")]
-    UrlParseError(#[from] url::ParseError),
+    #[error("{builder}: Builder missing field | field={field}")]
+    BuilderMissingField { builder: String, field: String },
 }
-
-type Result<T> = std::result::Result<T, Error>;
 
 pub static CONFIG: LazyLock<Config> =
     LazyLock::new(|| load_config().expect("Failed to load configuration"));
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
-    pub application: application::Application,
-    pub database: database::Database,
+    application: application::Application,
+    database: database::Database,
 }
 
 impl Config {
@@ -41,9 +33,10 @@ impl Config {
     }
 }
 
-pub fn load_config() -> Result<Config> {
+pub fn load_config() -> Result<Config, crate::Error> {
     let project_root = var("APP_PROJECT_ROOT")?;
-    let config_path = format!("{project_root}/config");
+    let environment = var("ENVIRONMENT")?;
+    let config_path = format!("{project_root}/config/{environment}");
 
     let mut file_string = String::new();
     let application_config_path = format!("{config_path}/application.yaml");
@@ -64,15 +57,23 @@ pub fn load_config() -> Result<Config> {
 
 #[cfg(test)]
 mod tests {
-    use dotenvy::dotenv;
-
     use super::*;
 
+    use shared::test_lifecycle;
+    use with_lifecycle::with_lifecycle;
+
+    #[with_lifecycle(test_lifecycle)]
     #[test]
     fn test_load_config() {
-        dotenv().ok();
-        let config = load_config().unwrap();
-        assert_eq!(config.get_application().get_name(), "Loom");
-        assert_eq!(config.get_database().get_uri().get_port(), 5432);
+        assert_eq!(CONFIG.get_application().get_environment(), "test");
+        assert_eq!(CONFIG.get_application().get_name(), "Loom");
+        assert_eq!(
+            CONFIG
+                .get_database()
+                .get_databases()
+                .get_tenant()
+                .get_name_prefix(),
+            "test_loom_tenant"
+        );
     }
 }

@@ -1,0 +1,11 @@
+database:
+  databases:
+    admin:
+      uri: ${ADMIN_DATABASE_URI}
+    tenant:
+      name_prefix: test_loom_tenant
+
+  pool:
+    max_size: 20
+    min_size: 5
+    timeout_seconds: 30

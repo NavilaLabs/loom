@@ -11,7 +11,7 @@ if [[ ":$PATH:" != *":/workspaces/loom/scripts:"* ]]; then
 fi
 
 # Install Deno only if it's missing
-if ! command -v deno &> /dev/null; then
+if ! command -v deno >/dev/null 2>&1; then
     curl -fsSL https://deno.land/install.sh | sh
 else
     echo "Deno already installed, skipping..."

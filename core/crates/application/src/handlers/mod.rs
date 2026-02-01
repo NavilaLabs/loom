@@ -3,7 +3,7 @@ use async_trait::async_trait;
 #[async_trait]
 pub trait Handler<Pool, Command>
 where
-    Pool: Send,
+    Pool: Send + Sync,
 {
     type Error;
 

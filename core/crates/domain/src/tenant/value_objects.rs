@@ -1,3 +1,3 @@
-use crate::shared::EntityToken;
+use crate::shared;
 
-pub type TenantToken = EntityToken;
+pub type TenantToken = shared::value_objects::EntityToken;

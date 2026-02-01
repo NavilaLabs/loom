@@ -1,4 +1,4 @@
-use dioxus::{fullstack::routing::Route, prelude::*};
+use dioxus::prelude::*;
 
 use crate::components::{
     atoms::{Navbar, NavbarContent, NavbarItem, NavbarNav, NavbarTrigger},

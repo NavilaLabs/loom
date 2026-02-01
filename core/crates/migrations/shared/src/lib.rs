@@ -7,10 +7,13 @@ pub enum Error {
 }
 
 #[must_use]
-pub fn create_events_table_migration(name: Option<&'static str>) -> TableCreateStatement {
-    Table::create()
+pub fn create_events_table_migration(
+    name: Option<&'static str>,
+) -> (TableCreateStatement, Vec<IndexCreateStatement>) {
+    let name = name.unwrap_or("events");
+    let table_create_statement = Table::create()
         .if_not_exists()
-        .table(name.unwrap_or("events"))
+        .table(name)
         // event columns
         .col(uuid("event_id").primary_key())
         .col(string("event_type"))
@@ -19,7 +22,6 @@ pub fn create_events_table_migration(name: Option<&'static str>) -> TableCreateS
         .col(string("aggregate_type"))
         .col(uuid("aggregate_id"))
         .col(integer("aggregate_version"))
-        .col(integer("aggregate_schema_version"))
         // data columns
         .col(json_binary("data"))
         .col(json_binary_null("metadata"))
@@ -34,44 +36,50 @@ pub fn create_events_table_migration(name: Option<&'static str>) -> TableCreateS
         .col(uuid_null("causation_id"))
         // integrity columns
         .col(binary("hash"))
-        // indexes
-        .index(
-            Index::create()
-                .name("uq_events_aggregate_type_id_version")
-                .unique()
-                .col("aggregate_type")
-                .col("aggregate_id")
-                .col("aggregate_version"),
-        )
-        .index(
-            Index::create()
-                .name("idx_events_correlation_id")
-                .col("correlation_id"),
-        )
-        .index(
-            Index::create()
-                .name("idx_events_causation_id")
-                .col("causation_id"),
-        )
-        .index(
-            Index::create()
-                .name("idx_events_event_type")
-                .col("event_type"),
-        )
-        .index(
-            Index::create()
-                .name("idx_events_event_type_version")
-                .col("event_type")
-                .col("event_version"),
-        )
-        .to_owned()
+        .to_owned();
+    let index_create_statements = vec![
+        Index::create()
+            .table(name)
+            .name("uq_events_aggregate_type_id_version")
+            .unique()
+            .col("aggregate_type")
+            .col("aggregate_id")
+            .col("aggregate_version")
+            .to_owned(),
+        Index::create()
+            .table(name)
+            .name("idx_events_correlation_id")
+            .col("correlation_id")
+            .to_owned(),
+        Index::create()
+            .table(name)
+            .name("idx_events_causation_id")
+            .col("causation_id")
+            .to_owned(),
+        Index::create()
+            .table(name)
+            .name("idx_events_event_type")
+            .col("event_type")
+            .to_owned(),
+        Index::create()
+            .table(name)
+            .name("idx_events_event_type_version")
+            .col("event_type")
+            .col("event_version")
+            .to_owned(),
+    ];
+
+    (table_create_statement, index_create_statements)
 }
 
 #[must_use]
-pub fn create_snapshots_table_migration(name: Option<&'static str>) -> TableCreateStatement {
-    Table::create()
+pub fn create_snapshots_table_migration(
+    name: Option<&'static str>,
+) -> (TableCreateStatement, Vec<IndexCreateStatement>) {
+    let name = name.unwrap_or("snapshots");
+    let table_create_statement = Table::create()
         .if_not_exists()
-        .table(name.unwrap_or("snapshots"))
+        .table(name)
         // snapshot columns
         .col(uuid("snapshot_id").primary_key())
         .col(string("aggregate_type"))
@@ -81,20 +89,28 @@ pub fn create_snapshots_table_migration(name: Option<&'static str>) -> TableCrea
         .col(json_binary("data"))
         .col(json_binary("metadata"))
         .col(timestamp("created_at").default(Expr::current_timestamp()))
-        // indexes
-        .index(
-            Index::create()
-                .name("uq_snapshots_aggregate_type_id_version")
-                .unique()
-                .col("aggregate_type")
-                .col("aggregate_id")
-                .col("aggregate_version"),
-        )
-        .index(
-            Index::create()
-                .name("idx_snapshots_lookup")
-                .col("aggregate_type")
-                .col("aggregate_id"),
-        )
-        .to_owned()
+        .to_owned();
+    let index_create_statements = vec![
+        Index::create()
+            .table(name)
+            .name("uq_snapshots_aggregate_type_id_version")
+            .unique()
+            .col("aggregate_type")
+            .col("aggregate_id")
+            .col("aggregate_version")
+            .to_owned(),
+        Index::create()
+            .table(name)
+            .name("idx_snapshots_lookup")
+            .col("aggregate_type")
+            .col("aggregate_id")
+            .to_owned(),
+        Index::create()
+            .table(name)
+            .name("idx_snapshots_created_at")
+            .col("created_at")
+            .to_owned(),
+    ];
+
+    (table_create_statement, index_create_statements)
 }

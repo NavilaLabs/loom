@@ -4,14 +4,13 @@ services:
       context: ..
       dockerfile: .devcontainer/Dockerfile
     command: sleep infinity
-    env_file: ../.env.dev
     networks:
       - local
     volumes:
       - ../..:/workspaces:cached
       - sqlite-data:/sqlite
 
-  postgres:
+  postgres: &database
     image: postgres:18-trixie
     env_file: ../.env.dev
     ports:
@@ -23,15 +22,10 @@ services:
     restart: unless-stopped
 
   postgres-test:
-    image: postgres:18-trixie
+    <<: *database
     env_file: ../.env.test
-    ports:
-      - "5433:5432"
-    networks:
-      - local
     volumes:
       - postgres-test-data:/var/lib/postgresql
-    restart: unless-stopped
 
 volumes:
   postgres-data:

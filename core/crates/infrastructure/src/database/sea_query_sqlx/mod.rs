@@ -1,21 +1,49 @@
 mod connect;
-mod initiate;
+mod initialize;
 mod migrate;
-
 
 use std::marker::PhantomData;
 
-use crate::config;
-
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("Configuration error: {0}")]
-    ConfigError(#[from] config::Error),
+    #[error("Migrate error: {0}")]
+    MigrateError(#[from] sqlx::migrate::MigrateError),
     #[error("SQLx error: {0}")]
     SqlxError(#[from] sqlx::Error),
-    #[error("URL parse error: {0}")]
-    UrlParseError(#[from] url::ParseError),
+    #[error("SeaORM error: {0}")]
+    SeaOrmError(#[from] sea_orm::DbErr),
+    #[error("SeaQuery error: {0}")]
+    SeaQueryError(#[from] sea_query::error::Error),
+    #[error("Unsupported database type")]
+    UnsupportedDatabaseType,
 }
+
+impl From<sqlx::migrate::MigrateError> for crate::Error {
+    fn from(err: sqlx::migrate::MigrateError) -> Self {
+        Error::MigrateError(err).into()
+    }
+}
+
+impl From<sqlx::Error> for crate::Error {
+    fn from(err: sqlx::Error) -> Self {
+        Error::SqlxError(err).into()
+    }
+}
+
+impl From<sea_orm::DbErr> for crate::Error {
+    fn from(err: sea_orm::DbErr) -> Self {
+        Error::SeaOrmError(err).into()
+    }
+}
+
+impl From<sea_query::error::Error> for crate::Error {
+    fn from(err: sea_query::error::Error) -> Self {
+        Error::SeaQueryError(err).into()
+    }
+}
+
+pub type ConnectedAdminPool = Pool<ScopeAdmin, StateConnected>;
+pub type ConnectedTenantPool = Pool<ScopeTenant, StateConnected>;
 
 #[derive(Debug)]
 pub struct ScopeDefault;
@@ -27,20 +55,28 @@ pub struct ScopeAdmin;
 pub struct ScopeTenant;
 
 #[derive(Debug)]
-pub struct StateConnected;
+pub struct StateConnected {
+    pool: sqlx::AnyPool,
+}
 
 #[derive(Debug)]
 pub struct StateDisconnected;
 
 #[derive(Debug)]
+pub enum DatabaseType {
+    Postgres,
+    Sqlite,
+}
+
+#[derive(Debug)]
 pub struct Pool<Scope, State = StateDisconnected> {
-    pool: Option<sqlx::AnyPool>,
+    state: State,
+    database_type: DatabaseType,
     _scope: PhantomData<Scope>,
-    _state: PhantomData<State>,
 }
 
 impl<Scope> AsRef<sqlx::AnyPool> for Pool<Scope, StateConnected> {
     fn as_ref(&self) -> &sqlx::AnyPool {
-        self.pool.as_ref().unwrap()
+        &self.state.pool
     }
 }

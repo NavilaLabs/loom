@@ -6,9 +6,15 @@ pub struct Migration;
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager
-            .create_table(shared_migrations::create_events_table_migration(None))
-            .await
+        let (table_create_statement, index_create_statements) =
+            shared_migrations::create_events_table_migration(None);
+        manager.create_table(table_create_statement).await?;
+
+        for statement in index_create_statements {
+            manager.create_index(statement).await?;
+        }
+
+        Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
