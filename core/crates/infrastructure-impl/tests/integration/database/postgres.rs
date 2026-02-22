@@ -1,0 +1,138 @@
+use infrastructure::{
+    config::CONFIG,
+    database::{
+        Migrate, TenantDatabaseNameBuilder, TenantDatabaseNameConcreteBuilder,
+        TenantDatabaseNameDirector,
+    },
+};
+use infrastructure_impl::{
+    Error,
+    infrastructure::{Provider, ScopeAdmin, ScopeTenant, StateConnected},
+};
+use modules::tenant::value_objects::TenantToken;
+use tracing::info;
+use url::Url;
+
+use super::{ConnectedDefaultPool, initialize_databases};
+
+async fn reset_entire_database(pool: &ConnectedDefaultPool) -> Result<(), Error> {
+    sqlx::query(
+        "SELECT pg_terminate_backend(pid) FROM pg_stat_activity
+         WHERE datname LIKE 'test_loom_%' AND pid <> pg_backend_pid()",
+    )
+    .execute(pool.as_ref())
+    .await?;
+
+    let admin_database_name = CONFIG.get_database().get_databases().get_admin().get_name();
+    sqlx::query(&format!(
+        "DROP DATABASE IF EXISTS \"{admin_database_name}\""
+    ))
+    .execute(pool.as_ref())
+    .await?;
+
+    let tenant_database_name_prefix = CONFIG
+        .get_database()
+        .get_databases()
+        .get_tenant()
+        .get_name_prefix();
+    let tenants: Vec<(String,)> = sqlx::query_as(&format!(
+        "SELECT datname::TEXT FROM pg_database WHERE datname LIKE '{tenant_database_name_prefix}%'"
+    ))
+    .fetch_all(pool.as_ref())
+    .await?;
+
+    for (tenant_name,) in tenants {
+        let drop_query = format!("DROP DATABASE IF EXISTS \"{tenant_name}\"");
+        sqlx::query(&drop_query).execute(pool.as_ref()).await?;
+    }
+
+    Ok(())
+}
+
+async fn get_default_pool() -> Result<ConnectedDefaultPool, Error> {
+    let database_url = "postgres://postgres:postgres@postgres-test:5432/postgres";
+    Provider::connect(&Url::parse(database_url).unwrap()).await
+}
+
+async fn get_admin_pool() -> Result<Provider<ScopeAdmin, StateConnected>, Error> {
+    let admin_database_name = CONFIG.get_database().get_databases().get_admin().get_name();
+    let database_url = format!(
+        "postgres://postgres:postgres@postgres-test:5432/{}",
+        admin_database_name
+    );
+    Provider::connect(&Url::parse(&database_url).unwrap()).await
+}
+
+async fn get_tenant_pool(
+    tenant_token: &TenantToken,
+) -> Result<Provider<ScopeTenant, StateConnected>, Error> {
+    let mut database_name_builder = TenantDatabaseNameConcreteBuilder::new();
+    TenantDatabaseNameDirector::construct(&mut database_name_builder, tenant_token);
+    let database_name = database_name_builder.get_tenant_database_name();
+    let database_url = format!("postgres://postgres:postgres@postgres-test:5432/{database_name}",);
+    Provider::connect(&Url::parse(&database_url).unwrap()).await
+}
+
+pub(crate) async fn refresh_databases(
+    pool: &ConnectedDefaultPool,
+    tenant_token: &TenantToken,
+) -> Result<(), Error> {
+    reset_entire_database(pool).await?;
+    info!("Database successfully reseted!");
+    initialize_databases(pool, tenant_token).await?;
+    info!("Database successfully initialized!");
+
+    let admin_pool = get_admin_pool().await?;
+    admin_pool.migrate_database().await?;
+    let tenant_template_pool = get_tenant_pool(tenant_token).await?;
+    tenant_template_pool.migrate_database().await?;
+    info!("Database successfully refreshed!");
+
+    Ok(())
+}
+
+pub mod tests {
+    use with_lifecycle::with_lifecycle;
+
+    use crate::database::test_lifecycle;
+
+    use super::*;
+
+    #[with_lifecycle(test_lifecycle)]
+    #[tokio::test]
+    async fn test_setup_postgres_database() -> Result<(), Error> {
+        let default_pool = get_default_pool().await?;
+        refresh_databases(&default_pool, &TenantToken::default()).await?;
+
+        Ok(())
+    }
+
+    // #[with_lifecycle(test_lifecycle)]
+    // #[tokio::test]
+    // async fn test_insert_into_master_table() -> Result<(), Error> {
+    //     let data = tenant::events::EventV1::Created {
+    //         name: "NavilaLabs".to_string(),
+    //     };
+
+    //     dbg!(&data);
+
+    //     let event_id = EventId::default();
+    //     dbg!(&event_id);
+    //     let aggregate = AggregateMeta::new("tenant".into(), AggregateId::default(), 1);
+    //     dbg!(&aggregate);
+    //     let context = EventContext::default();
+    //     dbg!(&context);
+    //     let timestamps = EventTimestamps::default();
+    //     dbg!(&timestamps);
+
+    //     let envelope = EventEnvelope::new(event_id, aggregate, context, timestamps, data, None);
+
+    //     dbg!(&envelope);
+
+    //     let pool = get_admin_pool().await?;
+
+    //     pool.append(envelope).await?;
+
+    //     Ok(())
+    // }
+}

@@ -1,20 +1,27 @@
-use domain::{
+use modules::{
     AggregateMeta, EventContext, EventEnvelope, EventTimestamps, EventType, EventVersion,
+    shared::value_objects::EventId,
 };
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use serde_json::Value as JsonValue;
-use sqlx::types::Uuid;
+
+use crate::integrity::IntegrityChain;
 
 pub mod config;
 pub mod database;
+pub mod event_bus;
 pub mod event_store;
+pub mod integrity;
 pub mod projections;
 
-mod integrity;
-pub use integrity::*;
+pub trait ImplError {
+    type Error: From<Error> + Send + Sync;
+}
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    #[error("{0}")]
+    DateTimeError(#[from] chrono::ParseError),
     #[error("{0}")]
     EnvVarError(#[from] dotenvy::Error),
     #[error("{0}")]
@@ -27,16 +34,17 @@ pub enum Error {
     JsonError(#[from] serde_json::Error),
 
     #[error("{0}")]
-    ConfigError(#[from] config::Error),
-    #[cfg(feature = "sea-query-sqlx")]
+    ModulesError(#[from] modules::Error),
     #[error("{0}")]
-    SeaQuerySQLx(#[from] database::Error),
+    ConfigError(#[from] config::Error),
+    #[error("{0}")]
+    DatabaseError(#[from] database::Error),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EventRecord {
     // Event Identity
-    event_id: Uuid,
+    event_id: EventId,
     event_type: String,
     event_version: u8,
 
@@ -49,7 +57,7 @@ pub struct EventRecord {
 
     // Data payloads
     data: JsonValue,
-    metadata: Option<JsonValue>,
+    metadata: JsonValue,
 
     // Integrity
     hash: Vec<u8>,
@@ -57,7 +65,33 @@ pub struct EventRecord {
 }
 
 impl EventRecord {
-    pub fn get_event_id(&self) -> &Uuid {
+    pub fn new(
+        event_id: EventId,
+        event_type: String,
+        event_version: u8,
+        aggregate: AggregateMeta,
+        context: EventContext,
+        timestamps: EventTimestamps,
+        data: JsonValue,
+        metadata: JsonValue,
+        hash: Vec<u8>,
+        previous_hash: Vec<u8>,
+    ) -> Self {
+        Self {
+            event_id,
+            event_type,
+            event_version,
+            aggregate,
+            context,
+            timestamps,
+            data,
+            metadata,
+            hash,
+            previous_hash,
+        }
+    }
+
+    pub fn get_event_id(&self) -> &EventId {
         &self.event_id
     }
 
@@ -85,45 +119,53 @@ impl EventRecord {
         &self.data
     }
 
-    pub fn get_metadata(&self) -> &Option<JsonValue> {
+    pub fn get_metadata(&self) -> &JsonValue {
         &self.metadata
     }
 
-    pub fn get_hash(&self) -> &Vec<u8> {
+    pub fn get_hash(&self) -> &[u8] {
         &self.hash
     }
 
-    pub fn get_previous_hash(&self) -> &Vec<u8> {
+    pub fn get_previous_hash(&self) -> &[u8] {
         &self.previous_hash
     }
 }
 
-impl<T: Serialize + EventType + EventVersion> TryFrom<EventEnvelope<T>> for EventRecord {
-    type Error = Error;
-
-    fn try_from(event: EventEnvelope<T>) -> Result<Self, Self::Error> {
-        let payload = event.get_payload();
+impl EventRecord {
+    pub fn from_envelope<T>(
+        envelope: EventEnvelope<T>,
+        previous_hash: Vec<u8>,
+    ) -> Result<Self, Error>
+    where
+        T: EventType + EventVersion + Serialize + Send + Sync,
+    {
+        let payload = envelope.get_payload();
         let data = serde_json::to_value(&payload)?;
 
         let mut record = EventRecord {
-            event_id: event.get_event_id().clone(),
+            event_id: envelope.get_event_id().clone(),
             event_type: payload.get_event_type().to_string(),
             event_version: <T as EventVersion>::VERSION,
-            aggregate: event.get_aggregate().clone(),
-            context: event.get_context().clone(),
-            timestamps: event.get_timestamps().clone(),
+            aggregate: envelope.get_aggregate().clone(),
+            context: envelope.get_context().clone(),
+            timestamps: envelope.get_timestamps().clone(),
             data,
-            metadata: event.get_metadata().clone(),
-            previous_hash: event.get_hash().clone(),
+            metadata: envelope.get_metadata().clone(),
+
+            previous_hash: previous_hash.clone(),
             hash: Vec::new(),
         };
-        record.hash = record.calculate_hash(&event.get_hash());
+        record.hash = record.calculate_hash(&previous_hash);
 
         Ok(record)
     }
 }
 
-impl<T: DeserializeOwned> TryInto<EventEnvelope<T>> for EventRecord {
+impl<T: DeserializeOwned> TryInto<EventEnvelope<T>> for EventRecord
+where
+    T: EventType + EventVersion + Serialize + Send + Sync,
+{
     type Error = Error;
 
     fn try_into(self) -> Result<EventEnvelope<T>, Self::Error> {

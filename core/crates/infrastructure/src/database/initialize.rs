@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use domain::tenant::value_objects::TenantToken;
+use modules::tenant::value_objects::TenantToken;
 
 #[async_trait]
 pub trait Initialize {

@@ -6,7 +6,7 @@
   "lsp": {
     "rust-analyzer": {
       "initialization_options": {
-        "linkedProjects": ["core/Cargo.toml", "interfaces/gui/Cargo.toml"]
+        "linkedProjects": ["core/Cargo.toml", "presentation/gui/Cargo.toml"]
       }
     },
     "tailwindcss-language-server": {

@@ -5,40 +5,29 @@ edition.workspace = true
 
 [dependencies]
 admin-migrations = { path = "../migrations/admin" }
-domain = { path = "../domain" }
-with_lifecycle = { path = "../with_lifecycle" }
+modules = { path = "../modules" }
 shared-migrations = { path = "../migrations/shared" }
-shared = { path = "../shared" }
 tenant-migrations = { path = "../migrations/tenant" }
 
 async-trait = { workspace = true }
+chrono = { workspace = true }
 dotenvy = { workspace = true }
-embassy-futures = { workspace = true }
 regex = { workspace = true }
-sea-orm = { version = "2.0.0-rc.28", optional = true, default-features = false, features = ["sqlx-postgres", "sqlx-sqlite"] }
-sea-query = { version = "1.0.0-rc.28", optional = true }
-sea-query-sqlx = { version = "0.8.0-rc.11", features = ["sqlx-any", "runtime-tokio-rustls", "with-json", "with-chrono", "with-time", "with-uuid", "with-rust_decimal"], optional = true }
 serde = { workspace = true }
 serde-vars = "0.3.1"
 serde_yaml = "0.9"
 serde_json = { workspace = true }
-sqlx = { version = "0.8.6", features = ["postgres", "sqlite", "runtime-tokio"], optional = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
+tokio = { workspace = true }
 url = { workspace = true }
+uuid = { workspace = true }
 sha2 = "0.10.9"
 serde_jcs = "0.1.0"
 
 [dev-dependencies]
-tokio = { workspace = true }
-
-[features]
-default = ["sea-query-sqlx"]
-sea-query-sqlx = ["dep:sea-orm", "dep:sea-query", "dep:sea-query-sqlx", "dep:sqlx"]
-
-[[test]]
-name = "integration_infrastructure"
-path = "tests/integration/integration_tests.rs"
+with_lifecycle = { path = "../with_lifecycle" }
+shared = { path = "../shared" }
 
 [lints]
 workspace = true

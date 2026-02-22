@@ -55,8 +55,10 @@ pub fn create_events_table_migration(
             .to_owned(),
         Index::create()
             .table(name)
-            .name("uq_events_previous_hash")
+            .name("uq_events_aggregate_type_id_previous_hash")
             .unique()
+            .col("aggregate_type")
+            .col("aggregate_id")
             .col("previous_hash")
             .to_owned(),
         Index::create()

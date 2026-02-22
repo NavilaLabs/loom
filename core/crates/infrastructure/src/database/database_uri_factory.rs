@@ -1,11 +1,10 @@
-use domain::tenant::value_objects::TenantToken;
+use modules::tenant::value_objects::TenantToken;
 use url::Url;
 
 use crate::{
     config::CONFIG,
     database::{
-        Error, TenantDatabaseNameBuilder, TenantDatabaseNameConcreteBuilder,
-        TenantDatabaseNameDirector,
+        TenantDatabaseNameBuilder, TenantDatabaseNameConcreteBuilder, TenantDatabaseNameDirector,
     },
 };
 
@@ -35,8 +34,10 @@ pub struct TenantDatabaseUri;
 impl DatabaseUri for TenantDatabaseUri {
     fn get_uri(&self, tenant_token: Option<&TenantToken>) -> Result<Url, crate::Error> {
         let base_uri = CONFIG.get_database().get_base_uri();
-        let tenant_token =
-            tenant_token.map_or_else(|| Err(Error::NoTenantTokenProvided), |token| Ok(token))?;
+        let tenant_token = tenant_token.map_or_else(
+            || Err(crate::database::Error::NoTenantTokenProvided),
+            |token| Ok(token),
+        )?;
         let mut database_name_builder = TenantDatabaseNameConcreteBuilder::new();
         TenantDatabaseNameDirector::construct(&mut database_name_builder, tenant_token);
         let database_name = database_name_builder.get_tenant_database_name();

@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use domain::tenant::value_objects::TenantToken;
+use modules::tenant::value_objects::TenantToken;
 
 use crate::config::CONFIG;
 

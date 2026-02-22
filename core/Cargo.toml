@@ -1,8 +1,8 @@
 [workspace]
 members = [
-    "crates/application",
-    "crates/domain",
+    "crates/modules",
     "crates/infrastructure",
+    "crates/infrastructure-impl",
     "crates/migrations/admin",
     "crates/migrations/shared",
     "crates/migrations/tenant",
@@ -30,6 +30,7 @@ thiserror = "2.0.18"
 tokio = { version = "1.49.0", features = ["full"] }
 tracing = "0.1.44"
 url = "2.5.8"
+uuid = { version = "1.21.0", features = ["v7"] }
 
 [workspace.lints.clippy]
 # Enforce correctness and best practices
