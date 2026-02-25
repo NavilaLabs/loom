@@ -1,0 +1,28 @@
+[package]
+name = "loom-infrastructure"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+async-trait = { workspace = true }
+chrono = { workspace = true }
+dotenvy = { workspace = true }
+regex = { workspace = true }
+serde = { workspace = true }
+serde-vars = "0.3.1"
+serde_yaml = "0.9"
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+tokio = { workspace = true }
+url = { workspace = true }
+uuid = { workspace = true }
+sha2 = "0.10.9"
+serde_jcs = "0.1.0"
+
+[dev-dependencies]
+with-lifecycle = { path = "../with-lifecycle" }
+loom-shared = { path = "../loom-shared" }
+
+[lints]
+workspace = true

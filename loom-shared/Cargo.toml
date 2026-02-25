@@ -1,0 +1,11 @@
+[package]
+name = "loom-shared"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+url = { workspace = true }
+dotenvy = { workspace = true }
+
+[lints]
+workspace = true
