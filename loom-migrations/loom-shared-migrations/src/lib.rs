@@ -14,10 +14,10 @@ pub fn create_events_table_migration(
     let table_create_statement = Table::create()
         .if_not_exists()
         .table(name)
+        .col(big_pk_auto("global_position"))
         // event columns
-        .col(uuid("event_id").primary_key())
+        .col(uuid("event_id"))
         .col(string("event_type"))
-        .col(integer("event_version"))
         // aggregate columns
         .col(string("aggregate_type"))
         .col(uuid("aggregate_id"))
@@ -27,18 +27,14 @@ pub fn create_events_table_migration(
         .col(json_binary_null("metadata"))
         // timestamp columns
         .col(timestamp("created_at").default(Expr::current_timestamp()))
-        .col(timestamp_null("effective_at"))
-        // user columns
-        .col(uuid("created_by"))
-        .col(uuid_null("owned_by"))
-        // tracing columns
-        .col(uuid_null("correlation_id"))
-        .col(uuid_null("causation_id"))
-        // integrity columns
-        .col(binary("hash"))
-        .col(binary("previous_hash"))
         .to_owned();
     let index_create_statements = vec![
+        Index::create()
+            .table(name)
+            .name("uq_events_event_id")
+            .unique()
+            .col("event_id")
+            .to_owned(),
         Index::create()
             .table(name)
             .name("uq_events_aggregate_type_id_version")
@@ -46,41 +42,6 @@ pub fn create_events_table_migration(
             .col("aggregate_type")
             .col("aggregate_id")
             .col("aggregate_version")
-            .to_owned(),
-        Index::create()
-            .table(name)
-            .name("uq_events_hash")
-            .unique()
-            .col("hash")
-            .to_owned(),
-        Index::create()
-            .table(name)
-            .name("uq_events_aggregate_type_id_previous_hash")
-            .unique()
-            .col("aggregate_type")
-            .col("aggregate_id")
-            .col("previous_hash")
-            .to_owned(),
-        Index::create()
-            .table(name)
-            .name("idx_events_correlation_id")
-            .col("correlation_id")
-            .to_owned(),
-        Index::create()
-            .table(name)
-            .name("idx_events_causation_id")
-            .col("causation_id")
-            .to_owned(),
-        Index::create()
-            .table(name)
-            .name("idx_events_event_type")
-            .col("event_type")
-            .to_owned(),
-        Index::create()
-            .table(name)
-            .name("idx_events_event_type_version")
-            .col("event_type")
-            .col("event_version")
             .to_owned(),
     ];
 
@@ -96,13 +57,12 @@ pub fn create_snapshots_table_migration(
         .if_not_exists()
         .table(name)
         // snapshot columns
-        .col(uuid("snapshot_id").primary_key())
         .col(string("aggregate_type"))
         .col(uuid("aggregate_id"))
         .col(integer("aggregate_version"))
-        .col(json_binary("data"))
-        .col(json_binary("metadata"))
+        .col(json_binary("state"))
         .col(timestamp("created_at").default(Expr::current_timestamp()))
+        .col(timestamp("updated_at").default(Expr::current_timestamp()))
         .to_owned();
     let index_create_statements = vec![
         Index::create()
@@ -115,7 +75,8 @@ pub fn create_snapshots_table_migration(
             .to_owned(),
         Index::create()
             .table(name)
-            .name("idx_snapshots_lookup")
+            .name("pk_snapshots_aggregate_type_id")
+            .primary()
             .col("aggregate_type")
             .col("aggregate_id")
             .to_owned(),
@@ -123,6 +84,17 @@ pub fn create_snapshots_table_migration(
             .table(name)
             .name("idx_snapshots_created_at")
             .col("created_at")
+            .to_owned(),
+        Index::create()
+            .table(name)
+            .name("idx_snapshots_updated_at")
+            .col("updated_at")
+            .to_owned(),
+        Index::create()
+            .table(name)
+            .name("idx_snapshots_created_at_updated_at")
+            .col("created_at")
+            .col("updated_at")
             .to_owned(),
     ];
 

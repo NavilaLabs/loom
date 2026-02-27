@@ -25,5 +25,5 @@ features = [
 
 [features]
 default = ["sqlite"]
-postgres = ["sea-orm-migration/postgres"]
-sqlite = ["sea-orm-migration/sqlite"]
+postgres = ["loom-shared-migrations/postgres"]
+sqlite = ["loom-shared-migrations/sqlite"]
