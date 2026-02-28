@@ -3,7 +3,7 @@ database:
 
   databases:
     admin:
-      name: test_loom_admin
+      name: ${ADMIN_DATABASE_NAME}
     tenant:
       name_prefix: test_loom_tenant_
 

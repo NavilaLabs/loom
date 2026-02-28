@@ -1,11 +1,11 @@
-use std::marker::PhantomData;
+use std::{fmt::Display, marker::PhantomData};
 
 use loom_infrastructure::ImplError;
 use sea_orm::{ExprTrait, Value};
 use sea_query::{Alias, Expr};
 
-pub type ConnectedAdminPool = Provider<ScopeAdmin, StateConnected>;
-pub type ConnectedTenantPool = Provider<ScopeTenant, StateConnected>;
+pub type ConnectedAdminPool = Pool<ScopeAdmin, StateConnected>;
+pub type ConnectedTenantPool = Pool<ScopeTenant, StateConnected>;
 
 #[derive(Debug)]
 pub struct ScopeDefault;
@@ -36,24 +36,33 @@ pub enum DatabaseType {
     Sqlite,
 }
 
+impl Display for DatabaseType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DatabaseType::Postgres => write!(f, "postgres"),
+            DatabaseType::Sqlite => write!(f, "sqlite"),
+        }
+    }
+}
+
 #[derive(Debug)]
-pub struct Provider<Scope, State = StateDisconnected> {
+pub struct Pool<Scope, State = StateDisconnected> {
     state: State,
     database_type: DatabaseType,
     _scope: PhantomData<Scope>,
 }
 
-impl<Scope, State> ImplError for Provider<Scope, State> {
+impl<Scope, State> ImplError for Pool<Scope, State> {
     type Error = crate::Error;
 }
 
-impl<Scope> AsRef<sqlx::AnyPool> for Provider<Scope, StateConnected> {
+impl<Scope> AsRef<sqlx::AnyPool> for Pool<Scope, StateConnected> {
     fn as_ref(&self) -> &sqlx::AnyPool {
         &self.state.pool
     }
 }
 
-impl<Scope, State> Provider<Scope, State> {
+impl<Scope, State> Pool<Scope, State> {
     pub fn new(state: State, database_type: DatabaseType) -> Self {
         Self {
             state,

@@ -5,7 +5,7 @@ use loom_infrastructure::{
     database::{
         self, Initialize, TenantDatabaseNameBuilder, TenantDatabaseNameConcreteBuilder,
         TenantDatabaseNameDirector,
-        database_uri_factory::{self, DatabaseUriType},
+        database_uri_factory::{self, DatabaseScope},
     },
 };
 use sea_query::{Expr, ExprTrait, PostgresQueryBuilder, Query};
@@ -16,11 +16,11 @@ use url::Url;
 
 use crate::{
     Error,
-    sea_query_sqlx::infrastructure::{DatabaseType, Provider, ScopeDefault, StateConnected},
+    sea_query_sqlx::infrastructure::{DatabaseType, Pool, ScopeDefault, StateConnected},
 };
 
 #[async_trait]
-impl Initialize for Provider<ScopeDefault, StateConnected> {
+impl Initialize for Pool<ScopeDefault, StateConnected> {
     type Error = Error;
 
     async fn is_initialized(
@@ -79,29 +79,28 @@ impl Initialize for Provider<ScopeDefault, StateConnected> {
 pub trait InitializationStrategy {
     async fn check_is_initialized(
         &self,
-        pool: &Provider<ScopeDefault, StateConnected>,
+        pool: &Pool<ScopeDefault, StateConnected>,
         database_uri: &Url,
     ) -> Result<bool, Error>;
 
     async fn is_admin_initialized(
         &self,
-        pool: &Provider<ScopeDefault, StateConnected>,
+        pool: &Pool<ScopeDefault, StateConnected>,
     ) -> Result<bool, Error> {
         let admin_database_uri =
-            database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Admin)
-                .get_uri(None)?;
+            database_uri_factory::Factory::new_database_uri(&DatabaseScope::Admin)
+                .get_uri(&pool.get_database_type().to_string(), None)?;
 
         self.check_is_initialized(pool, &admin_database_uri).await
     }
 
     async fn is_tenant_initialized(
         &self,
-        pool: &Provider<ScopeDefault, StateConnected>,
+        pool: &Pool<ScopeDefault, StateConnected>,
         tenant_token: Option<&str>,
     ) -> Result<bool, Error> {
-        let database_uri =
-            database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Tenant)
-                .get_uri(tenant_token)?;
+        let database_uri = database_uri_factory::Factory::new_database_uri(&DatabaseScope::Tenant)
+            .get_uri(&pool.get_database_type().to_string(), tenant_token)?;
         dbg!(&database_uri);
 
         self.check_is_initialized(pool, &database_uri).await
@@ -109,7 +108,7 @@ pub trait InitializationStrategy {
 
     async fn is_initialized(
         &self,
-        pool: &Provider<ScopeDefault, StateConnected>,
+        pool: &Pool<ScopeDefault, StateConnected>,
         tenant_token: Option<&str>,
     ) -> Result<bool, Error> {
         let admin_fut = self.is_admin_initialized(pool);
@@ -125,12 +124,12 @@ pub trait InitializationStrategy {
 
     async fn initialize_admin(
         &self,
-        pool: &Provider<ScopeDefault, StateConnected>,
+        pool: &Pool<ScopeDefault, StateConnected>,
     ) -> Result<(), Error>;
 
     async fn initialize_tenant(
         &self,
-        pool: &Provider<ScopeDefault, StateConnected>,
+        pool: &Pool<ScopeDefault, StateConnected>,
         tenant_token: Option<&str>,
     ) -> Result<(), Error>;
 }
@@ -142,7 +141,7 @@ pub struct PostgresInitializationStrategy;
 impl InitializationStrategy for PostgresInitializationStrategy {
     async fn check_is_initialized(
         &self,
-        pool: &Provider<ScopeDefault, StateConnected>,
+        pool: &Pool<ScopeDefault, StateConnected>,
         database_uri: &Url,
     ) -> Result<bool, Error> {
         let (sql, _) = Query::select()
@@ -161,7 +160,7 @@ impl InitializationStrategy for PostgresInitializationStrategy {
 
     async fn initialize_admin(
         &self,
-        pool: &Provider<ScopeDefault, StateConnected>,
+        pool: &Pool<ScopeDefault, StateConnected>,
     ) -> Result<(), Error> {
         let database_name = CONFIG.get_database().get_databases().get_admin().get_name();
         info!("Initializing admin database: {}", database_name);
@@ -173,7 +172,7 @@ impl InitializationStrategy for PostgresInitializationStrategy {
 
     async fn initialize_tenant(
         &self,
-        pool: &Provider<ScopeDefault, StateConnected>,
+        pool: &Pool<ScopeDefault, StateConnected>,
         tenant_token: Option<&str>,
     ) -> Result<(), Error> {
         let tenant_token = tenant_token.map_or_else(
@@ -203,7 +202,7 @@ pub struct SqliteInitializationStrategy;
 impl InitializationStrategy for SqliteInitializationStrategy {
     async fn check_is_initialized(
         &self,
-        _pool: &Provider<ScopeDefault, StateConnected>,
+        _pool: &Pool<ScopeDefault, StateConnected>,
         database_uri: &Url,
     ) -> Result<bool, Error> {
         let file_path = format!("{}.sqlite", database_uri.path());
@@ -213,10 +212,10 @@ impl InitializationStrategy for SqliteInitializationStrategy {
 
     async fn initialize_admin(
         &self,
-        _pool: &Provider<ScopeDefault, StateConnected>,
+        pool: &Pool<ScopeDefault, StateConnected>,
     ) -> Result<(), Error> {
-        let uri = database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Admin)
-            .get_uri(None)?;
+        let uri = database_uri_factory::Factory::new_database_uri(&DatabaseScope::Admin)
+            .get_uri(&pool.get_database_type().to_string(), None)?;
         let uri = uri.to_string().replace("sqlite://", "");
         info!("Initializing admin database: {}", uri);
         std::fs::File::create(&uri)?;
@@ -226,7 +225,7 @@ impl InitializationStrategy for SqliteInitializationStrategy {
 
     async fn initialize_tenant(
         &self,
-        _pool: &Provider<ScopeDefault, StateConnected>,
+        pool: &Pool<ScopeDefault, StateConnected>,
         tenant_token: Option<&str>,
     ) -> Result<(), Error> {
         let tenant_token = tenant_token.map_or_else(
@@ -237,8 +236,8 @@ impl InitializationStrategy for SqliteInitializationStrategy {
             },
             |token| Ok(token),
         )?;
-        let uri = database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Tenant)
-            .get_uri(Some(tenant_token))?;
+        let uri = database_uri_factory::Factory::new_database_uri(&DatabaseScope::Tenant)
+            .get_uri(&pool.get_database_type().to_string(), Some(tenant_token))?;
         let uri = uri.to_string().replace("sqlite://", "");
         info!("Initializing tenant database: {}", uri);
         std::fs::File::create(&uri)?;
@@ -258,7 +257,7 @@ impl<T: InitializationStrategy + Send + Sync> Initializer<T> {
 
     pub async fn is_initialized(
         &self,
-        pool: &Provider<ScopeDefault, StateConnected>,
+        pool: &Pool<ScopeDefault, StateConnected>,
         tenant_token: Option<&str>,
     ) -> Result<bool, Error> {
         self.strategy.is_initialized(pool, tenant_token).await
@@ -266,14 +265,14 @@ impl<T: InitializationStrategy + Send + Sync> Initializer<T> {
 
     pub async fn initialize_admin(
         &self,
-        pool: &Provider<ScopeDefault, StateConnected>,
+        pool: &Pool<ScopeDefault, StateConnected>,
     ) -> Result<(), Error> {
         self.strategy.initialize_admin(pool).await
     }
 
     pub async fn initialize_tenant(
         &self,
-        pool: &Provider<ScopeDefault, StateConnected>,
+        pool: &Pool<ScopeDefault, StateConnected>,
         tenant_token: Option<&str>,
     ) -> Result<(), Error> {
         self.strategy.initialize_tenant(pool, tenant_token).await

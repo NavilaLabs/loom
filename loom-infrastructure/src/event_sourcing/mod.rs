@@ -52,7 +52,6 @@ impl Builder for MetadataBuilder {
         Metadata {
             event_version: self.event_version,
             created_by: self.created_by,
-            effective_at: self.effective_at,
             correlated_to: self.correlated_to,
             caused_by: self.caused_by,
             owned_by: self.owned_by,

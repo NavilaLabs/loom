@@ -7,11 +7,11 @@ use url::Url;
 
 use crate::{
     Error,
-    sea_query_sqlx::infrastructure::{DatabaseType, Provider, StateConnected, StateDisconnected},
+    sea_query_sqlx::infrastructure::{DatabaseType, Pool, StateConnected, StateDisconnected},
 };
 
-impl<Scope> Provider<Scope, StateDisconnected> {
-    pub async fn connect(uri: &Url) -> Result<Provider<Scope, StateConnected>, Error> {
+impl<Scope> Pool<Scope, StateDisconnected> {
+    pub async fn connect(uri: &Url) -> Result<Pool<Scope, StateConnected>, Error> {
         sqlx::any::install_default_drivers();
 
         let mut pool = AnyPoolOptions::new();
@@ -37,7 +37,7 @@ impl<Scope> Provider<Scope, StateDisconnected> {
         info!("Configured database pool: {:?}", pool);
         info!("Establishing connection to database at URL: {}", uri);
 
-        Ok(Provider::new(
+        Ok(Pool::new(
             StateConnected::new(pool.connect(uri.as_str()).await?),
             database_type,
         ))

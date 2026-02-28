@@ -15,7 +15,14 @@ resolver = "3"
 version = "0.1.0"
 edition = "2024"
 
+[profile.release]
+opt-level = 's'
+lto = true
+codegen-units = 1
+strip = true
+
 [workspace.dependencies]
+anyhow = "1.0.73"
 async-trait = "0.1.89"
 chrono = "0.4"
 dotenvy = "0.15.7"

@@ -1,4 +1,6 @@
 mod database;
+#[cfg(feature = "eventually")]
+mod eventually;
 mod pool;
 
 pub use pool::*;

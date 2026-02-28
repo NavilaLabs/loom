@@ -6,20 +6,22 @@ edition.workspace = true
 [lib]
 crate-type = ["cdylib", "rlib"]
 
-[profile.release]
-opt-level = 's'
-lto = true
-codegen-units = 1
-strip = true
-
 [dependencies]
+async-trait = { workspace = true }
 chrono = { workspace = true }
+eventually = { version = "0.5.0", features = ["serde-json"], git = "https://github.com/get-eventually/eventually-rs", optional = true }
 hex = { workspace = true }
+loom-infrastructure-impl.path = "../loom-infrastructure-impl"
 rand = "0.10.0"
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 uuid = { workspace = true }
+
+[features]
+default = ["eventually", "sea-query-sqlx"]
+eventually = ["dep:eventually"]
+sea-query-sqlx = ["loom-infrastructure-impl/sea-query-sqlx"]
 
 [lints]
 workspace = true

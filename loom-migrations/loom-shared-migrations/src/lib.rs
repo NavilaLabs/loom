@@ -14,7 +14,12 @@ pub fn create_events_table_migration(
     let table_create_statement = Table::create()
         .if_not_exists()
         .table(name)
-        .col(big_pk_auto("global_position"))
+        .col(
+            big_integer("global_position")
+                .primary_key()
+                .auto_increment()
+                .not_null(),
+        )
         // event columns
         .col(uuid("event_id"))
         .col(string("event_type"))
@@ -67,18 +72,18 @@ pub fn create_snapshots_table_migration(
     let index_create_statements = vec![
         Index::create()
             .table(name)
+            .name("pk_snapshots_aggregate_type_id")
+            .unique()
+            .col("aggregate_type")
+            .col("aggregate_id")
+            .to_owned(),
+        Index::create()
+            .table(name)
             .name("uq_snapshots_aggregate_type_id_version")
             .unique()
             .col("aggregate_type")
             .col("aggregate_id")
             .col("aggregate_version")
-            .to_owned(),
-        Index::create()
-            .table(name)
-            .name("pk_snapshots_aggregate_type_id")
-            .primary()
-            .col("aggregate_type")
-            .col("aggregate_id")
             .to_owned(),
         Index::create()
             .table(name)
