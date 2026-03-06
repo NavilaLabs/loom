@@ -1,54 +1,39 @@
+use std::sync::LazyLock;
+
+use eventually::version::{ConflictError, Version};
+use regex::Regex;
+
 pub mod aggragte;
 pub mod event;
 
-use eventually::version::Version;
-use sea_query::{Expr, Iden, OnConflict, PostgresQueryBuilder, Query, SqliteQueryBuilder};
-use sea_query_binder::SqlxBinder;
-use sqlx::{AnyPool, Row};
-use uuid::Uuid;
+static CONFLICT_ERROR_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"version check failed, expected: (?P<expected>\d), got: (?P<got>\d)")
+        .expect("regex compiles successfully")
+});
 
-// --- Tabellen-Definitionen für sea-query ---
+pub(crate) fn check_for_conflict_error(err: &sqlx::Error) -> Option<ConflictError> {
+    fn capture_to_version(captures: &regex::Captures, name: &'static str) -> Version {
+        let v: i32 = captures
+            .name(name)
+            .expect("field is captured")
+            .as_str()
+            .parse::<i32>()
+            .expect("field should be a valid integer");
 
-#[derive(Iden)]
-pub enum Events {
-    Table,
-    GlobalPosition,
-    EventId,
-    EventType,
-    AggregateType,
-    AggregateId,
-    AggregateVersion,
-    Data,
-    Metadata,
-    CreatedAt,
-}
-
-#[derive(Iden)]
-pub enum Snapshots {
-    Table,
-    AggregateType,
-    AggregateId,
-    AggregateVersion,
-    State,
-    CreatedAt,
-    UpdatedAt,
-}
-
-// --- Helper: Datenbank-Agnostische Konflikterkennung ---
-
-pub fn is_conflict_error(err: &sqlx::Error) -> bool {
-    if let sqlx::Error::Database(db_err) = err {
-        let code = db_err.code().unwrap_or_default();
-        // 23505 = Postgres Unique Violation
-        // 2067 / 19 = SQLite Unique Constraint Violation
-        return code == "23505" || code == "2067" || code == "19";
+        #[allow(clippy::cast_sign_loss)]
+        {
+            v as Version
+        }
     }
-    false
-}
 
-// Ein einfaches Enum, um zur Laufzeit den richtigen Builder zu wählen
-#[derive(Clone, Copy)]
-pub enum DbBackend {
-    Postgres,
-    Sqlite,
+    if let sqlx::Error::Database(db_err) = err {
+        return CONFLICT_ERROR_REGEX
+            .captures(db_err.message())
+            .map(|captures| ConflictError {
+                actual: capture_to_version(&captures, "got"),
+                expected: capture_to_version(&captures, "expected"),
+            });
+    }
+
+    None
 }

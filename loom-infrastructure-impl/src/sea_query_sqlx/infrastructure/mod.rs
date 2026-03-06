@@ -7,14 +7,18 @@ pub use pool::*;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("SQLx error: {0}")]
-    SqlxError(#[from] sqlx::Error),
-    #[error("SeaORM error: {0}")]
-    SeaOrmError(#[from] sea_orm::DbErr),
-    #[error("SeaQuery error: {0}")]
-    SeaQueryError(#[from] sea_query::error::Error),
+    #[error("{0}")]
+    EventuallyError(#[from] crate::infrastructure::eventually::event::Error),
     #[error("{0}")]
     MigrateError(#[from] sqlx::migrate::MigrateError),
+    #[error("{0}")]
+    SeaOrmError(#[from] sea_orm::DbErr),
+    #[error("{0}")]
+    SeaQueryError(#[from] sea_query::error::Error),
+    #[error("{0}")]
+    SerdeError(#[from] serde_json::Error),
+    #[error("{0}")]
+    SqlxError(#[from] sqlx::Error),
     #[error("Unsupported database type: {0}")]
     UnsupportedDatabaseType(String),
 }

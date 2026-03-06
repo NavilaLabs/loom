@@ -1642,14 +1642,17 @@ name = "loom-infrastructure-impl"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-stream",
  "async-trait",
  "chrono",
  "embassy-futures",
  "eventually",
+ "futures-util",
  "loom-admin-migrations",
  "loom-infrastructure",
  "loom-shared",
  "loom-tenant-migrations",
+ "regex",
  "sea-orm",
  "sea-query 1.0.0-rc.31",
  "sea-query-binder",

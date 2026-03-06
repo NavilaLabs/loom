@@ -10,10 +10,13 @@ use sea_query_sqlx::SqlxBinder;
 use sqlx::{AnyPool, Row};
 use uuid::Uuid;
 
-use crate::infrastructure::eventually::{DbBackend, Snapshots};
+use crate::infrastructure::{
+    Pool, StateConnected,
+    eventually::{DbBackend, Snapshots},
+};
 
-pub struct Repository<T: Aggregate, Serde, EvtSerde> {
-    pool: AnyPool,
+pub struct Repository<Scope, T: Aggregate, Serde, EvtSerde> {
+    pool: Pool<Scope, StateConnected>,
     backend: DbBackend,
     aggregate_serde: Serde,
     event_serde: EvtSerde,
@@ -21,8 +24,10 @@ pub struct Repository<T: Aggregate, Serde, EvtSerde> {
 }
 
 #[async_trait]
-impl<T, Serde, EvtSerde> aggregate::repository::Getter<T> for Repository<T, Serde, EvtSerde>
+impl<Scope, T, Serde, EvtSerde> aggregate::repository::Getter<T>
+    for Repository<Scope, T, Serde, EvtSerde>
 where
+    Scope: Send + Sync,
     T: Aggregate + Send + Sync,
     <T as Aggregate>::Id: ToString,
     Serde: serde::Serde<T> + Send + Sync,
@@ -68,8 +73,10 @@ where
 }
 
 #[async_trait]
-impl<T, Serde, EvtSerde> aggregate::repository::Saver<T> for Repository<T, Serde, EvtSerde>
+impl<Scope, T, Serde, EvtSerde> aggregate::repository::Saver<T>
+    for Repository<Scope, T, Serde, EvtSerde>
 where
+    Scope: Send + Sync,
     T: Aggregate + Send + Sync,
     <T as Aggregate>::Id: ToString,
     Serde: serde::Serde<T> + Send + Sync,
@@ -84,11 +91,21 @@ where
             return Ok(());
         }
 
-        let aggregate_id_uuid = Uuid::parse_str(&root.aggregate_id().to_string()).unwrap();
-        let current_version = root.version() as i32;
-
         // 1. Events via EventStore (Appender) speichern (wie oben definiert)
         // ... (Ruf hier die Logik aus deinem EventStore auf)
+        let mut tx = self
+            .pool
+            .begin()
+            .await
+            .map_err(|err| anyhow::anyhow!("failed to begin transaction: {}", err))?;
+
+        sqlx::query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE DEFERRABLE")
+            .execute(&mut *tx)
+            .await
+            .map_err(|err| anyhow::anyhow!("failed to begin transaction: {}", err))?;
+
+        let aggregate_id_uuid = Uuid::parse_str(&root.aggregate_id().to_string()).unwrap();
+        let current_version = root.version() as i32;
 
         // 2. Snapshot Upsert (Der elegante Teil mit sea-query)
         // Man macht das meistens nur alle X Events (z.B. current_version % 50 == 0),

@@ -4,14 +4,15 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-loom-admin-migrations = { path = "../loom-migrations/loom-admin-migrations" }
-loom-infrastructure = { path = "../loom-infrastructure" }
-loom-tenant-migrations = { path = "../loom-migrations/loom-tenant-migrations" }
 anyhow = { workspace = true }
 async-trait = { workspace = true }
 chrono = { workspace = true }
 embassy-futures = { workspace = true }
 eventually = { version = "0.5.0", features = ["serde-json"], git = "https://github.com/get-eventually/eventually-rs", optional = true }
+loom-admin-migrations = { path = "../loom-migrations/loom-admin-migrations" }
+loom-infrastructure = { path = "../loom-infrastructure" }
+loom-tenant-migrations = { path = "../loom-migrations/loom-tenant-migrations" }
+regex = { workspace = true }
 sea-orm = { version = "2.0.0-rc.28", optional = true, default-features = false, features = ["sqlx-postgres", "sqlx-sqlite"] }
 sea-query = { version = "1.0.0-rc.28", optional = true }
 serde_json = { workspace = true }
@@ -22,6 +23,8 @@ thiserror = { workspace = true }
 tracing = { workspace = true }
 url = { workspace = true }
 uuid = { workspace = true }
+futures-util = "0.3.32"
+async-stream = "0.3.6"
 
 [dev-dependencies]
 tokio = { workspace = true }
