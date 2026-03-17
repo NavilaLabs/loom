@@ -7,7 +7,7 @@ pub struct Migration;
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         let (table_create_statement, index_create_statements) =
-            loom_shared_migrations::create_snapshots_table_migration(None);
+            loom_shared_migrations::create_snapshots_table_migration();
         manager.create_table(table_create_statement).await?;
 
         for statement in index_create_statements {

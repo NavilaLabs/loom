@@ -4,7 +4,9 @@ use loom_infrastructure::database::{
 };
 use loom_infrastructure_impl::{
     Error,
-    infrastructure::{Provider, ScopeAdmin, ScopeDefault, ScopeTenant, StateConnected},
+    infrastructure::{
+        DatabaseType, Provider, ScopeAdmin, ScopeDefault, ScopeTenant, StateConnected,
+    },
 };
 use tracing::info;
 use url::Url;
@@ -15,7 +17,7 @@ use super::initialize_databases;
 async fn reset_entire_database() -> Result<(), Error> {
     let admin_database_uri =
         database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Admin)
-            .get_uri(None)?
+            .get_uri(&DatabaseType::Sqlite.to_string(), None)?
             .to_string()
             .replace("sqlite://", "");
     if std::path::Path::new(&admin_database_uri).exists() {
@@ -24,7 +26,7 @@ async fn reset_entire_database() -> Result<(), Error> {
 
     let tenant_template_database_uri =
         database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Tenant)
-            .get_uri(Some("test_token"))?
+            .get_uri(&DatabaseType::Sqlite.to_string(), Some("test_token"))?
             .to_string()
             .replace("sqlite://", "");
     if std::path::Path::new(&tenant_template_database_uri).exists() {
@@ -41,8 +43,8 @@ async fn get_default_pool() -> Result<Provider<ScopeDefault, StateConnected>, Er
 }
 
 async fn get_admin_pool() -> Result<Provider<ScopeAdmin, StateConnected>, Error> {
-    let uri =
-        database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Admin).get_uri(None)?;
+    let uri = database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Admin)
+        .get_uri(&DatabaseType::Sqlite.to_string(), None)?;
     let admin_pool = Provider::connect(&uri).await?;
     Ok(admin_pool)
 }
@@ -51,7 +53,7 @@ async fn get_tenant_pool(
     tenant_token: &str,
 ) -> Result<Provider<ScopeTenant, StateConnected>, Error> {
     let uri = database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Tenant)
-        .get_uri(Some(tenant_token))?;
+        .get_uri(&DatabaseType::Sqlite.to_string(), Some(tenant_token))?;
     let tenant_pool = Provider::connect(&uri).await?;
     Ok(tenant_pool)
 }

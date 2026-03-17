@@ -1,6 +1,7 @@
 pub use loom_shared_migrations::Error;
 pub use sea_orm_migration::prelude::*;
 
+mod m20251214_102154_create_event_streams_table;
 mod m20251214_102155_create_events_table;
 mod m20251215_183826_create_snapshots_table;
 
@@ -10,6 +11,7 @@ pub struct Migrator;
 impl MigratorTrait for Migrator {
     fn migrations() -> Vec<Box<dyn MigrationTrait>> {
         vec![
+            Box::new(m20251214_102154_create_event_streams_table::Migration),
             Box::new(m20251214_102155_create_events_table::Migration),
             Box::new(m20251215_183826_create_snapshots_table::Migration),
         ]

@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{fmt::Display, marker::PhantomData};
 
 use loom_infrastructure::ImplError;
 use sea_orm::{ExprTrait, Value};
@@ -34,6 +34,15 @@ pub struct StateDisconnected;
 pub enum DatabaseType {
     Postgres,
     Sqlite,
+}
+
+impl Display for DatabaseType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DatabaseType::Postgres => write!(f, "postgres"),
+            DatabaseType::Sqlite => write!(f, "sqlite"),
+        }
+    }
 }
 
 #[derive(Debug)]

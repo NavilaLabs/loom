@@ -89,7 +89,7 @@ pub trait InitializationStrategy {
     ) -> Result<bool, Error> {
         let admin_database_uri =
             database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Admin)
-                .get_uri(None)?;
+                .get_uri(&pool.get_database_type().to_string(), None)?;
 
         self.check_is_initialized(pool, &admin_database_uri).await
     }
@@ -101,7 +101,7 @@ pub trait InitializationStrategy {
     ) -> Result<bool, Error> {
         let database_uri =
             database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Tenant)
-                .get_uri(tenant_token)?;
+                .get_uri(&pool.get_database_type().to_string(), tenant_token)?;
         dbg!(&database_uri);
 
         self.check_is_initialized(pool, &database_uri).await
@@ -216,7 +216,7 @@ impl InitializationStrategy for SqliteInitializationStrategy {
         _pool: &Provider<ScopeDefault, StateConnected>,
     ) -> Result<(), Error> {
         let uri = database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Admin)
-            .get_uri(None)?;
+            .get_uri(&DatabaseType::Sqlite.to_string(), None)?;
         let uri = uri.to_string().replace("sqlite://", "");
         info!("Initializing admin database: {}", uri);
         std::fs::File::create(&uri)?;
@@ -238,7 +238,7 @@ impl InitializationStrategy for SqliteInitializationStrategy {
             |token| Ok(token),
         )?;
         let uri = database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Tenant)
-            .get_uri(Some(tenant_token))?;
+            .get_uri(&DatabaseType::Sqlite.to_string(), Some(tenant_token))?;
         let uri = uri.to_string().replace("sqlite://", "");
         info!("Initializing tenant database: {}", uri);
         std::fs::File::create(&uri)?;

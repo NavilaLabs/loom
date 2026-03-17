@@ -4,7 +4,6 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-evento-sql-migrator = { version = "2.0.0-alpha.13", default-features = false }
 thiserror = { workspace = true }
 
 [dependencies.sea-orm-migration]
@@ -18,8 +17,8 @@ features = [
 
 [features]
 default = ["sqlite"]
-postgres = ["evento-sql-migrator/postgres"]
-sqlite = ["evento-sql-migrator/sqlite"]
+postgres = ["sea-orm-migration/sqlx-postgres"]
+sqlite = ["sea-orm-migration/sqlx-sqlite"]
 
 [lints]
 workspace = true

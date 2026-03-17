@@ -105,33 +105,4 @@ pub mod tests {
 
         Ok(())
     }
-
-    // #[with_lifecycle(test_lifecycle)]
-    // #[tokio::test]
-    // async fn test_insert_into_master_table() -> Result<(), Error> {
-    //     let data = tenant::events::EventV1::Created {
-    //         name: "NavilaLabs".to_string(),
-    //     };
-
-    //     dbg!(&data);
-
-    //     let event_id = EventId::default();
-    //     dbg!(&event_id);
-    //     let aggregate = AggregateMeta::new("tenant".into(), AggregateId::default(), 1);
-    //     dbg!(&aggregate);
-    //     let context = EventContext::default();
-    //     dbg!(&context);
-    //     let timestamps = EventTimestamps::default();
-    //     dbg!(&timestamps);
-
-    //     let envelope = EventEnvelope::new(event_id, aggregate, context, timestamps, data, None);
-
-    //     dbg!(&envelope);
-
-    //     let pool = get_admin_pool().await?;
-
-    //     pool.append(envelope).await?;
-
-    //     Ok(())
-    // }
 }
