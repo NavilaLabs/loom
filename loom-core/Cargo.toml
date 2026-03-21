@@ -14,12 +14,28 @@ strip = true
 
 [dependencies]
 chrono = { workspace = true }
+eventually = { version = "0.5", git = "https://github.com/get-eventually/eventually-rs" }
+eventually-any = { version = "0.1", git = "https://github.com/NavilaLabs/eventually-any", features = [
+  "snapshots",
+] }
+eventually-projection = { version = "0.1", git = "https://github.com/NavilaLabs/eventually-projection" }
+eventually-macros = { version = "0.1", git = "https://github.com/get-eventually/eventually-rs" }
 hex = { workspace = true }
 rand = "0.10.0"
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 uuid = { workspace = true }
+
+[dev-dependencies]
+tokio = { version = "1.50.0", features = ["macros", "rt", "rt-multi-thread"] }
+loom-tests = { path = "../loom-tests" }
+with-lifecycle = { path = "../with-lifecycle" }
+
+[features]
+default = ["sqlite"]
+sqlite = ["eventually-any/sqlite", "eventually-projection/sqlite"]
+postgres = ["eventually-any/postgres", "eventually-projection/postgres"]
 
 [lints]
 workspace = true

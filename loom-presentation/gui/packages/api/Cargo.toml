@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 dioxus = { workspace = true, features = ["fullstack"] }
+loom-core = { path = "../../../../loom-core", optional = true }
 
 [features]
-server = ["dioxus/server"]
+server = ["dioxus/server", "loom-core"]

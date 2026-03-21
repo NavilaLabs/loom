@@ -2,13 +2,13 @@ use embassy_futures::join::join;
 use loom_infrastructure::database::Initialize;
 use loom_infrastructure_impl::{
     Error,
-    infrastructure::{Provider, ScopeDefault, StateConnected},
+    infrastructure::{Pool, ScopeDefault, StateConnected},
 };
 
 pub mod postgres;
 pub mod sqlite;
 
-type ConnectedDefaultPool = Provider<ScopeDefault, StateConnected>;
+type ConnectedDefaultPool = Pool<ScopeDefault, StateConnected>;
 
 async fn initialize_databases(
     pool: &ConnectedDefaultPool,

@@ -1,0 +1,17 @@
+use eventually::message::Message;
+use serde::{Deserialize, Serialize};
+
+use crate::admin::user::aggregates::UserId;
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum UserEvent {
+    Created { id: UserId, name: String },
+}
+
+impl Message for UserEvent {
+    fn name(&self) -> &'static str {
+        match self {
+            UserEvent::Created { .. } => "UserCreated",
+        }
+    }
+}

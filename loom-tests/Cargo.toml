@@ -1,0 +1,16 @@
+[package]
+name = "loom-tests"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+dotenvy = { workspace = true }
+embassy-futures.workspace = true
+loom-infrastructure = { path = "../loom-infrastructure" }
+loom-infrastructure-impl = { path = "../loom-infrastructure-impl" }
+url = { workspace = true }
+sqlx = { version = "0.8.6", features = ["runtime-tokio", "any"] }
+tracing = { workspace = true }
+
+[lints]
+workspace = true

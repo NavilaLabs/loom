@@ -1,10 +1,40 @@
-pub mod tenant;
-pub mod user;
+use std::{fmt::Display, str::FromStr};
+
+use eventually::aggregate::repository;
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
+
+pub mod admin;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("{0}")]
-    UuidError(#[from] uuid::Error),
-    #[error("{0}")]
-    HexError(#[from] hex::FromHexError),
+    #[error("admin database error: {0:?}")]
+    AdminDatabaseError(#[from] admin::Error),
+    #[error("{0:?}")]
+    DatabaseSaveError(#[from] repository::SaveError),
+    #[error("{0:?}")]
+    DatabaseGetError(#[from] repository::GetError),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AggregateId(pub Uuid);
+
+impl Display for AggregateId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl From<Uuid> for AggregateId {
+    fn from(value: Uuid) -> Self {
+        Self(value)
+    }
+}
+
+impl FromStr for AggregateId {
+    type Err = uuid::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Uuid::from_str(s).map(Self)
+    }
 }

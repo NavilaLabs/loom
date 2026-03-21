@@ -1,6 +1,5 @@
 pub mod config;
 pub mod database;
-pub mod event_sourcing;
 
 pub trait ImplError {
     type Error: From<Error> + Send + Sync;

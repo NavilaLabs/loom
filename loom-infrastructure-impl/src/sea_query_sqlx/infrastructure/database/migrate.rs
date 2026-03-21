@@ -1,14 +1,14 @@
-use loom_admin_migrations::MigratorTrait;
 use async_trait::async_trait;
+use loom_admin_migrations::MigratorTrait;
 use loom_infrastructure::database::Migrate;
 
 use crate::{
     Error,
-    sea_query_sqlx::infrastructure::{Provider, ScopeAdmin, ScopeTenant, StateConnected},
+    sea_query_sqlx::infrastructure::{Pool, ScopeAdmin, ScopeTenant, StateConnected},
 };
 
 #[async_trait]
-impl Migrate for Provider<ScopeAdmin, StateConnected> {
+impl Migrate for Pool<ScopeAdmin, StateConnected> {
     type Error = Error;
 
     async fn migrate_database(&self) -> Result<(), <Self as Migrate>::Error> {
@@ -22,7 +22,7 @@ impl Migrate for Provider<ScopeAdmin, StateConnected> {
 }
 
 #[async_trait]
-impl Migrate for Provider<ScopeTenant, StateConnected> {
+impl Migrate for Pool<ScopeTenant, StateConnected> {
     type Error = Error;
 
     async fn migrate_database(&self) -> Result<(), <Self as Migrate>::Error> {

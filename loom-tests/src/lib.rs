@@ -1,5 +1,6 @@
+use embassy_futures::join::join;
 use loom_infrastructure::database::{
-    Migrate,
+    Initialize, Migrate,
     database_uri_factory::{self, DatabaseUriType},
 };
 use loom_infrastructure_impl::{
@@ -11,10 +12,25 @@ use loom_infrastructure_impl::{
 use tracing::info;
 use url::Url;
 
-use super::ConnectedDefaultPool;
-use super::initialize_databases;
+type ConnectedDefaultPool = Pool<ScopeDefault, StateConnected>;
 
-async fn reset_entire_database() -> Result<(), Error> {
+pub async fn initialize_databases(
+    pool: &ConnectedDefaultPool,
+    tenant_token: &str,
+) -> Result<(), Error> {
+    let (admin_result, tenant_result) = join(
+        pool.initialize_admin_database(),
+        pool.initialize_tenant_database(Some(tenant_token)),
+    )
+    .await;
+
+    admin_result?;
+    tenant_result?;
+
+    Ok(())
+}
+
+pub async fn reset_entire_database() -> Result<(), Error> {
     let admin_database_uri =
         database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Admin)
             .get_uri(&DatabaseType::Sqlite.to_string(), None)?
@@ -36,20 +52,20 @@ async fn reset_entire_database() -> Result<(), Error> {
     Ok(())
 }
 
-async fn get_default_pool() -> Result<Pool<ScopeDefault, StateConnected>, Error> {
+pub async fn get_default_pool() -> Result<Pool<ScopeDefault, StateConnected>, Error> {
     let url = Url::parse("sqlite::memory:").unwrap();
     let default_pool = Pool::connect(&url).await?;
     Ok(default_pool)
 }
 
-async fn get_admin_pool() -> Result<Pool<ScopeAdmin, StateConnected>, Error> {
+pub async fn get_admin_pool() -> Result<Pool<ScopeAdmin, StateConnected>, Error> {
     let uri = database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Admin)
         .get_uri(&DatabaseType::Sqlite.to_string(), None)?;
     let admin_pool = Pool::connect(&uri).await?;
     Ok(admin_pool)
 }
 
-async fn get_tenant_pool(
+pub async fn get_tenant_pool(
     tenant_token: &str,
 ) -> Result<Pool<ScopeTenant, StateConnected>, Error> {
     let uri = database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Tenant)
@@ -58,7 +74,7 @@ async fn get_tenant_pool(
     Ok(tenant_pool)
 }
 
-pub(crate) async fn refresh_databases(
+pub async fn refresh_databases(
     pool: &ConnectedDefaultPool,
     tenant_token: &str,
 ) -> Result<(), Error> {
@@ -76,19 +92,28 @@ pub(crate) async fn refresh_databases(
     Ok(())
 }
 
-pub mod tests {
-    use with_lifecycle::with_lifecycle;
+pub mod test_lifecycle {
+    pub fn before() {
+        dotenvy::from_filename_override(".env.test").expect("Failed to load .env.test.");
+    }
 
-    use crate::database::test_lifecycle;
+    pub fn after() {
+        dotenvy::from_filename_override(".env.dev").ok();
+    }
+}
 
-    use super::*;
+pub mod test_database_lifecycle {
+    use sqlx::any::install_default_drivers;
 
-    #[with_lifecycle(test_lifecycle)]
-    #[tokio::test]
-    async fn test_setup_sqlite_database() -> Result<(), Error> {
-        let default_pool = get_default_pool().await?;
-        refresh_databases(&default_pool, "test_token").await?;
+    use crate::test_lifecycle;
 
-        Ok(())
+    pub fn before() {
+        test_lifecycle::before();
+
+        install_default_drivers();
+    }
+
+    pub fn after() {
+        test_lifecycle::after();
     }
 }
