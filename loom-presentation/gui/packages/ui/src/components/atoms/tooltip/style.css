@@ -1,150 +1,188 @@
-/* Tooltip Styles */
+:root {
+    --color-tooltip-bg: var(--dark, #e8e8e0) var(--light, #1e1e1e);
+    --color-tooltip-text: var(--dark, #1a1a1a) var(--light, #f5f5f0);
+}
+
+/* ─── Tooltip ────────────────────────────────────────────────── */
 .tooltip {
-  position: relative;
-  display: inline-block;
+    position: relative;
+    display: inline-block;
 }
 
 .tooltip-trigger {
-  display: inline-block;
+    display: inline-block;
 }
 
+.tooltip[data-disabled="true"] .tooltip-trigger {
+    cursor: default;
+}
+
+/* ─── Content ────────────────────────────────────────────────── */
 .tooltip-content {
-  position: absolute;
-  z-index: 1000;
-  max-width: 250px;
-  padding: 8px 12px;
-  border-radius: 0.5rem;
-  animation: tooltip-fade-in 0.2s ease-in-out;
-  background-color: var(--secondary-color-4);
-  color: var(--primary-color);
-  font-size: 14px;
-  line-height: 1.4;
+    position: absolute;
+    z-index: 1000;
+    max-width: 250px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-tooltip-bg);
+    color: var(--color-tooltip-text);
+    font-size: 14px;
+    line-height: 1.4;
+    pointer-events: none; /* prevent hover flicker */
+    white-space: normal;
 }
 
+/* ─── Arrow (solid rotated square, not border trick) ─────────── */
 .tooltip-content::after {
-  position: absolute;
-  border-width: 0.25rem;
-  border-style: solid;
-  margin-left: -0.25rem;
-  content: " ";
-  rotate: 45deg;
+    content: "";
+    position: absolute;
+    width: 0.5rem;
+    height: 0.5rem;
+    background-color: var(--color-tooltip-bg);
+    rotate: 45deg;
 }
 
-/* Positioning based on side */
+/* ─── Sides ──────────────────────────────────────────────────── */
 .tooltip-content[data-side="top"] {
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  margin-bottom: 8px;
-  transform: translateX(-50%);
+    bottom: 100%;
+    left: 50%;
+    margin-bottom: 8px;
+    transform: translateX(-50%);
 }
-
 .tooltip-content[data-side="top"]::after {
-  top: calc(100% - 0.25rem);
-  left: 50%;
-  border-color: var(--secondary-color-4);
-  border-radius: 0 0 0.1rem;
-}
-
-.tooltip-content[data-side="right"] {
-  position: absolute;
-  top: 50%;
-  left: 100%;
-  margin-left: 8px;
-  transform: translateY(-50%);
-}
-
-.tooltip-content[data-side="right"]::after {
-  top: calc(50% - 0.25rem);
-  left: 0;
-  border-color: var(--secondary-color-4);
-  border-radius: 0 0 0 0.1rem;
+    top: calc(100% - 0.25rem);
+    left: calc(50% - 0.25rem);
+    border-radius: 0 0 2px 0; /* only round the bottom-right to sell the corner */
 }
 
 .tooltip-content[data-side="bottom"] {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  margin-top: 8px;
-  transform: translateX(-50%);
+    top: 100%;
+    left: 50%;
+    margin-top: 8px;
+    transform: translateX(-50%);
+}
+.tooltip-content[data-side="bottom"]::after {
+    bottom: calc(100% - 0.25rem);
+    left: calc(50% - 0.25rem);
+    border-radius: 2px 0 0 0;
 }
 
-.tooltip-content[data-side="bottom"]::after {
-  bottom: calc(100% - 0.25rem);
-  left: 50%;
-  border-color: var(--secondary-color-4);
-  border-radius: 0.1rem 0 0;
+.tooltip-content[data-side="right"] {
+    top: 50%;
+    left: 100%;
+    margin-left: 8px;
+    transform: translateY(-50%);
+}
+.tooltip-content[data-side="right"]::after {
+    top: calc(50% - 0.25rem);
+    left: -0.25rem;
+    border-radius: 0 0 0 2px;
 }
 
 .tooltip-content[data-side="left"] {
-  position: absolute;
-  top: 50%;
-  right: 100%;
-  margin-right: 8px;
-  transform: translateY(-50%);
+    top: 50%;
+    right: 100%;
+    margin-right: 8px;
+    transform: translateY(-50%);
 }
-
 .tooltip-content[data-side="left"]::after {
-  top: calc(50% - 0.25rem);
-  right: -0.25rem;
-  border-color: var(--secondary-color-4);
-  border-radius: 0 0.1rem 0 0;
+    top: calc(50% - 0.25rem);
+    right: -0.25rem;
+    border-radius: 0 2px 0 0;
 }
 
-/* Alignment styles for top and bottom */
+/* ─── Alignment — top / bottom ───────────────────────────────── */
 .tooltip-content[data-side="top"][data-align="start"],
 .tooltip-content[data-side="bottom"][data-align="start"] {
-  left: 0;
-  transform: none;
+    left: 0;
+    transform: none;
 }
-
 .tooltip-content[data-side="top"][data-align="end"],
 .tooltip-content[data-side="bottom"][data-align="end"] {
-  right: 0;
-  left: auto;
-  transform: none;
+    right: 0;
+    left: auto;
+    transform: none;
 }
 
-/* Alignment styles for left and right */
+/* ─── Alignment — left / right ───────────────────────────────── */
 .tooltip-content[data-side="left"][data-align="start"],
 .tooltip-content[data-side="right"][data-align="start"] {
-  top: 0;
-  transform: none;
+    top: 0;
+    transform: none;
 }
-
 .tooltip-content[data-side="left"][data-align="center"],
 .tooltip-content[data-side="right"][data-align="center"] {
-  top: 50%;
-  transform: translateY(-50%);
+    top: 50%;
+    transform: translateY(-50%);
 }
-
 .tooltip-content[data-side="left"][data-align="end"],
 .tooltip-content[data-side="right"][data-align="end"] {
-  top: auto;
-  bottom: 0;
-  transform: none;
+    top: auto;
+    bottom: 0;
+    transform: none;
 }
 
-/* Animation */
-@keyframes tooltip-fade-in {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-/* State styles */
-.tooltip[data-disabled="true"] .tooltip-trigger {
-  cursor: default;
-}
-
+/* ─── State ──────────────────────────────────────────────────── */
 .tooltip-content[data-state="closed"] {
-  display: none;
+    display: none;
 }
 
 .tooltip-content[data-state="open"] {
-  display: block;
+    display: block;
+    animation: tooltip-fade-in 150ms ease-out;
+}
+
+/* ─── Animation — per-side slide-in ─────────────────────────── */
+@keyframes tooltip-fade-in-top {
+    from {
+        opacity: 0;
+        translate: 0 4px;
+    }
+    to {
+        opacity: 1;
+        translate: 0 0;
+    }
+}
+@keyframes tooltip-fade-in-bottom {
+    from {
+        opacity: 0;
+        translate: 0 -4px;
+    }
+    to {
+        opacity: 1;
+        translate: 0 0;
+    }
+}
+@keyframes tooltip-fade-in-left {
+    from {
+        opacity: 0;
+        translate: 4px 0;
+    }
+    to {
+        opacity: 1;
+        translate: 0 0;
+    }
+}
+@keyframes tooltip-fade-in-right {
+    from {
+        opacity: 0;
+        translate: -4px 0;
+    }
+    to {
+        opacity: 1;
+        translate: 0 0;
+    }
+}
+
+.tooltip-content[data-state="open"][data-side="top"] {
+    animation-name: tooltip-fade-in-top;
+}
+.tooltip-content[data-state="open"][data-side="bottom"] {
+    animation-name: tooltip-fade-in-bottom;
+}
+.tooltip-content[data-state="open"][data-side="left"] {
+    animation-name: tooltip-fade-in-left;
+}
+.tooltip-content[data-state="open"][data-side="right"] {
+    animation-name: tooltip-fade-in-right;
 }

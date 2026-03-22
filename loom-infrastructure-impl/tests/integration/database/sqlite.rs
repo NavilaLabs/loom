@@ -3,10 +3,7 @@ use loom_infrastructure::database::{
     database_uri_factory::{self, DatabaseUriType},
 };
 use loom_infrastructure_impl::{
-    Error,
-    infrastructure::{
-        DatabaseType, Pool, ScopeAdmin, ScopeDefault, ScopeTenant, StateConnected,
-    },
+    Error, {DatabaseType, Pool, ScopeAdmin, ScopeDefault, ScopeTenant, StateConnected},
 };
 use tracing::info;
 use url::Url;
@@ -49,9 +46,7 @@ async fn get_admin_pool() -> Result<Pool<ScopeAdmin, StateConnected>, Error> {
     Ok(admin_pool)
 }
 
-async fn get_tenant_pool(
-    tenant_token: &str,
-) -> Result<Pool<ScopeTenant, StateConnected>, Error> {
+async fn get_tenant_pool(tenant_token: &str) -> Result<Pool<ScopeTenant, StateConnected>, Error> {
     let uri = database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Tenant)
         .get_uri(&DatabaseType::Sqlite.to_string(), Some(tenant_token))?;
     let tenant_pool = Pool::connect(&uri).await?;

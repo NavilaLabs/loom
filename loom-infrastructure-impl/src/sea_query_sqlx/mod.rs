@@ -1,1 +1,2 @@
-pub mod infrastructure;
+mod infrastructure;
+pub use infrastructure::*;

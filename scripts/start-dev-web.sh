@@ -3,5 +3,5 @@ set -e
 
 echo "Starting development server..."
 
-cd /workspaces/loom/interfaces/gui/packages/web
-dx serve --fullstack
+cd /workspaces/loom/loom-presentation/gui/packages/web
+dx serve --fullstack --port 8080 --addr 0.0.0.0

@@ -1,8 +1,7 @@
 use embassy_futures::join::join;
 use loom_infrastructure::database::Initialize;
 use loom_infrastructure_impl::{
-    Error,
-    infrastructure::{Pool, ScopeDefault, StateConnected},
+    Error, {Pool, ScopeDefault, StateConnected},
 };
 
 pub mod postgres;

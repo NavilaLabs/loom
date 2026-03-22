@@ -4,7 +4,7 @@ use crate::components::atoms::accordion::{
 use crate::components::atoms::card::{
     Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle,
 };
-use crate::components::atoms::{Button, Tooltip, TooltipContent, TooltipTrigger};
+use crate::components::atoms::{Button, Headline, Tooltip, TooltipContent, TooltipTrigger};
 use crate::layouts::DefaultLayout;
 use dioxus::prelude::*;
 use dioxus_free_icons::icons::hi_solid_icons::HiArrowRight;
@@ -23,7 +23,7 @@ pub fn Database() -> Element {
 
     rsx! {
         DefaultLayout {
-            h2 { "Developer" }
+            Headline { "Developer" }
 
             Accordion { class: "developer-actions w-full!",
                 AccordionItem { index: 1, default_open: true,
@@ -40,11 +40,14 @@ pub fn Database() -> Element {
                                         TooltipTrigger {
                                             CardAction {
                                                 Button {
+                                                    onclick: move |_| async move {
+                                                        let _ = api::migrate_database().await;
+                                                    },
                                                     div { class: "flex flex-col items-center",
                                                         Icon {
                                                             fill: "black",
                                                             icon: HiArrowRight,
-                                                            style: "",
+                                                            style: "color: var(--color-btn-icon)",
                                                         }
                                                         {tid!("developer-actions-database-migrations-run")}
                                                     }

@@ -6,8 +6,7 @@ use loom_infrastructure::{
     },
 };
 use loom_infrastructure_impl::{
-    Error,
-    infrastructure::{Pool, ScopeAdmin, ScopeTenant, StateConnected},
+    Error, {Pool, ScopeAdmin, ScopeTenant, StateConnected},
 };
 use tracing::info;
 use url::Url;
@@ -62,9 +61,7 @@ async fn get_admin_pool() -> Result<Pool<ScopeAdmin, StateConnected>, Error> {
     Pool::connect(&Url::parse(&database_url).unwrap()).await
 }
 
-async fn get_tenant_pool(
-    tenant_token: &str,
-) -> Result<Pool<ScopeTenant, StateConnected>, Error> {
+async fn get_tenant_pool(tenant_token: &str) -> Result<Pool<ScopeTenant, StateConnected>, Error> {
     let mut database_name_builder = TenantDatabaseNameConcreteBuilder::new();
     TenantDatabaseNameDirector::construct(&mut database_name_builder, tenant_token);
     let database_name = database_name_builder.get_tenant_database_name();

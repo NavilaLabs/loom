@@ -17,5 +17,5 @@ pub enum Error {
     Url(#[from] url::ParseError),
     #[cfg(feature = "sea-query-sqlx")]
     #[error("{0}")]
-    SeaQuerySqlxError(#[from] sea_query_sqlx::infrastructure::Error),
+    SeaQuerySqlxError(#[from] sea_query_sqlx::Error),
 }
