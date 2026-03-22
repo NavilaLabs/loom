@@ -4,93 +4,278 @@
 @import url("https://fonts.googleapis.com/css2?family=Bitcount:wght@100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Pacifico&display=swap");
 
 body {
-  padding: 0;
-  margin: 0;
-  background-color: var(--primary-color);
-  color: var(--secondary-color-4);
-  font-family: Inter, sans-serif;
-  font-optical-sizing: auto;
-  font-style: normal;
-  font-weight: 400;
+    padding: 0;
+    margin: 0;
+    background-color: var(--primary-color);
+    color: var(--secondary-color-4);
+    font-family: Inter, sans-serif;
+    font-optical-sizing: auto;
+    font-style: normal;
+    font-weight: 400;
+}
+
+/* ============================================================
+   DESIGN TOKENS — Light & Dark
+   Syntax: var(--dark, #dark-value) var(--light, #light-value)
+   Usage:  Set --dark: initial and --light: ; on :root for dark mode
+           Set --dark: ;   and --light: initial on :root for light mode
+   ============================================================ */
+
+:root {
+    /* Default: Light mode */
+    --light: initial;
+    --dark: ;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --dark: initial;
-    --light: ;
-  }
+    :root {
+        --light: ;
+        --dark: initial;
+    }
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    --dark: ;
+[data-theme="light"] {
     --light: initial;
-  }
+    --dark: ;
+}
+
+[data-theme="dark"] {
+    --light: ;
+    --dark: initial;
 }
 
 :root {
-  /* Primary Surface Colors (Backgrounds and Layers) */
-  /* Dark: Deep Earthy Olive / Light: Matcha Foam Cream */
-  --primary-color: var(--dark, #1b1d1a) var(--light, #f5f7f2);
-  --primary-color-1: var(--dark, #232621) var(--light, #eef1e9);
-  --primary-color-2: var(--dark, #2a2e27) var(--light, #e4e9de);
-  --primary-color-3: var(--dark, #33382f) var(--light, #dae1d3);
-  --primary-color-4: var(--dark, #3d4238) var(--light, #ced7c4);
-  --primary-color-5: var(--dark, #474d41) var(--light, #bec9b3);
-  --primary-color-6: var(--dark, #545b4d) var(--light, #adbba0);
-  --primary-color-7: var(--dark, #666e5e) var(--light, #9cae8d);
+    /* ============================================================
+    BRAND — Primary (Green)
+    ============================================================ */
 
-  /* Secondary Colors (The Matcha Accents) */
-  /* Sage Green & Forest Moss */
-  --secondary-color: var(--dark, #a3b18a) var(--light, #588157);
-  --secondary-color-1: var(--dark, #96a37b) var(--light, #4a6d49);
-  --secondary-color-2: var(--dark, #b7c3a1) var(--light, #3a5a40);
-  
-  /* Text Colors */
-  /* Dark: Soft Tea Leaf / Light: Deep Bark Brown */
-  --secondary-color-3: var(--dark, #e1e3d9) var(--light, #2d302b);
-  --secondary-color-4: var(--dark, #f0f1eb) var(--light, #1c1e1c);
-  
-  /* Muted Text / UI Elements */
-  --secondary-color-5: var(--dark, #8a917f) var(--light, #717768);
-  --secondary-color-6: var(--dark, #717768) var(--light, #8a917f);
+    --color-primary: var(--dark, #2e7d32) var(--light, #2e7d32);
 
-  /* Functional Colors */
-  /* Deep Forest Focus */
-  --focused-border-color: var(--dark, #a3b18a) var(--light, #3a5a40);
-  
-  /* Success: Fresh Mint */
-  --primary-success-color: var(--dark, #222e23) var(--light, #f0f5f0);
-  --secondary-success-color: var(--dark, #84cc16) var(--light, #166534);
-  
-  /* Warning: Clay/Ochre */
-  --primary-warning-color: var(--dark, #2e261a) var(--light, #fdf8f0);
-  --secondary-warning-color: var(--dark, #eab308) var(--light, #a16207);
-  
-  /* Error: Terracotta */
-  --primary-error-color: var(--dark, #331d1d) var(--light, #fff5f5);
-  --secondary-error-color: var(--dark, #f87171) var(--light, #991b1b);
+    /* Tonal scale — dark → light left to right */
+    --color-primary-950: var(--dark, #0a1f0b) var(--light, #0a1f0b);
+    --color-primary-900: var(--dark, #1b4d1e) var(--light, #1b4d1e);
+    --color-primary-800: var(--dark, #245c27) var(--light, #245c27);
+    --color-primary-700: var(--dark, #2e7d32) var(--light, #2e7d32); /* base */
+    --color-primary-600: var(--dark, #388e3c) var(--light, #388e3c);
+    --color-primary-500: var(--dark, #4caf50) var(--light, #4caf50);
+    --color-primary-400: var(--dark, #66bb6a) var(--light, #66bb6a);
+    --color-primary-300: var(--dark, #81c784) var(--light, #81c784);
+    --color-primary-200: var(--dark, #a5d6a7) var(--light, #a5d6a7);
+    --color-primary-100: var(--dark, #c8e6c9) var(--light, #c8e6c9);
+    --color-primary-50: var(--dark, #e8f5e9) var(--light, #e8f5e9);
 
-  /* Contrast & Info */
-  --contrast-error-color: var(--dark, var(--secondary-color-3)) var(--light, var(--primary-color));
-  --primary-info-color: var(--dark, var(--primary-color-5)) var(--light, var(--primary-color));
-  --secondary-info-color: var(--dark, var(--primary-color-7)) var(--light, var(--secondary-color-3));
+    /* ============================================================
+    BRAND — Secondary (Slate/Blue-Grey)
+    ============================================================ */
+
+    --color-secondary: var(--dark, #455a64) var(--light, #455a64);
+
+    --color-secondary-950: var(--dark, #0d1517) var(--light, #0d1517);
+    --color-secondary-900: var(--dark, #1c2b31) var(--light, #1c2b31);
+    --color-secondary-800: var(--dark, #263238) var(--light, #263238);
+    --color-secondary-700: var(--dark, #37474f) var(--light, #37474f);
+    --color-secondary-600: var(--dark, #455a64) var(--light, #455a64); /* base */
+    --color-secondary-500: var(--dark, #546e7a) var(--light, #546e7a);
+    --color-secondary-400: var(--dark, #78909c) var(--light, #78909c);
+    --color-secondary-300: var(--dark, #90a4ae) var(--light, #90a4ae);
+    --color-secondary-200: var(--dark, #b0bec5) var(--light, #b0bec5);
+    --color-secondary-100: var(--dark, #cfd8dc) var(--light, #cfd8dc);
+    --color-secondary-50: var(--dark, #eceff1) var(--light, #eceff1);
+
+    /* ============================================================
+    BRAND — Tertiary (Blue)
+    ============================================================ */
+
+    --color-tertiary: var(--dark, #0277bd) var(--light, #0277bd);
+
+    --color-tertiary-950: var(--dark, #011627) var(--light, #011627);
+    --color-tertiary-900: var(--dark, #013a6b) var(--light, #013a6b);
+    --color-tertiary-800: var(--dark, #01579b) var(--light, #01579b);
+    --color-tertiary-700: var(--dark, #0277bd) var(--light, #0277bd); /* base */
+    --color-tertiary-600: var(--dark, #0288d1) var(--light, #0288d1);
+    --color-tertiary-500: var(--dark, #039be5) var(--light, #039be5);
+    --color-tertiary-400: var(--dark, #29b6f6) var(--light, #29b6f6);
+    --color-tertiary-300: var(--dark, #4fc3f7) var(--light, #4fc3f7);
+    --color-tertiary-200: var(--dark, #81d4fa) var(--light, #81d4fa);
+    --color-tertiary-100: var(--dark, #b3e5fc) var(--light, #b3e5fc);
+    --color-tertiary-50: var(--dark, #e1f5fe) var(--light, #e1f5fe);
+
+    /* ============================================================
+    NEUTRAL
+    ============================================================ */
+
+    --color-neutral: var(--dark, #f5f5f0) var(--light, #f5f5f0);
+
+    --color-neutral-950: var(--dark, #141414) var(--light, #1a1a1a);
+    --color-neutral-900: var(--dark, #1e1e1e) var(--light, #212121);
+    --color-neutral-800: var(--dark, #2a2a2a) var(--light, #2e2e2e);
+    --color-neutral-700: var(--dark, #3a3a3a) var(--light, #424242);
+    --color-neutral-600: var(--dark, #4f4f4f) var(--light, #5a5a5a);
+    --color-neutral-500: var(--dark, #717171) var(--light, #757575);
+    --color-neutral-400: var(--dark, #9e9e9e) var(--light, #9e9e9e);
+    --color-neutral-300: var(--dark, #bdbdbd) var(--light, #bdbdbd);
+    --color-neutral-200: var(--dark, #d4d4cc) var(--light, #d4d4cc);
+    --color-neutral-100: var(--dark, #e8e8e3) var(--light, #e8e8e3);
+    --color-neutral-50: var(--dark, #f5f5f0) var(--light, #f5f5f0); /* base (warm off-white) */
+
+    /* ============================================================
+    SURFACES & BACKGROUNDS
+    ============================================================ */
+
+    /* Page / canvas background */
+    --color-bg: var(--dark, #1a1a1a) var(--light, #e8e8e3);
+
+    /* Card / panel surface */
+    --color-surface: var(--dark, #242424) var(--light, #f0f0ea);
+
+    /* Elevated card (slightly lighter in dark, slightly whiter in light) */
+    --color-surface-raised: var(--dark, #2c2c2c) var(--light, #f7f7f2);
+
+    /* Subtle fill for inputs, chips, tonal areas */
+    --color-surface-tonal: var(--dark, #333333) var(--light, #e4e4de);
+
+    /* ============================================================
+    BORDERS & DIVIDERS
+    ============================================================ */
+
+    --color-border: var(--dark, #3a3a3a) var(--light, #d0d0c8);
+    --color-border-subtle: var(--dark, #2e2e2e) var(--light, #e0e0d8);
+    --color-border-strong: var(--dark, #555555) var(--light, #b0b0a8);
+
+    /* ============================================================
+    TEXT
+    ============================================================ */
+
+    --color-text-primary: var(--dark, #e8e8e0) var(--light, #1a1a1a);
+    --color-text-secondary: var(--dark, #a0a09a) var(--light, #455a64);
+    --color-text-disabled: var(--dark, #606060) var(--light, #9e9e98);
+    --color-text-on-primary: var(--dark, #ffffff) var(--light, #ffffff);
+    --color-text-on-dark: var(--dark, #1a1a1a) var(--light, #1a1a1a);
+
+    /* ============================================================
+    INTERACTIVE — BUTTONS
+    ============================================================ */
+
+    /* Primary button */
+    --color-btn-primary-bg: var(--dark, #2e7d32) var(--light, #2e7d32);
+    --color-btn-primary-text: var(--dark, #ffffff) var(--light, #ffffff);
+    --color-btn-primary-hover: var(--dark, #388e3c) var(--light, #245c27);
+
+    /* Secondary button */
+    --color-btn-secondary-bg: var(--dark, #2c2c2c) var(--light, #f0f0ea);
+    --color-btn-secondary-text: var(--dark, #e8e8e0) var(--light, #1a1a1a);
+    --color-btn-secondary-border: var(--dark, #3a3a3a) var(--light, #c8c8c0);
+
+    /* Inverted button */
+    --color-btn-inverted-bg: var(--dark, #e8e8e0) var(--light, #1e1e1e);
+    --color-btn-inverted-text: var(--dark, #1a1a1a) var(--light, #f5f5f0);
+
+    /* Outlined button */
+    --color-btn-outlined-bg: var(--dark, transparent) var(--light, transparent);
+    --color-btn-outlined-border: var(--dark, #555555) var(--light, #9e9e98);
+    --color-btn-outlined-text: var(--dark, #e8e8e0) var(--light, #1a1a1a);
+
+    /* FAB / icon button — tertiary blue */
+    --color-btn-fab-bg: var(--dark, #0277bd) var(--light, #0277bd);
+    --color-btn-fab-text: var(--dark, #ffffff) var(--light, #ffffff);
+
+    /* Label chip button — primary green */
+    --color-btn-label-bg: var(--dark, #2e7d32) var(--light, #2e7d32);
+    --color-btn-label-text: var(--dark, #ffffff) var(--light, #ffffff);
+
+    /* ============================================================
+    ICON BUTTONS (the 4-icon row)
+    ============================================================ */
+
+    --color-icon-btn-green-bg: var(--dark, #2e7d32) var(--light, #2e7d32);
+    --color-icon-btn-slate-bg: var(--dark, #455a64) var(--light, #455a64);
+    --color-icon-btn-blue-bg: var(--dark, #0277bd) var(--light, #0277bd);
+    --color-icon-btn-red-bg: var(--dark, #c62828) var(--light, #d32f2f);
+    --color-icon-btn-text: var(--dark, #ffffff) var(--light, #ffffff);
+
+    /* ============================================================
+    PROGRESS / DIVIDER BARS
+    ============================================================ */
+
+    /* Top bar — primary green */
+    --color-progress-primary: var(--dark, #2e7d32) var(--light, #2e7d32);
+
+    /* Middle bar — secondary slate */
+    --color-progress-secondary: var(--dark, #455a64) var(--light, #455a64);
+
+    /* Bottom bar — tertiary blue */
+    --color-progress-tertiary: var(--dark, #0277bd) var(--light, #0277bd);
+
+    /* Track (unfilled) */
+    --color-progress-track: var(--dark, #333333) var(--light, #d8d8d0);
+
+    /* ============================================================
+    NAVIGATION ICONS
+    ============================================================ */
+
+    --color-nav-icon-active-bg: var(--dark, #2e7d32) var(--light, #2e7d32);
+    --color-nav-icon-active-text: var(--dark, #ffffff) var(--light, #ffffff);
+    --color-nav-icon-inactive: var(--dark, #a0a09a) var(--light, #455a64);
+
+    /* ============================================================
+    SEARCH INPUT
+    ============================================================ */
+
+    --color-input-bg: var(--dark, #2c2c2c) var(--light, #f0f0ea);
+    --color-input-border: var(--dark, #3a3a3a) var(--light, #d0d0c8);
+    --color-input-text: var(--dark, #e8e8e0) var(--light, #1a1a1a);
+    --color-input-placeholder: var(--dark, #707068) var(--light, #9e9e98);
+    --color-input-icon: var(--dark, #a0a09a) var(--light, #455a64);
+
+    /* ============================================================
+    TYPOGRAPHY SCALE (color only; sizes are separate)
+    ============================================================ */
+
+    /* Headline — uses serif font in both themes */
+    --color-text-headline: var(--dark, #e8e8e0) var(--light, #1a1a1a);
+
+    /* Body — uses sans-serif */
+    --color-text-body: var(--dark, #c0c0b8) var(--light, #2e2e2e);
+
+    /* Label — smaller weight */
+    --color-text-label: var(--dark, #a0a09a) var(--light, #455a64);
+
+    /* ============================================================
+    SHADOWS
+    ============================================================ */
+
+    --shadow-card: var(--dark, 0 1px 3px rgba(0, 0, 0, 0.5))
+        var(--light, 0 1px 4px rgba(0, 0, 0, 0.08));
+
+    --shadow-raised: var(--dark, 0 4px 16px rgba(0, 0, 0, 0.6))
+        var(--light, 0 4px 12px rgba(0, 0, 0, 0.1));
+
+    /* ============================================================
+    RADIUS
+    (not theme-dependent, but included for completeness)
+    ============================================================ */
+
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+    --radius-pill: 999px;
+    --radius-icon: 50%;
 }
 
 /* Modern browsers with `scrollbar-*` support */
 @supports (scrollbar-width: auto) {
-  :not(:hover) {
-    scrollbar-color: rgb(0 0 0 / 0%) rgb(0 0 0 / 0%);
-  }
+    :not(:hover) {
+        scrollbar-color: rgb(0 0 0 / 0%) rgb(0 0 0 / 0%);
+    }
 
-  :hover {
-    scrollbar-color: var(--secondary-color-2) rgb(0 0 0 / 0%);
-  }
+    :hover {
+        scrollbar-color: var(--secondary-color-2) rgb(0 0 0 / 0%);
+    }
 }
 
 /* Legacy browsers with `::-webkit-scrollbar-*` support */
 @supports selector(::-webkit-scrollbar) {
-  :root::-webkit-scrollbar-track {
-    background: transparent;
-  }
+    :root::-webkit-scrollbar-track {
+        background: transparent;
+    }
 }

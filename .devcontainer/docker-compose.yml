@@ -6,6 +6,8 @@ services:
     command: sleep infinity
     networks:
       - local
+    ports:
+      - 8080:8080
     volumes:
       - ../..:/workspaces:cached
       - sqlite-data:/sqlite
