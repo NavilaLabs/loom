@@ -13,6 +13,7 @@ codegen-units = 1
 strip = true
 
 [dependencies]
+async-trait = { workspace = true }
 chrono = { workspace = true }
 eventually = { version = "0.5", git = "https://github.com/get-eventually/eventually-rs" }
 eventually-any = { version = "0.1", git = "https://github.com/NavilaLabs/eventually-any", features = [
@@ -21,6 +22,7 @@ eventually-any = { version = "0.1", git = "https://github.com/NavilaLabs/eventua
 eventually-projection = { version = "0.1", git = "https://github.com/NavilaLabs/eventually-projection" }
 eventually-macros = { version = "0.1", git = "https://github.com/get-eventually/eventually-rs" }
 hex = { workspace = true }
+loom-infrastructure-impl = { path = "../loom-infrastructure-impl" }
 rand = "0.10.0"
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -34,8 +36,8 @@ with-lifecycle = { path = "../with-lifecycle" }
 
 [features]
 default = []
-sqlite = ["eventually-any/sqlite", "eventually-projection/sqlite"]
-postgres = ["eventually-any/postgres", "eventually-projection/postgres"]
+sqlite = ["eventually-any/sqlite", "eventually-projection/sqlite", "loom-infrastructure-impl/sqlite"]
+postgres = ["eventually-any/postgres", "eventually-projection/postgres", "loom-infrastructure-impl/postgres"]
 
 [lints]
 workspace = true

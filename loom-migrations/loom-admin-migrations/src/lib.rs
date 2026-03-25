@@ -5,6 +5,7 @@ mod m20251214_102200_create_event_streams_table;
 mod m20251214_102201_create_events_table;
 mod m20251215_183831_create_snapshots_table;
 mod m20260325_145345_add_global_position;
+mod m20260325_185315_create_users_projection_table;
 
 pub struct Migrator;
 
@@ -16,6 +17,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20251214_102201_create_events_table::Migration),
             Box::new(m20251215_183831_create_snapshots_table::Migration),
             Box::new(m20260325_145345_add_global_position::Migration),
+            Box::new(m20260325_185315_create_users_projection_table::Migration),
         ]
     }
 }

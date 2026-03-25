@@ -3931,12 +3931,14 @@ dependencies = [
 name = "loom-core"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "chrono",
  "eventually",
  "eventually-any",
  "eventually-macros",
  "eventually-projection",
  "hex",
+ "loom-infrastructure-impl",
  "rand 0.10.0",
  "serde",
  "serde_json",
