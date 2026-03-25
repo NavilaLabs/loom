@@ -8,12 +8,21 @@ pub mod admin;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("admin database error: {0:?}")]
+    #[error("missing field: {0}")]
+    MissingField(String),
+
+    #[error("{0:?}")]
     AdminDatabaseError(#[from] admin::Error),
     #[error("{0:?}")]
     DatabaseSaveError(#[from] repository::SaveError),
     #[error("{0:?}")]
     DatabaseGetError(#[from] repository::GetError),
+    #[error("{0:?}")]
+    ParseUuidError(#[from] uuid::Error),
+    #[error("{0:?}")]
+    SerdeJsonError(#[from] serde_json::Error),
+    #[error("{0:?}")]
+    SqlxError(#[from] sqlx::Error),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

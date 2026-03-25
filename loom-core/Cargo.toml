@@ -24,8 +24,11 @@ eventually-macros = { version = "0.1", git = "https://github.com/get-eventually/
 hex = { workspace = true }
 loom-infrastructure-impl = { path = "../loom-infrastructure-impl" }
 rand = "0.10.0"
+sea-query = { version = "1.0.0-rc.28", optional = true }
+sea-query-sqlx = { version = "0.8.0-rc.11", features = ["sqlx-any", "runtime-tokio-rustls", "with-json", "with-chrono", "with-time", "with-uuid", "with-rust_decimal"], optional = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+sqlx = { version = "0.8.6", features = ["runtime-tokio"], optional = true }
 thiserror = { workspace = true }
 uuid = { workspace = true }
 
@@ -35,9 +38,9 @@ loom-tests = { path = "../loom-tests" }
 with-lifecycle = { path = "../with-lifecycle" }
 
 [features]
-default = []
-sqlite = ["eventually-any/sqlite", "eventually-projection/sqlite", "loom-infrastructure-impl/sqlite"]
-postgres = ["eventually-any/postgres", "eventually-projection/postgres", "loom-infrastructure-impl/postgres"]
+default = ["sqlite"]
+sqlite = ["eventually-any/sqlite", "eventually-projection/sqlite", "loom-infrastructure-impl/sqlite", "dep:sea-query", "dep:sea-query-sqlx", "sqlx/sqlite"]
+postgres = ["eventually-any/postgres", "eventually-projection/postgres", "loom-infrastructure-impl/postgres", "dep:sea-query", "dep:sea-query-sqlx", "sqlx/postgres"]
 
 [lints]
 workspace = true

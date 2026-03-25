@@ -3940,8 +3940,11 @@ dependencies = [
  "hex",
  "loom-infrastructure-impl",
  "rand 0.10.0",
+ "sea-query",
+ "sea-query-sqlx",
  "serde",
  "serde_json",
+ "sqlx",
  "thiserror 2.0.18",
  "uuid",
 ]

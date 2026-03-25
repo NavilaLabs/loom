@@ -12,8 +12,8 @@ loom-infrastructure = { path = "../loom-infrastructure" }
 loom-tenant-migrations = { path = "../loom-migrations/loom-tenant-migrations" }
 sea-orm = { version = "2.0.0-rc.28", optional = true, default-features = false, features = ["sqlx-postgres", "sqlx-sqlite"] }
 sea-query = { version = "1.0.0-rc.28", optional = true }
-serde_json = { workspace = true }
 sea-query-sqlx = { version = "0.8.0-rc.11", features = ["sqlx-any", "runtime-tokio-rustls", "with-json", "with-chrono", "with-time", "with-uuid", "with-rust_decimal"], optional = true }
+serde_json = { workspace = true }
 sqlx = { version = "0.8.6", features = ["runtime-tokio"], optional = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
