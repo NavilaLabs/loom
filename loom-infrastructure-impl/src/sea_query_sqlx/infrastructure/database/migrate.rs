@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use loom_admin_migrations::MigratorTrait;
 use loom_infrastructure::database::Migrate;
+use tracing::debug;
 
 use crate::{
     Error,
@@ -13,6 +14,7 @@ impl Migrate for Pool<ScopeAdmin, StateConnected> {
 
     async fn migrate_database(&self) -> Result<(), <Self as Migrate>::Error> {
         let uri = self.as_ref().connect_options().database_url.clone();
+        debug!("Migrating database: {uri}");
         let pool = sea_orm::Database::connect(uri.as_str()).await?;
 
         loom_admin_migrations::Migrator::up(&pool, None).await?;
@@ -27,6 +29,7 @@ impl Migrate for Pool<ScopeTenant, StateConnected> {
 
     async fn migrate_database(&self) -> Result<(), <Self as Migrate>::Error> {
         let uri = self.as_ref().connect_options().database_url.clone();
+        debug!("Migrating database: {uri}");
         let pool = sea_orm::Database::connect(uri.as_str()).await?;
 
         loom_tenant_migrations::Migrator::up(&pool, None).await?;

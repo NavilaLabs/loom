@@ -163,6 +163,10 @@ impl InitializationStrategy for PostgresInitializationStrategy {
         &self,
         pool: &Pool<ScopeDefault, StateConnected>,
     ) -> Result<(), Error> {
+        if self.is_admin_initialized(pool).await? {
+            info!("Admin database already initialized");
+            return Ok(());
+        }
         let database_name = CONFIG.get_database().get_databases().get_admin().get_name();
         info!("Initializing admin database: {}", database_name);
         let query = format!(r#"CREATE DATABASE "{}""#, database_name);
@@ -176,6 +180,10 @@ impl InitializationStrategy for PostgresInitializationStrategy {
         pool: &Pool<ScopeDefault, StateConnected>,
         tenant_token: Option<&str>,
     ) -> Result<(), Error> {
+        if self.is_tenant_initialized(pool, tenant_token).await? {
+            info!("Tenant database already initialized");
+            return Ok(());
+        }
         let tenant_token = tenant_token.map_or_else(
             || {
                 Err(loom_infrastructure::Error::DatabaseError(
@@ -206,15 +214,22 @@ impl InitializationStrategy for SqliteInitializationStrategy {
         _pool: &Pool<ScopeDefault, StateConnected>,
         database_uri: &Url,
     ) -> Result<bool, Error> {
-        let file_path = format!("{}.sqlite", database_uri.path());
+        let mut path = database_uri.path().to_string();
+        if !path.ends_with(".sqlite") {
+            path = format!("{}.sqlite", path);
+        }
 
-        Ok(std::fs::metadata(&file_path).is_ok())
+        Ok(std::fs::metadata(&path).is_ok())
     }
 
     async fn initialize_admin(
         &self,
-        _pool: &Pool<ScopeDefault, StateConnected>,
+        pool: &Pool<ScopeDefault, StateConnected>,
     ) -> Result<(), Error> {
+        if self.is_admin_initialized(pool).await? {
+            info!("Admin database already initialized");
+            return Ok(());
+        }
         let uri = database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Admin)
             .get_uri(&DatabaseType::Sqlite.to_string(), None)?;
         let uri = uri.to_string().replace("sqlite://", "");
@@ -226,9 +241,13 @@ impl InitializationStrategy for SqliteInitializationStrategy {
 
     async fn initialize_tenant(
         &self,
-        _pool: &Pool<ScopeDefault, StateConnected>,
+        pool: &Pool<ScopeDefault, StateConnected>,
         tenant_token: Option<&str>,
     ) -> Result<(), Error> {
+        if self.is_tenant_initialized(pool, tenant_token).await? {
+            info!("Tenant database already initialized");
+            return Ok(());
+        }
         let tenant_token = tenant_token.map_or_else(
             || {
                 Err(loom_infrastructure::Error::DatabaseError(

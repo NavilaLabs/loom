@@ -12,7 +12,8 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     libayatana-appindicator3-dev \
     librsvg2-dev \
-    lld
+    lld \
+    clang
 
 # Install rust-analyzer (latest release)
 RUN curl -L https://github.com/rust-lang/rust-analyzer/releases/latest/download/rust-analyzer-$(uname -m)-unknown-linux-gnu.gz \

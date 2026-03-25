@@ -25,7 +25,7 @@ pub fn Database() -> Element {
         DefaultLayout {
             Headline { "Developer" }
 
-            Accordion { class: "developer-actions w-full!",
+            Accordion { class: "developer-actions",
                 AccordionItem { index: 1, default_open: true,
                     AccordionTrigger { {tid!("developer-actions-database")} }
                     AccordionContent {
@@ -41,7 +41,7 @@ pub fn Database() -> Element {
                                             CardAction {
                                                 Button {
                                                     onclick: move |_| async move {
-                                                        let _ = api::migrate_database().await;
+                                                        let _ = api::developer::migrate_database().await;
                                                     },
                                                     div { class: "flex flex-col items-center",
                                                         Icon {

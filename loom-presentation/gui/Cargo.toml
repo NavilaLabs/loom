@@ -18,6 +18,7 @@ dioxus = "0.7.3"
 dioxus-free-icons = { version = "0.10.0", features = ["hero-icons-solid"] }
 dioxus-i18n = "0.5.1"
 unic-langid = "0.9.6"
+dotenvy = "0.15.7"
 
 # workspace
 ui = { path = "packages/ui" }

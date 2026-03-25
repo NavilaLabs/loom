@@ -10,4 +10,7 @@ loom-infrastructure = { path = "../../../../loom-infrastructure", optional = tru
 loom-infrastructure-impl = { path = "../../../../loom-infrastructure-impl", optional = true }
 
 [features]
-server = ["dioxus/server", "loom-core", "loom-infrastructure", "loom-infrastructure-impl"]
+# default = ["server"]
+server = ["dioxus/server", "dep:loom-core", "dep:loom-infrastructure", "dep:loom-infrastructure-impl", "sqlite"]
+postgres = ["loom-core/postgres", "loom-infrastructure-impl/postgres"]
+sqlite = ["loom-core/sqlite", "loom-infrastructure-impl/sqlite"]

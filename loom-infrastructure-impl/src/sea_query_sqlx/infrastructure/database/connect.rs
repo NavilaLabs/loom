@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{str::FromStr, time::Duration};
 
 use async_trait::async_trait;
 use loom_infrastructure::{
@@ -10,9 +10,8 @@ use tracing::info;
 use url::Url;
 
 use crate::{
-    Error,
+    Error, ScopeAdmin, ScopeDefault, ScopeTenant,
     sea_query_sqlx::infrastructure::{DatabaseType, Pool, StateConnected, StateDisconnected},
-    {ScopeAdmin, ScopeTenant},
 };
 
 impl<Scope> Pool<Scope, StateDisconnected> {
@@ -41,11 +40,14 @@ impl<Scope> Pool<Scope, StateDisconnected> {
         };
         info!("Configured database pool: {:?}", pool);
         info!("Establishing connection to database at URL: {}", uri);
-
-        Ok(Pool::new(
+        let pool = Pool::new(
             StateConnected::new(pool.connect(uri.as_str()).await?),
             database_type,
-        ))
+        );
+
+        info!("Connected to database at URL: {uri}");
+
+        Ok(pool)
     }
 }
 
@@ -66,5 +68,11 @@ impl Pool<ScopeAdmin, StateDisconnected> {
             .get_uri(&DatabaseType::Sqlite.to_string(), None)?;
 
         Self::connect(&uri).await
+    }
+}
+
+impl Pool<ScopeDefault, StateDisconnected> {
+    pub async fn connect_default() -> Result<Pool<ScopeDefault, StateConnected>, Error> {
+        Self::connect(&Url::from_str("sqlite:///file:loom?mode=memory&cache=shared").unwrap()).await
     }
 }

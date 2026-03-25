@@ -3,6 +3,7 @@ use std::{fmt::Display, marker::PhantomData};
 use loom_infrastructure::ImplError;
 use sea_orm::{ExprTrait, Value};
 use sea_query::{Alias, Expr};
+use url::Url;
 
 pub type ConnectedAdminPool = Pool<ScopeAdmin, StateConnected>;
 pub type ConnectedTenantPool = Pool<ScopeTenant, StateConnected>;
@@ -79,5 +80,9 @@ impl<Scope, State> Pool<Scope, State> {
 impl<Scope> Pool<Scope, StateConnected> {
     pub fn into_pool(self) -> sqlx::AnyPool {
         self.state.pool
+    }
+
+    pub fn get_uri(&self) -> Url {
+        self.state.pool.connect_options().database_url.clone()
     }
 }

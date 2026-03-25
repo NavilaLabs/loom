@@ -33,7 +33,7 @@ loom-tests = { path = "../loom-tests" }
 with-lifecycle = { path = "../with-lifecycle" }
 
 [features]
-default = ["sqlite"]
+default = []
 sqlite = ["eventually-any/sqlite", "eventually-projection/sqlite"]
 postgres = ["eventually-any/postgres", "eventually-projection/postgres"]
 

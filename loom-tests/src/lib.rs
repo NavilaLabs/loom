@@ -4,10 +4,7 @@ use loom_infrastructure::database::{
     database_uri_factory::{self, DatabaseUriType},
 };
 use loom_infrastructure_impl::{
-    Error,
-    infrastructure::{
-        DatabaseType, Pool, ScopeAdmin, ScopeDefault, ScopeTenant, StateConnected,
-    },
+    Error, {DatabaseType, Pool, ScopeAdmin, ScopeDefault, ScopeTenant, StateConnected},
 };
 use tracing::info;
 use url::Url;

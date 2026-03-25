@@ -1,7 +1,6 @@
 use dioxus::prelude::*;
 use dioxus_motion::prelude::*;
 use ui::{
-    components::atoms::{Navbar, NavbarContent, NavbarItem, NavbarNav, NavbarTrigger},
     views::{Database, Login},
     FAVICON,
 };
@@ -19,6 +18,8 @@ enum Route {
 }
 
 fn main() {
+    dotenvy::from_filename_override(".env.dev").ok();
+
     dioxus::launch(App);
 }
 

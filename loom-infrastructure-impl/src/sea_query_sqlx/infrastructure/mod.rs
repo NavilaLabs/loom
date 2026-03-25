@@ -1,4 +1,4 @@
-mod database;
+pub mod database;
 mod pool;
 
 pub use pool::*;
