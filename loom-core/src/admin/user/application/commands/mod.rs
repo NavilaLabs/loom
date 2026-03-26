@@ -1,8 +1,11 @@
 use eventually::aggregate;
 
 use crate::admin::user::{
-    aggregates::{Error, User, UserId},
-    events::UserEvent,
+    self,
+    domain::{
+        aggregates::{User, UserId},
+        events::UserEvent,
+    },
 };
 
 #[eventually_macros::aggregate_root(User)]
@@ -10,7 +13,11 @@ use crate::admin::user::{
 pub struct UserRoot;
 
 impl UserRoot {
-    pub fn create(id: UserId, name: String) -> Result<Self, Error> {
-        Ok(aggregate::Root::<User>::record_new(UserEvent::Created { id, name }.into())?.into())
+    pub fn create(id: UserId, name: String) -> Result<Self, crate::Error> {
+        Ok(
+            aggregate::Root::<User>::record_new(UserEvent::Created { id, name }.into())
+                .map_err(|error| user::DomainError::from(error))?
+                .into(),
+        )
     }
 }

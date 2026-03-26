@@ -4,7 +4,7 @@ use loom_infrastructure_impl::{DatabaseType, Pool, ScopeAdmin, StateConnected};
 use sea_query::{DynIden, PostgresQueryBuilder, Query, SqliteQueryBuilder, TableRef};
 use sea_query_sqlx::SqlxBinder;
 
-use crate::admin::user::events::UserEvent;
+use crate::admin::user::UserEvent;
 
 pub struct UserProjector {
     pool: Pool<ScopeAdmin, StateConnected>,
@@ -23,10 +23,10 @@ impl Projector for UserProjector {
     type Error = crate::Error;
 
     async fn handle(&mut self, event: RawEvent) -> Result<(), Self::Error> {
-        let UserEvent::Created { id, name } = serde_json::from_slice(&event.payload_bytes)?;
-
         match event.event_type.as_str() {
             "UserCreated" => {
+                let UserEvent::Created { id, name } = serde_json::from_slice(&event.payload_bytes)?;
+
                 let query = Query::insert()
                     .into_table(TableRef::from(Self::TABLE))
                     .columns([DynIden::from("id"), DynIden::from("name")])
@@ -36,6 +36,7 @@ impl Projector for UserProjector {
                     DatabaseType::Sqlite => query.build_sqlx(SqliteQueryBuilder),
                     DatabaseType::Postgres => query.build_sqlx(PostgresQueryBuilder),
                 };
+
                 sqlx::query_with(&sql, values)
                     .execute(self.pool.as_ref())
                     .await?;

@@ -26,7 +26,7 @@ async fn initialize_databases(
 }
 
 pub(crate) mod test_lifecycle {
-    use loom_shared::test_lifecycle;
+    use loom_tests::test_lifecycle;
     use sqlx::any::install_default_drivers;
 
     pub fn before() {

@@ -1,4 +1,4 @@
-use crate::admin::user::{aggregates::UserId, commands::UserRoot, interfaces::UserRepository};
+use crate::admin::user::{UserId, UserRepository, UserRoot};
 
 pub async fn create_user(
     repository: &impl UserRepository,
@@ -21,7 +21,7 @@ mod test {
     };
     use with_lifecycle::with_lifecycle;
 
-    use crate::admin::user::{aggregates::User, create_user, events::UserEvent};
+    use crate::admin::user::{User, UserEvent, create_user};
 
     #[with_lifecycle(test_database_lifecycle)]
     #[tokio::test]

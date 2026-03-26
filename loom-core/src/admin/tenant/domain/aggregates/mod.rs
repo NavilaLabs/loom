@@ -1,7 +1,7 @@
 use eventually::aggregate::Aggregate;
 use serde::{Deserialize, Serialize};
 
-use crate::{AggregateId, admin::tenant::events::TenantEvent};
+use crate::{admin::tenant::events::TenantEvent, shared::AggregateId};
 
 pub type TenantId = AggregateId;
 

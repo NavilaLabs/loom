@@ -1521,7 +1521,7 @@ dependencies = [
  "async-trait",
  "chrono",
  "dotenvy",
- "loom-shared",
+ "loom-tests",
  "regex",
  "serde",
  "serde-vars",
@@ -1546,8 +1546,8 @@ dependencies = [
  "embassy-futures",
  "loom-admin-migrations",
  "loom-infrastructure",
- "loom-shared",
  "loom-tenant-migrations",
+ "loom-tests",
  "sea-orm",
  "sea-query",
  "sea-query-sqlx",
@@ -1558,18 +1558,6 @@ dependencies = [
  "tracing",
  "url",
  "with-lifecycle",
-]
-
-[[package]]
-name = "loom-shared"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "dotenvy",
- "serde",
- "serde_json",
- "url",
- "uuid",
 ]
 
 [[package]]

@@ -21,7 +21,7 @@ url = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true }
-loom-shared = { path = "../loom-shared" }
+loom-tests = { path = "../loom-tests" }
 with-lifecycle = { path = "../with-lifecycle" }
 
 [features]

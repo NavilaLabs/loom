@@ -1,7 +1,7 @@
 use eventually::aggregate::Aggregate;
 use serde::{Deserialize, Serialize};
 
-use crate::{AggregateId, admin::user::events::UserEvent};
+use crate::{admin::user::UserEvent, shared::AggregateId};
 
 pub type UserId = AggregateId;
 
@@ -21,7 +21,7 @@ impl User {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum Error {
     #[error("user already exists")]
     AlreadyExists,

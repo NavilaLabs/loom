@@ -1,4 +1,4 @@
-use crate::admin::user::aggregates::UserId;
+use crate::admin::user::UserId;
 
 #[derive(Debug, Clone)]
 pub struct UserView {

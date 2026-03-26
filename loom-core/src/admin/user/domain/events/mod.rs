@@ -1,7 +1,7 @@
 use eventually::message::Message;
 use serde::{Deserialize, Serialize};
 
-use crate::admin::user::aggregates::UserId;
+use crate::admin::user::UserId;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum UserEvent {

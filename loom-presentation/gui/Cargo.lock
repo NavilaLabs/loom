@@ -3956,7 +3956,6 @@ dependencies = [
  "async-trait",
  "chrono",
  "dotenvy",
- "loom-shared",
  "regex",
  "serde",
  "serde-vars",
@@ -3989,18 +3988,6 @@ dependencies = [
  "thiserror 2.0.18",
  "tracing",
  "url",
-]
-
-[[package]]
-name = "loom-shared"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "dotenvy",
- "serde",
- "serde_json",
- "url",
- "uuid",
 ]
 
 [[package]]

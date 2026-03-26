@@ -59,7 +59,7 @@ pub fn load_config() -> Result<Config, crate::Error> {
 mod tests {
     use super::*;
 
-    use loom_shared::test_lifecycle;
+    use loom_tests::test_lifecycle;
     use with_lifecycle::with_lifecycle;
 
     #[with_lifecycle(test_lifecycle)]

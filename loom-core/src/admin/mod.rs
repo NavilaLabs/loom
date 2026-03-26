@@ -1,14 +1,26 @@
 pub mod tenant;
 pub mod user;
 
-#[derive(Debug, PartialEq, Eq, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum Error {
     #[error("{0:?}")]
-    UserError(#[from] user::aggregates::Error),
+    UserError(#[from] user::Error),
 }
 
-impl From<user::aggregates::Error> for crate::Error {
-    fn from(value: user::aggregates::Error) -> Self {
-        crate::Error::AdminDatabaseError(Error::UserError(value))
+impl From<user::ApplicationError> for crate::Error {
+    fn from(value: user::ApplicationError) -> Self {
+        crate::Error::AdminDatabaseError(Error::UserError(value.into()))
+    }
+}
+
+impl From<user::DomainError> for crate::Error {
+    fn from(value: user::DomainError) -> Self {
+        crate::Error::AdminDatabaseError(Error::UserError(value.into()))
+    }
+}
+
+impl From<user::InfrastructureError> for crate::Error {
+    fn from(value: user::InfrastructureError) -> Self {
+        crate::Error::AdminDatabaseError(Error::UserError(value.into()))
     }
 }

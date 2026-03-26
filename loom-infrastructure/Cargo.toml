@@ -7,7 +7,6 @@ edition.workspace = true
 async-trait = { workspace = true }
 chrono = { workspace = true }
 dotenvy = { workspace = true }
-loom-shared = { path = "../loom-shared" }
 regex = { workspace = true }
 serde = { workspace = true }
 serde-vars = "0.3.1"
@@ -22,6 +21,7 @@ sha2 = "0.10.9"
 serde_jcs = "0.1.0"
 
 [dev-dependencies]
+loom-tests = { path = "../loom-tests" }
 with-lifecycle = { path = "../with-lifecycle" }
 
 [lints]

@@ -7,7 +7,6 @@ members = [
   "loom-migrations/loom-admin-migrations",
   "loom-migrations/loom-shared-migrations",
   "loom-migrations/loom-tenant-migrations",
-  "loom-shared",
   "loom-tests",
 ]
 resolver = "3"
