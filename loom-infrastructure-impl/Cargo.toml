@@ -7,6 +7,11 @@ edition.workspace = true
 async-trait = { workspace = true }
 chrono = { workspace = true }
 embassy-futures = { workspace = true }
+eventually-any = { version = "0.1", git = "https://github.com/NavilaLabs/eventually-any", features = [
+  "snapshots",
+] }
+eventually-projection = { version = "0.1", git = "https://github.com/NavilaLabs/eventually-projection" }
+loom-core = { path = "../loom-core" }
 loom-admin-migrations = { path = "../loom-migrations/loom-admin-migrations" }
 loom-infrastructure = { path = "../loom-infrastructure" }
 loom-tenant-migrations = { path = "../loom-migrations/loom-tenant-migrations" }
@@ -25,10 +30,10 @@ loom-tests = { path = "../loom-tests" }
 with-lifecycle = { path = "../with-lifecycle" }
 
 [features]
-default = ["sea-query-sqlx"]
+default = ["sea-query-sqlx", "sqlite"]
 sea-query-sqlx = ["dep:sea-orm", "dep:sea-query", "dep:sea-query-sqlx", "dep:sqlx"]
-sqlite = ["loom-admin-migrations/sqlite", "loom-tenant-migrations/sqlite", "sea-orm/sqlx-sqlite", "sqlx/sqlite"]
-postgres = ["loom-admin-migrations/postgres", "loom-tenant-migrations/postgres", "sea-orm/sqlx-postgres", "sqlx/postgres"]
+sqlite = ["loom-admin-migrations/sqlite", "loom-tenant-migrations/sqlite", "eventually-any/sqlite", "eventually-projection/sqlite", "sea-orm/sqlx-sqlite", "dep:sea-query", "dep:sea-query-sqlx", "sqlx/sqlite"]
+postgres = ["loom-admin-migrations/postgres", "loom-tenant-migrations/postgres", "eventually-any/postgres", "eventually-projection/postgres", "sea-orm/sqlx-postgres", "dep:sea-query", "dep:sea-query-sqlx", "sqlx/postgres"]
 
 [[test]]
 name = "integration_infrastructure"

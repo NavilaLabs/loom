@@ -17,10 +17,36 @@ enum Route {
         Database {},
 }
 
+#[cfg(not(feature = "server"))]
 fn main() {
     dotenvy::from_filename_override(".env.dev").ok();
 
     dioxus::launch(App);
+}
+
+#[cfg(feature = "server")]
+#[tokio::main]
+async fn main() {
+    dotenvy::from_filename_override(".env.dev").ok();
+
+    let projection_daemon = api::configure_admin_projection_daemon()
+        .await
+        .unwrap()
+        .unwrap();
+
+    tokio::spawn(async move {
+        projection_daemon.run_until_cancelled().await;
+    });
+
+    let address = dioxus::cli_config::fullstack_address_or_localhost();
+
+    let router =
+        axum::Router::new().serve_dioxus_application(dioxus_server::ServeConfig::new(), App);
+
+    let listener = tokio::net::TcpListener::bind(address).await.unwrap();
+    axum::serve(listener, router.into_make_service())
+        .await
+        .unwrap();
 }
 
 #[component]

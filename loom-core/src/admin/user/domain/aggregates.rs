@@ -21,7 +21,7 @@ impl User {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("user already exists")]
     AlreadyExists,

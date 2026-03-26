@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 use crate::components::{
-    atoms::{Navbar, NavbarContent, NavbarItem, NavbarNav, NavbarTrigger},
+    atoms::{Navbar, NavbarItem},
     molecules::{LoomLogo, NavilaLabsLogo, Seperator},
 };
 

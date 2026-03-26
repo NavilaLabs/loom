@@ -5,12 +5,11 @@ edition = "2021"
 
 [dependencies]
 dioxus = { workspace = true, features = ["fullstack"] }
-loom-core = { path = "../../../../loom-core", optional = true }
-loom-infrastructure = { path = "../../../../loom-infrastructure", optional = true }
-loom-infrastructure-impl = { path = "../../../../loom-infrastructure-impl", optional = true }
+loom = { path = "../../../../loom", optional = true }
+# tokio-util = { version = "0.7", optional = true }
 
 [features]
 # default = ["server"]
-server = ["dioxus/server", "dep:loom-core", "dep:loom-infrastructure", "dep:loom-infrastructure-impl", "sqlite"]
-postgres = ["loom-core/postgres", "loom-infrastructure-impl/postgres"]
-sqlite = ["loom-core/sqlite", "loom-infrastructure-impl/sqlite"]
+server = ["dioxus/server", "dep:loom", "sqlite"]
+postgres = ["loom/postgres"]
+sqlite = ["loom/sqlite"]

@@ -4,6 +4,16 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+anyhow = "1"
+loom-core = { path = "../loom-core" }
+loom-infrastructure = { path = "../loom-infrastructure" }
+loom-infrastructure-impl = { path = "../loom-infrastructure-impl" }
+
+[features]
+default = ["sea-query-sqlx"]
+sea-query-sqlx = ["loom-infrastructure-impl/sea-query-sqlx"]
+sqlite = ["loom-infrastructure-impl/sqlite"]
+postgres = ["loom-infrastructure-impl/postgres"]
 
 [lints]
 workspace = true

@@ -1,10 +1,10 @@
 use async_trait::async_trait;
 use eventually_projection::{Projector, RawEvent};
-use loom_infrastructure_impl::{DatabaseType, Pool, ScopeAdmin, StateConnected};
+use loom_core::admin::user::UserEvent;
 use sea_query::{DynIden, PostgresQueryBuilder, Query, SqliteQueryBuilder, TableRef};
 use sea_query_sqlx::SqlxBinder;
 
-use crate::admin::user::UserEvent;
+use crate::{DatabaseType, Pool, ScopeAdmin, StateConnected};
 
 pub struct UserProjector {
     pool: Pool<ScopeAdmin, StateConnected>,

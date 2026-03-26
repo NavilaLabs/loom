@@ -14,10 +14,12 @@ pub async fn migrate_database() -> Result<(), ServerFnError> {
 
 #[cfg(feature = "server")]
 async fn _migrate_database() -> Result<(), ServerFnError> {
-    use loom_infrastructure::database::Migrate;
-    use loom_infrastructure_impl::{
-        database::{Initializer, SqliteInitializationStrategy},
-        Pool,
+    use loom::{
+        infrastructure::{
+            database::{Initializer, SqliteInitializationStrategy},
+            Pool,
+        },
+        Migrate,
     };
 
     let default_pool =

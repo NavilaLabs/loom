@@ -1,6 +1,5 @@
 use std::{str::FromStr, time::Duration};
 
-use async_trait::async_trait;
 use loom_infrastructure::{
     config::CONFIG,
     database::database_uri_factory::{self, DatabaseUriType},

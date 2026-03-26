@@ -10,10 +10,10 @@ use crate::admin::user::{
 
 #[eventually_macros::aggregate_root(User)]
 #[derive(Debug, Clone, PartialEq)]
-pub struct UserRoot;
+pub struct UserCommand;
 
-impl UserRoot {
-    pub fn create(id: UserId, name: String) -> Result<Self, crate::Error> {
+impl UserCommand {
+    pub fn create(&self, id: UserId, name: String) -> Result<Self, crate::Error> {
         Ok(
             aggregate::Root::<User>::record_new(UserEvent::Created { id, name }.into())
                 .map_err(|error| user::DomainError::from(error))?

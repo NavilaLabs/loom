@@ -1,23 +1,21 @@
 use std::{fmt::Display, marker::PhantomData};
 
 use loom_infrastructure::ImplError;
-use sea_orm::{ExprTrait, Value};
-use sea_query::{Alias, Expr};
 use url::Url;
 
 pub type ConnectedAdminPool = Pool<ScopeAdmin, StateConnected>;
 pub type ConnectedTenantPool = Pool<ScopeTenant, StateConnected>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ScopeDefault;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ScopeAdmin;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ScopeTenant;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct StateConnected {
     pool: sqlx::AnyPool,
 }
@@ -28,7 +26,7 @@ impl StateConnected {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct StateDisconnected;
 
 #[derive(Debug, Clone, PartialEq)]
