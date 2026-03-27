@@ -102,8 +102,6 @@ pub trait InitializationStrategy {
         let database_uri =
             database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Tenant)
                 .get_uri(&pool.get_database_type().to_string(), tenant_token)?;
-        dbg!(&database_uri);
-
         self.check_is_initialized(pool, &database_uri).await
     }
 
@@ -145,7 +143,7 @@ impl InitializationStrategy for PostgresInitializationStrategy {
         pool: &Pool<ScopeDefault, StateConnected>,
         database_uri: &Url,
     ) -> Result<bool, Error> {
-        let (sql, _) = Query::select()
+        let (sql, values) = Query::select()
             .expr(Expr::exists(
                 Query::select()
                     .expr(Expr::value(1))
@@ -154,7 +152,7 @@ impl InitializationStrategy for PostgresInitializationStrategy {
                     .to_owned(),
             ))
             .build_sqlx(PostgresQueryBuilder);
-        let result = sqlx::query(&sql).fetch_one(pool.as_ref()).await?;
+        let result = sqlx::query_with(&sql, values).fetch_one(pool.as_ref()).await?;
 
         Ok(result.get(0))
     }

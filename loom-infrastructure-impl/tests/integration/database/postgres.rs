@@ -88,12 +88,14 @@ pub(crate) async fn refresh_databases(
 }
 
 pub mod tests {
+    use serial_test::serial;
     use with_lifecycle::with_lifecycle;
 
     use crate::database::test_lifecycle;
 
     use super::*;
 
+    #[serial]
     #[with_lifecycle(test_lifecycle)]
     #[tokio::test]
     async fn test_setup_postgres_database() -> Result<(), Error> {

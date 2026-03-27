@@ -1,13 +1,16 @@
 use embassy_futures::join::join;
 use loom_infrastructure::database::Initialize;
 use loom_infrastructure_impl::{
-    Error, {Pool, ScopeDefault, StateConnected},
+    Error,
+    {Pool, ScopeDefault, StateConnected},
 };
 
 pub mod postgres;
 pub mod sqlite;
 
 type ConnectedDefaultPool = Pool<ScopeDefault, StateConnected>;
+
+pub(crate) use sqlite::{get_admin_pool, get_default_pool, refresh_databases};
 
 async fn initialize_databases(
     pool: &ConnectedDefaultPool,

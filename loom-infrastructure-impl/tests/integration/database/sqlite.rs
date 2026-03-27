@@ -33,13 +33,13 @@ async fn reset_entire_database() -> Result<(), Error> {
     Ok(())
 }
 
-async fn get_default_pool() -> Result<Pool<ScopeDefault, StateConnected>, Error> {
+pub(crate) async fn get_default_pool() -> Result<Pool<ScopeDefault, StateConnected>, Error> {
     let url = Url::parse("sqlite::memory:").unwrap();
     let default_pool = Pool::connect(&url).await?;
     Ok(default_pool)
 }
 
-async fn get_admin_pool() -> Result<Pool<ScopeAdmin, StateConnected>, Error> {
+pub(crate) async fn get_admin_pool() -> Result<Pool<ScopeAdmin, StateConnected>, Error> {
     let uri = database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Admin)
         .get_uri(&DatabaseType::Sqlite.to_string(), None)?;
     let admin_pool = Pool::connect(&uri).await?;
@@ -72,12 +72,14 @@ pub(crate) async fn refresh_databases(
 }
 
 pub mod tests {
+    use serial_test::serial;
     use with_lifecycle::with_lifecycle;
 
     use crate::database::test_lifecycle;
 
     use super::*;
 
+    #[serial]
     #[with_lifecycle(test_lifecycle)]
     #[tokio::test]
     async fn test_setup_sqlite_database() -> Result<(), Error> {
