@@ -2,6 +2,7 @@
 mod sea_query_sqlx;
 #[cfg(feature = "sea-query-sqlx")]
 pub use sea_query_sqlx::*;
+use sqlx::types::uuid;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -12,10 +13,12 @@ pub enum Error {
     #[error("{0}")]
     InfrastructureError(#[from] loom_infrastructure::Error),
     #[error("{0}")]
-    Io(#[from] std::io::Error),
-    #[error("{0}")]
-    Url(#[from] url::ParseError),
+    IoError(#[from] std::io::Error),
     #[cfg(feature = "sea-query-sqlx")]
     #[error("{0}")]
     SeaQuerySqlxError(#[from] sea_query_sqlx::Error),
+    #[error("{0}")]
+    UrlParseError(#[from] url::ParseError),
+    #[error("{0}")]
+    UuidError(#[from] uuid::Error),
 }

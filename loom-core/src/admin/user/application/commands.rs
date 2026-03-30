@@ -9,7 +9,6 @@ use crate::admin::user::{
 };
 
 #[eventually_macros::aggregate_root(User)]
-#[derive(Debug, Clone, PartialEq)]
 pub struct UserCommand;
 
 impl UserCommand {
@@ -68,8 +67,6 @@ mod tests {
     fn create_propagates_aggregate_error_on_bad_event() {
         // record_new on Created succeeds — verify the happy path doesn't panic
         let shell = make_command_shell(test_id());
-        assert!(shell
-            .create(test_id(), "Bob".to_string())
-            .is_ok());
+        assert!(shell.create(test_id(), "Bob".to_string()).is_ok());
     }
 }

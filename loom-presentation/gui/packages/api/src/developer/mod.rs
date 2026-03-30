@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 
+/// TODO: This should not be handled here. Instead it could be a separate binary to be run separately from the server as a standalone process.
 #[post("/api/database/migrate")]
 pub async fn migrate_database() -> Result<(), ServerFnError> {
     #[cfg(feature = "server")]

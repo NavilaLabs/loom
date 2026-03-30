@@ -1,6 +1,10 @@
-use std::{fmt::Display, marker::PhantomData};
+use std::{fmt::Display, marker::PhantomData, ops::Deref};
 
 use loom_infrastructure::ImplError;
+use sea_orm::{Value, Values};
+use sea_query::{PostgresQueryBuilder, QueryBuilder, QueryStatementWriter, SqliteQueryBuilder};
+use sea_query_sqlx::{SqlxBinder, SqlxValues};
+use sqlx::Statement;
 use url::Url;
 
 pub type ConnectedAdminPool = Pool<ScopeAdmin, StateConnected>;
@@ -44,6 +48,15 @@ impl Display for DatabaseType {
     }
 }
 
+impl DatabaseType {
+    pub fn build_query<S: SqlxBinder>(&self, statement: &S) -> (String, SqlxValues) {
+        match self {
+            DatabaseType::Postgres => statement.build_sqlx(PostgresQueryBuilder),
+            DatabaseType::Sqlite => statement.build_sqlx(SqliteQueryBuilder),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Pool<Scope, State = StateDisconnected> {
     state: State,
@@ -61,7 +74,10 @@ impl<Scope> AsRef<sqlx::AnyPool> for Pool<Scope, StateConnected> {
     }
 }
 
-impl<Scope, State> Pool<Scope, State> {
+impl<Scope, State> Pool<Scope, State>
+where
+    Self: Sized,
+{
     pub fn new(state: State, database_type: DatabaseType) -> Self {
         Self {
             state,

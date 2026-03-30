@@ -6,6 +6,7 @@ pub struct Application {
     environment: String,
     name: String,
     project_root: String,
+    authentication_secret: String,
 }
 
 impl Application {
@@ -19,5 +20,9 @@ impl Application {
 
     pub fn get_project_root(&self) -> &str {
         &self.project_root
+    }
+
+    pub fn get_authentication_secret(&self) -> &str {
+        &self.authentication_secret
     }
 }
