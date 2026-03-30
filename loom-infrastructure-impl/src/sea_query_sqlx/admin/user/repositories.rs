@@ -3,15 +3,14 @@ use std::{ops::Deref, str::FromStr};
 use async_trait::async_trait;
 use eventually::serde::Json;
 use eventually_any::snapshot::Repository;
-use loom_core::admin::{
-    Query, RowToView,
-    user::{User, UserEvent, UserView},
-};
-use sea_orm::ExprTrait;
-use sea_query::Expr;
+use loom_core::admin::user::{User, UserEvent, UserView};
+use loom_infrastructure::query::{Query, RowToView};
+use sea_query::{Condition, Expr, ExprTrait, Func, SelectStatement};
 use sqlx::{Row, any::AnyRow, types::Uuid};
 
 use crate::ConnectedAdminPool;
+
+const TABLE: &str = "projections__users";
 
 pub struct UserRepository {
     database: ConnectedAdminPool,
@@ -26,11 +25,38 @@ impl Deref for UserRepository {
     }
 }
 
-impl RowToView<AnyRow, UserView> for UserRepository {
-    type Error = crate::Error;
-    type View = UserView;
+impl UserRepository {
+    pub fn new(
+        database: ConnectedAdminPool,
+        repository: Repository<User, Json<User>, Json<UserEvent>>,
+    ) -> Self {
+        Self {
+            database,
+            repository,
+        }
+    }
 
-    fn row_to_view(&self, row: AnyRow) -> Result<UserView, Self::Error> {
+    pub fn event_store(&self) -> &Repository<User, Json<User>, Json<UserEvent>> {
+        &self.repository
+    }
+
+    fn select(&self) -> SelectStatement {
+        sea_query::Query::select().from(TABLE).to_owned()
+    }
+
+    fn select_count(&self) -> SelectStatement {
+        sea_query::Query::select()
+            .expr(Func::count(Expr::col(sea_query::Asterisk)))
+            .from(TABLE)
+            .to_owned()
+    }
+}
+
+impl RowToView<AnyRow> for UserRepository {
+    type View = UserView;
+    type Error = crate::Error;
+
+    fn row_to_view(&self, row: AnyRow) -> Result<UserView, crate::Error> {
         let id: String = row.try_get("id")?;
         let id = Uuid::from_str(&id)?;
         let name: String = row.try_get("name")?;
@@ -40,15 +66,22 @@ impl RowToView<AnyRow, UserView> for UserRepository {
 }
 
 #[async_trait]
-impl Query<AnyRow, UserView> for UserRepository {
-    const Table: &'static str = "projections__users";
+impl Query<AnyRow> for UserRepository {
+    type Filter = Condition;
 
-    async fn one(&self, id: Uuid) -> Result<Self::View, Self::Error> {
-        let statement = sea_query::Query::select()
-            .from(Self::Table)
-            .and_where(Expr::Column("id".into()).eq(id))
-            .to_owned();
-        let (sql, arguments) = self.database.get_database_type().build_query(&statement);
+    async fn get_one(&self, id: Uuid) -> Result<UserView, crate::Error> {
+        self.get_one_by(Condition::all().add(Expr::col("id").eq(id)))
+            .await
+    }
+
+    async fn find_one(&self, id: Uuid) -> Result<Option<UserView>, crate::Error> {
+        self.find_one_by(Condition::all().add(Expr::col("id").eq(id)))
+            .await
+    }
+
+    async fn get_one_by(&self, filter: Condition) -> Result<UserView, crate::Error> {
+        let statement = self.select().cond_where(filter).to_owned();
+        let (sql, arguments) = self.database.build_query(&statement);
 
         let row = sqlx::query_with(&sql, arguments)
             .fetch_one(self.database.as_ref())
@@ -57,7 +90,66 @@ impl Query<AnyRow, UserView> for UserRepository {
         self.row_to_view(row)
     }
 
-    async fn all(&self) -> Result<Self::View, Self::Error> {
-        todo!()
+    async fn find_one_by(&self, filter: Condition) -> Result<Option<UserView>, crate::Error> {
+        let statement = self.select().cond_where(filter).to_owned();
+        let (sql, arguments) = self.database.build_query(&statement);
+
+        let row = sqlx::query_with(&sql, arguments)
+            .fetch_optional(self.database.as_ref())
+            .await?;
+
+        row.map(|r| self.row_to_view(r)).transpose()
+    }
+
+    async fn find_many(&self, ids: Vec<Uuid>) -> Result<Vec<UserView>, crate::Error> {
+        if ids.is_empty() {
+            return Ok(vec![]);
+        }
+        self.find_many_by(Condition::all().add(Expr::col("id").is_in(ids)))
+            .await
+    }
+
+    async fn find_many_by(&self, filter: Condition) -> Result<Vec<UserView>, crate::Error> {
+        let statement = self.select().cond_where(filter).to_owned();
+        let (sql, arguments) = self.database.build_query(&statement);
+
+        let rows = sqlx::query_with(&sql, arguments)
+            .fetch_all(self.database.as_ref())
+            .await?;
+
+        rows.into_iter().map(|row| self.row_to_view(row)).collect()
+    }
+
+    async fn all(&self) -> Result<Vec<UserView>, crate::Error> {
+        let (sql, arguments) = self.database.build_query(&self.select());
+
+        let rows = sqlx::query_with(&sql, arguments)
+            .fetch_all(self.database.as_ref())
+            .await?;
+
+        rows.into_iter().map(|row| self.row_to_view(row)).collect()
+    }
+
+    async fn count_by(&self, filter: Condition) -> Result<u64, crate::Error> {
+        let statement = self.select_count().cond_where(filter).to_owned();
+        let (sql, arguments) = self.database.build_query(&statement);
+
+        let row = sqlx::query_with(&sql, arguments)
+            .fetch_one(self.database.as_ref())
+            .await?;
+
+        let n: i64 = row.try_get(0)?;
+        Ok(n as u64)
+    }
+
+    async fn count(&self) -> Result<u64, crate::Error> {
+        let (sql, arguments) = self.database.build_query(&self.select_count());
+
+        let row = sqlx::query_with(&sql, arguments)
+            .fetch_one(self.database.as_ref())
+            .await?;
+
+        let n: i64 = row.try_get(0)?;
+        Ok(n as u64)
     }
 }

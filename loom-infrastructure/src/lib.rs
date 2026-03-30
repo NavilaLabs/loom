@@ -1,5 +1,6 @@
 pub mod config;
 pub mod database;
+pub mod query;
 
 pub trait ImplError {
     type Error: From<Error> + Send + Sync;

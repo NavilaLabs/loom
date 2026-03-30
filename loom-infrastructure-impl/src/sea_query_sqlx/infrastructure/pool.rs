@@ -49,7 +49,7 @@ impl Display for DatabaseType {
 }
 
 impl DatabaseType {
-    pub fn build_query<S: SqlxBinder>(&self, statement: &S) -> (String, SqlxValues) {
+    pub(crate) fn build_query<S: SqlxBinder>(&self, statement: &S) -> (String, SqlxValues) {
         match self {
             DatabaseType::Postgres => statement.build_sqlx(PostgresQueryBuilder),
             DatabaseType::Sqlite => statement.build_sqlx(SqliteQueryBuilder),
@@ -88,6 +88,10 @@ where
 
     pub fn get_database_type(&self) -> &DatabaseType {
         &self.database_type
+    }
+
+    pub fn build_query<S: SqlxBinder>(&self, statement: &S) -> (String, SqlxValues) {
+        self.database_type.build_query(statement)
     }
 }
 
