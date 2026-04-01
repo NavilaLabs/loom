@@ -18,7 +18,7 @@ pub fn Seperator(
                 height: "500",
                 x: "75",
                 y: "0",
-                style: "fill: var(--secondary-color-1);",
+                style: "fill: var(--color-text-primary);",
             }
         }
     }

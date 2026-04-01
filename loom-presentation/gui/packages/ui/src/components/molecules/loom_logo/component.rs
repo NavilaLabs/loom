@@ -13,7 +13,7 @@ pub fn LoomLogo(
             "xmlns:bx": "https://boxy-svg.com",
             ..attributes,
             text {
-                style: "fill: var(--secondary-color-1); font-size: 830px; font-family: 'Pacifico'; font-weight: 380; paint-order: fill; text-anchor: start;",
+                style: "fill: var(--color-text-primary); font-size: 830px; font-family: 'Pacifico'; font-weight: 380; paint-order: fill; text-anchor: start;",
                 x: "50",
                 y: "705",
                 "Loom"

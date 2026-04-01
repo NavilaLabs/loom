@@ -13,7 +13,7 @@ pub fn NavilaLabsLogo(
             "xmlns:bx": "https://boxy-svg.com",
             ..attributes,
             text {
-                style: "fill: var(--secondary-color-1); font-family: Bitcount; font-size: 830px; font-weight: 380; paint-order: fill; text-anchor: start;",
+                style: "fill: var(--color-text-primary); font-family: Bitcount; font-size: 830px; font-weight: 380; paint-order: fill; text-anchor: start;",
                 x: "0",
                 y: "500",
                 "N"

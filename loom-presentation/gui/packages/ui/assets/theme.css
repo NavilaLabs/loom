@@ -267,7 +267,7 @@
     }
 
     :hover {
-        scrollbar-color: var(--secondary-color-2) rgb(0 0 0 / 0%);
+        scrollbar-color: var(--color-secondary-400) rgb(0 0 0 / 0%);
     }
 }
 

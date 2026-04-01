@@ -5,6 +5,13 @@ use ui::{
     FAVICON,
 };
 
+#[component]
+fn NotFound(segments: Vec<String>) -> Element {
+    rsx! {
+        h1 { "404 - Page Not Found" }
+    }
+}
+
 #[derive(Debug, Clone, Routable, PartialEq, MotionTransitions)]
 #[rustfmt::skip]
 enum Route {
@@ -18,6 +25,9 @@ enum Route {
         #[route("/setup/admin")]
         #[transition()]
         SetupAdmin {},
+
+    #[route("/:..segments")]
+    NotFound { segments: Vec<String> },
 }
 
 #[cfg(not(feature = "server"))]

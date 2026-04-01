@@ -18,8 +18,7 @@
 }
 
 [data-variant="default"] .tabs-list {
-    background: var(--light, var(--primary-color-3))
-        var(--dark, var(--primary-color-5));
+    background: var(--color-surface-tonal);
 }
 
 .tabs-trigger {
@@ -27,29 +26,28 @@
     border: none;
     border-radius: calc(0.5rem - 0.25rem);
     background: none;
-    color: var(--secondary-color-5);
+    color: var(--color-text-secondary);
     cursor: pointer;
 }
 
 [data-variant="default"] .tabs-trigger[data-state="active"] {
-    background-color: var(--light, var(--primary-color))
-        var(--dark, var(--primary-color-6));
-    box-shadow: var(--dark, inset 0 0 0 1px var(--primary-color-7))
+    background-color: var(--color-surface-raised);
+    box-shadow: var(--dark, inset 0 0 0 1px var(--color-border))
         var(--light, 0 1px 2px rgb(0 0 0 / 18%));
 }
 
 .tabs-trigger[data-state="active"] {
-    color: var(--secondary-color-1);
+    color: var(--color-text-primary);
 }
 
 .tabs-trigger[data-disabled="true"] {
-    color: var(--secondary-color-5);
+    color: var(--color-text-disabled);
     cursor: not-allowed;
 }
 
 .tabs-trigger:hover:not([data-disabled="true"]),
 .tabs-trigger:focus-visible {
-    color: var(--secondary-color-3);
+    color: var(--color-text-primary);
 }
 
 .tabs-content {
@@ -59,11 +57,9 @@
 }
 
 [data-variant="default"] .tabs-content-themed {
-    border: 1px solid var(--light, var(--primary-color-6))
-        var(--dark, var(--primary-color-7));
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
-    background: var(--light, var(--primary-color))
-        var(--dark, var(--primary-color-3));
+    background: var(--color-surface);
     box-shadow: var(--light, 0 1px 2px rgb(0 0 0 / 18%)) var(--dark, none);
 }
 
