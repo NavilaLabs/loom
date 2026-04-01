@@ -40,6 +40,36 @@ impl UserRepository {
         &self.repository
     }
 
+    /// Returns `(user_id, email, password_hash)` for the given email — intended
+    /// only for authentication flows, not general display.
+    pub async fn find_credentials_by_email(
+        &self,
+        email: &str,
+    ) -> Result<Option<(String, String, String)>, crate::Error> {
+        let statement = self
+            .select()
+            .columns(["id", "email", "password_hash"])
+            .cond_where(Condition::all().add(Expr::col("email").eq(email)))
+            .to_owned();
+        let (sql, arguments) = self.database.build_query(&statement);
+
+        let row = sqlx::query_with(&sql, arguments)
+            .fetch_optional(self.database.as_ref())
+            .await?;
+
+        row.map(|r| {
+            let id: String = r.try_get("id")?;
+            let email: String = r.try_get("email")?;
+            let hash: String = r.try_get("password_hash")?;
+            Ok((id, email, hash))
+        })
+        .transpose()
+    }
+
+    pub async fn has_at_least_one_user(&self) -> Result<bool, crate::Error> {
+        Ok(self.count().await? > 0)
+    }
+
     fn select(&self) -> SelectStatement {
         sea_query::Query::select().from(TABLE).to_owned()
     }
@@ -60,8 +90,9 @@ impl RowToView<AnyRow> for UserRepository {
         let id: String = row.try_get("id")?;
         let id = Uuid::from_str(&id)?;
         let name: String = row.try_get("name")?;
+        let email: String = row.try_get("email")?;
 
-        Ok(UserView::new(id.into(), name))
+        Ok(UserView::new(id.into(), name, email))
     }
 }
 

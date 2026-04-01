@@ -6,8 +6,7 @@ use eventually_any::snapshot::Repository;
 use eventually_projection::{Projector, RawEvent};
 use loom_core::admin::user::{User, UserEvent, UserId};
 use loom_infrastructure_impl::{
-    Pool, ScopeAdmin, StateConnected,
-    admin::user::projectors::UserProjector,
+    Pool, ScopeAdmin, StateConnected, admin::user::projectors::UserProjector,
 };
 use sqlx::Row;
 use with_lifecycle::with_lifecycle;
@@ -22,8 +21,7 @@ fn test_id() -> UserId {
         .expect("valid UUID")
 }
 
-type UserRepo =
-    Repository<User, eventually::serde::Json<User>, eventually::serde::Json<UserEvent>>;
+type UserRepo = Repository<User, eventually::serde::Json<User>, eventually::serde::Json<UserEvent>>;
 
 async fn make_repository(
     pool: &Pool<ScopeAdmin, StateConnected>,
@@ -60,6 +58,8 @@ pub mod tests {
             UserEvent::Created {
                 id: id.clone(),
                 name: "Alice".to_string(),
+                email: "alice@example.com".to_string(),
+                password_hash: "".to_string(),
             }
             .into(),
         )
@@ -80,15 +80,30 @@ pub mod tests {
     #[test]
     fn test_duplicate_user_creation_is_rejected_by_domain() {
         let id = test_id();
-        let existing =
-            User::apply(None, UserEvent::Created { id: id.clone(), name: "Alice".to_string() })
-                .expect("first Created is valid");
+        let existing = User::apply(
+            None,
+            UserEvent::Created {
+                id: id.clone(),
+                name: "Alice".to_string(),
+                email: "alice@example.com".to_string(),
+                password_hash: "".to_string(),
+            },
+        )
+        .expect("first Created is valid");
 
         let result = User::apply(
             Some(existing),
-            UserEvent::Created { id, name: "Bob".to_string() },
+            UserEvent::Created {
+                id,
+                name: "Bob".to_string(),
+                email: "bob@example.com".to_string(),
+                password_hash: "".to_string(),
+            },
         );
-        assert!(result.is_err(), "second Created on an existing user must fail");
+        assert!(
+            result.is_err(),
+            "second Created on an existing user must fail"
+        );
     }
 
     /// The projector must insert a row into the projection table when it
@@ -108,6 +123,8 @@ pub mod tests {
         let event = UserEvent::Created {
             id: id.clone(),
             name: "Alice".to_string(),
+            email: "alice@example.com".to_string(),
+            password_hash: "".to_string(),
         };
         let payload_bytes = serde_json::to_vec(&event)?;
 
@@ -140,8 +157,7 @@ pub mod tests {
     #[serial]
     #[with_lifecycle(test_lifecycle)]
     #[tokio::test]
-    async fn test_projector_ignores_unknown_event_type() -> Result<(), Box<dyn std::error::Error>>
-    {
+    async fn test_projector_ignores_unknown_event_type() -> Result<(), Box<dyn std::error::Error>> {
         let default_pool = get_default_pool().await?;
         refresh_databases(&default_pool, "test_token").await?;
 
@@ -160,7 +176,10 @@ pub mod tests {
             })
             .await;
 
-        assert!(result.is_ok(), "unknown event type must not produce an error");
+        assert!(
+            result.is_ok(),
+            "unknown event type must not produce an error"
+        );
 
         Ok(())
     }

@@ -22,4 +22,4 @@ fi
 export PATH="$HOME/.deno/bin:$PATH"
 
 # Install global packages
-deno install -g npm:tailwind npm:@tailwindcss/cli
+deno install -fg npm:tailwind npm:@tailwindcss/cli

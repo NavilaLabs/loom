@@ -25,13 +25,29 @@ impl Projector for UserProjector {
     async fn handle(&mut self, event: RawEvent) -> Result<(), Self::Error> {
         match event.event_type.as_str() {
             "UserCreated" => {
-                let UserEvent::Created { id, name } = serde_json::from_slice(&event.payload_bytes)?;
+                let UserEvent::Created {
+                    id,
+                    name,
+                    email,
+                    password_hash,
+                } = serde_json::from_slice(&event.payload_bytes)?;
 
                 let query = Query::insert()
                     .into_table(TableRef::from(Self::TABLE))
-                    .columns([DynIden::from("id"), DynIden::from("name")])
-                    .values_panic([id.to_string().into(), name.into()])
+                    .columns([
+                        DynIden::from("id"),
+                        DynIden::from("name"),
+                        DynIden::from("email"),
+                        DynIden::from("password_hash"),
+                    ])
+                    .values_panic([
+                        id.to_string().into(),
+                        name.into(),
+                        email.into(),
+                        password_hash.into(),
+                    ])
                     .to_owned();
+
                 let (sql, values) = match self.pool.get_database_type() {
                     DatabaseType::Sqlite => query.build_sqlx(SqliteQueryBuilder),
                     DatabaseType::Postgres => query.build_sqlx(PostgresQueryBuilder),

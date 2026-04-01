@@ -277,3 +277,7 @@
         background: transparent;
     }
 }
+
+body > #main {
+    justify-items: anchor-center;
+}

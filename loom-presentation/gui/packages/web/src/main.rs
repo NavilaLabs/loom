@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use dioxus_motion::prelude::*;
 use ui::{
-    views::{Database, Login},
+    views::{setup::Admin as SetupAdmin, Database, Login},
     FAVICON,
 };
 
@@ -15,6 +15,9 @@ enum Route {
         #[route("/developer/database")]
         #[transition()]
         Database {},
+        #[route("/setup/admin")]
+        #[transition()]
+        SetupAdmin {},
 }
 
 #[cfg(not(feature = "server"))]

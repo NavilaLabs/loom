@@ -21,4 +21,10 @@ pub enum Error {
     UrlParseError(#[from] url::ParseError),
     #[error("{0}")]
     UuidError(#[from] uuid::Error),
+    #[error("bcrypt error: {0}")]
+    BcryptError(#[from] bcrypt::BcryptError),
+    #[error("JWT error: {0}")]
+    JwtError(#[from] jsonwebtoken::errors::Error),
+    #[error("invalid credentials")]
+    InvalidCredentials,
 }

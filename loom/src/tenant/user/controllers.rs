@@ -22,8 +22,14 @@ impl UserController {
         }
     }
 
-    pub async fn create_user(&self, id: UserId, email: String) -> Result<()> {
-        let mut root = self.commands.create(id, email)?;
+    pub async fn create_user(
+        &self,
+        id: UserId,
+        name: String,
+        email: String,
+        password_hash: String,
+    ) -> Result<()> {
+        let mut root = self.commands.create(id, name, email, password_hash)?;
         self.repository.save(&mut root).await?;
 
         Ok(())

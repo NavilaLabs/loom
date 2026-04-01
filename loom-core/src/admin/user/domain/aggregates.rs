@@ -9,6 +9,8 @@ pub type UserId = AggregateId;
 pub struct User {
     id: UserId,
     name: String,
+    email: String,
+    password_hash: String,
 }
 
 impl User {
@@ -18,6 +20,10 @@ impl User {
 
     pub fn name(&self) -> &str {
         &self.name
+    }
+
+    pub fn email(&self) -> &str {
+        &self.email
     }
 }
 
@@ -42,7 +48,20 @@ impl Aggregate for User {
 
     fn apply(state: Option<Self>, event: Self::Event) -> Result<Self, Self::Error> {
         match (state, event) {
-            (None, UserEvent::Created { id, name }) => Ok(Self { id, name }),
+            (
+                None,
+                UserEvent::Created {
+                    id,
+                    name,
+                    email,
+                    password_hash,
+                },
+            ) => Ok(Self {
+                id,
+                name,
+                email,
+                password_hash,
+            }),
             (Some(_), UserEvent::Created { .. }) => Err(Error::AlreadyExists),
         }
     }
@@ -58,32 +77,32 @@ mod tests {
             .expect("valid UUID")
     }
 
+    fn created_event(id: UserId, name: &str) -> UserEvent {
+        UserEvent::Created {
+            id,
+            name: name.to_string(),
+            email: "alice@example.com".to_string(),
+            password_hash: "$2b$12$hash".to_string(),
+        }
+    }
+
     #[test]
     fn apply_created_event_to_no_state_builds_user() {
         let id = test_id();
-        let event = UserEvent::Created {
-            id: id.clone(),
-            name: "Alice".to_string(),
-        };
+        let event = created_event(id.clone(), "Alice");
         let result = User::apply(None, event);
         assert!(result.is_ok());
         let user = result.unwrap();
         assert_eq!(user.id(), &id);
         assert_eq!(user.name(), "Alice");
+        assert_eq!(user.email(), "alice@example.com");
     }
 
     #[test]
     fn apply_created_event_to_existing_user_returns_already_exists() {
         let id = test_id();
-        let existing = User {
-            id: id.clone(),
-            name: "Alice".to_string(),
-        };
-        let event = UserEvent::Created {
-            id: id.clone(),
-            name: "Bob".to_string(),
-        };
-        let result = User::apply(Some(existing), event);
+        let existing = User::apply(None, created_event(id.clone(), "Alice")).unwrap();
+        let result = User::apply(Some(existing), created_event(id, "Bob"));
         assert!(matches!(result, Err(Error::AlreadyExists)));
     }
 }

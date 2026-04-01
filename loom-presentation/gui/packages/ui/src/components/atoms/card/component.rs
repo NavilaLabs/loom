@@ -4,12 +4,15 @@ use dioxus::prelude::*;
 pub fn Card(
     #[props(extends=GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
+    #[props(into, default)] class: String,
+    #[props(into, default)] data_size: Option<String>,
 ) -> Element {
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div {
-            class: "card",
+            class: format!("card {}", class),
             "data-slot": "card",
+            "data-size": data_size,
             ..attributes,
             {children}
         }
@@ -20,10 +23,11 @@ pub fn Card(
 pub fn CardHeader(
     #[props(extends=GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
+    #[props(into, default)] class: String,
 ) -> Element {
     rsx! {
         div {
-            class: "card-header",
+            class: format!("card-header {}", class),
             "data-slot": "card-header",
             ..attributes,
             {children}
@@ -35,10 +39,11 @@ pub fn CardHeader(
 pub fn CardTitle(
     #[props(extends=GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
+    #[props(into, default)] class: String,
 ) -> Element {
     rsx! {
         div {
-            class: "card-title",
+            class: format!("card-title {}", class),
             "data-slot": "card-title",
             ..attributes,
             {children}
@@ -50,10 +55,11 @@ pub fn CardTitle(
 pub fn CardDescription(
     #[props(extends=GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
+    #[props(into, default)] class: String,
 ) -> Element {
     rsx! {
         div {
-            class: "card-description",
+            class: format!("card-description {}", class),
             "data-slot": "card-description",
             ..attributes,
             {children}
@@ -65,10 +71,11 @@ pub fn CardDescription(
 pub fn CardAction(
     #[props(extends=GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
+    #[props(into, default)] class: String,
 ) -> Element {
     rsx! {
         div {
-            class: "card-action",
+            class: format!("card-action {}", class),
             "data-slot": "card-action",
             ..attributes,
             {children}
@@ -80,10 +87,11 @@ pub fn CardAction(
 pub fn CardContent(
     #[props(extends=GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
+    #[props(into, default)] class: String,
 ) -> Element {
     rsx! {
         div {
-            class: "card-content",
+            class: format!("card-content {}", class),
             "data-slot": "card-content",
             ..attributes,
             {children}
@@ -95,10 +103,11 @@ pub fn CardContent(
 pub fn CardFooter(
     #[props(extends=GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
+    #[props(into, default)] class: String,
 ) -> Element {
     rsx! {
         div {
-            class: "card-footer",
+            class: format!("card-footer {}", class),
             "data-slot": "card-footer",
             ..attributes,
             {children}

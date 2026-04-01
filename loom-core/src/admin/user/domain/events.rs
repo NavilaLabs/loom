@@ -5,7 +5,12 @@ use crate::admin::user::UserId;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum UserEvent {
-    Created { id: UserId, name: String },
+    Created {
+        id: UserId,
+        name: String,
+        email: String,
+        password_hash: String,
+    },
 }
 
 impl Message for UserEvent {

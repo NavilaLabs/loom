@@ -1,9 +1,18 @@
 use std::fmt::Debug;
 
+pub struct Credentials<'a> {
+    pub user_id: &'a str,
+    pub email: &'a str,
+    /// Plaintext password supplied by the caller.
+    pub password: &'a str,
+    /// Bcrypt hash stored in the database; the strategy verifies against this.
+    pub password_hash: &'a str,
+}
+
 pub trait AuthenticationStrategy {
     type Error: Debug;
 
-    fn authenticate<U>(&self, secret: &str, name: Option<&str>) -> Result<Option<U>, Self::Error>;
+    fn authenticate(&self, credentials: Credentials<'_>) -> Result<String, Self::Error>;
 }
 
 pub struct Authenticator<T: AuthenticationStrategy> {
@@ -15,7 +24,7 @@ impl<T: AuthenticationStrategy> Authenticator<T> {
         Self { strategy }
     }
 
-    pub fn authenticate<U>(&self, secret: &str, name: Option<&str>) -> Result<Option<U>, T::Error> {
-        self.strategy.authenticate(secret, name)
+    pub fn authenticate(&self, credentials: Credentials<'_>) -> Result<String, T::Error> {
+        self.strategy.authenticate(credentials)
     }
 }

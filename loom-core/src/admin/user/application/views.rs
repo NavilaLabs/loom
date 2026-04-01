@@ -4,11 +4,12 @@ use crate::admin::user::UserId;
 pub struct UserView {
     id: UserId,
     name: String,
+    email: String,
 }
 
 impl UserView {
-    pub fn new(id: UserId, name: String) -> Self {
-        Self { id, name }
+    pub fn new(id: UserId, name: String, email: String) -> Self {
+        Self { id, name, email }
     }
 
     pub fn get_id(&self) -> &UserId {
@@ -17,5 +18,9 @@ impl UserView {
 
     pub fn get_name(&self) -> &str {
         &self.name
+    }
+
+    pub fn get_email(&self) -> &str {
+        &self.email
     }
 }

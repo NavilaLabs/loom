@@ -12,12 +12,24 @@ use crate::admin::user::{
 pub struct UserCommand;
 
 impl UserCommand {
-    pub fn create(&self, id: UserId, name: String) -> Result<Self, crate::Error> {
-        Ok(
-            aggregate::Root::<User>::record_new(UserEvent::Created { id, name }.into())
-                .map_err(|error| user::DomainError::from(error))?
-                .into(),
+    pub fn create(
+        &self,
+        id: UserId,
+        name: String,
+        email: String,
+        password_hash: String,
+    ) -> Result<Self, crate::Error> {
+        Ok(aggregate::Root::<User>::record_new(
+            UserEvent::Created {
+                id,
+                name,
+                email,
+                password_hash,
+            }
+            .into(),
         )
+        .map_err(|error| user::DomainError::from(error))?
+        .into())
     }
 }
 
@@ -35,6 +47,8 @@ mod tests {
             UserEvent::Created {
                 id: id.clone(),
                 name: "seed".to_string(),
+                email: "seed@example.com".to_string(),
+                password_hash: "$2b$12$hash".to_string(),
             },
         )
         .expect("seed user");
@@ -54,7 +68,12 @@ mod tests {
             .parse()
             .expect("valid UUID");
 
-        let result = shell.create(id.clone(), "Alice".to_string());
+        let result = shell.create(
+            id.clone(),
+            "Alice".to_string(),
+            "alice@example.com".to_string(),
+            "$2b$12$hash".to_string(),
+        );
 
         assert!(result.is_ok());
         let cmd = result.unwrap();
@@ -65,8 +84,16 @@ mod tests {
 
     #[test]
     fn create_propagates_aggregate_error_on_bad_event() {
-        // record_new on Created succeeds — verify the happy path doesn't panic
         let shell = make_command_shell(test_id());
-        assert!(shell.create(test_id(), "Bob".to_string()).is_ok());
+        assert!(
+            shell
+                .create(
+                    test_id(),
+                    "Bob".to_string(),
+                    "bob@example.com".to_string(),
+                    "$2b$12$hash".to_string(),
+                )
+                .is_ok()
+        );
     }
 }

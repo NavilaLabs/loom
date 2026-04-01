@@ -33,12 +33,13 @@ pub fn Button(
     onmousedown: Option<EventHandler<MouseEvent>>,
     onmouseup: Option<EventHandler<MouseEvent>>,
     children: Element,
+    #[props(into, default)] class: String,
 ) -> Element {
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
 
         button {
-            class: "button",
+            class: format!("button {}", class),
             "data-style": variant.class(),
             onclick: move |event| {
                 if let Some(f) = &onclick {

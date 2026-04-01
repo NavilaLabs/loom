@@ -11,22 +11,42 @@ body {
     flex-direction: column;
     gap: 1rem;
     height: 100vh;
-    padding: 0.5rem;
+    .default-layout-content {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        align-items: center;
+    }
 }
 
 /* Break points */
-@media (min-width: 640px) {
+/*@media (min-width: 640px) {
     .default-layout {
-        padding: 1.5rem;
+        width: 100%;
+        max-width: 608px;
     }
 }
 @media (min-width: 768px) {
     .default-layout {
-        padding: 2rem;
+        width: 100%;
+        max-width: 730px;
     }
 }
 @media (min-width: 1024px) {
     .default-layout {
-        padding: 2.5rem;
+        width: 100%;
+        max-width: 973px;
     }
 }
+@media (min-width: 1280px) {
+    .default-layout {
+        width: 100%;
+        max-width: 1216px;
+    }
+}
+@media (min-width: 1536px) {
+    .default-layout {
+        width: 100%;
+        max-width: 1460px;
+    }
+}*/

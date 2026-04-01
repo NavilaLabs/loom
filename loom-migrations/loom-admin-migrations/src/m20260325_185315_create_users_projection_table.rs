@@ -13,6 +13,8 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(pk_uuid("id"))
                     .col(string("name"))
+                    .col(string("email"))
+                    .col(string("password_hash"))
                     .to_owned(),
             )
             .await
