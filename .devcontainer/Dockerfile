@@ -49,4 +49,4 @@ RUN cargo install sea-orm-cli@^2.0.0-rc
 RUN cargo binstall wasm-pack
 RUN cargo binstall dioxus-cli --force
 
-RUN curl -fsSL https://claude.ai/install.sh | bash
+RUN cargo binstall just

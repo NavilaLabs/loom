@@ -4,6 +4,8 @@ services:
       context: ..
       dockerfile: .devcontainer/Dockerfile
     command: sleep infinity
+    ports:
+      - "8080:8080"
     networks:
       - local
     volumes:
