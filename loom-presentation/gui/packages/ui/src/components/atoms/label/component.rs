@@ -1,31 +1,22 @@
 use dioxus::{core::AttributeValue, prelude::*};
 use dioxus_i18n::fluent::types::AnyEq;
-use dioxus_primitives::label::{self, LabelProps};
+use dioxus_primitives::{
+    dioxus_attributes::attributes,
+    label::{self, LabelProps},
+    merge_attributes,
+};
 
 #[component]
-pub fn Label(
-    LabelProps {
-        html_for,
-        attributes,
-        children,
-    }: LabelProps,
-) -> Element {
-    let extra_class = attributes
-        .iter()
-        .find(|a| a.name == "class")
-        .and_then(|a| match &a.value {
-            AttributeValue::Text(s) => Some(s.as_str()),
-            _ => None,
-        })
-        .unwrap_or("");
+pub fn Label(props: LabelProps) -> Element {
+    let base = attributes!(label { class: "label" });
+    let merged = merge_attributes(vec![base, props.attributes.clone()]);
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
         label::Label {
-            class: format!("label {}", extra_class),
-            html_for: html_for,
-            attributes: attributes,
-            {children}
+            html_for: props.html_for,
+            attributes: merged,
+            {props.children}
         }
     }
 }

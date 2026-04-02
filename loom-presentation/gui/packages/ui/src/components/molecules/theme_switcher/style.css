@@ -1,0 +1,83 @@
+/* Theme Switcher — fixed bottom-left FAB + drop-up menu */
+
+.theme-switcher {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  z-index: 500;
+}
+
+/* Make the trigger a round FAB */
+.theme-switcher .dropdown-menu-trigger {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: var(--radius-icon);
+  background-color: var(--color-btn-primary-bg);
+  color: var(--color-btn-primary-text);
+  box-shadow: var(--shadow-raised);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-switcher .dropdown-menu-trigger:hover {
+  background-color: var(--color-btn-primary-hover);
+  color: var(--color-btn-primary-text);
+}
+
+/* Drop-up: open above the trigger */
+.theme-switcher .dropdown-menu-content {
+  bottom: calc(100% + 8px);
+  top: auto;
+  left: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* Flip animations for drop-up direction */
+.theme-switcher .dropdown-menu-content[data-state="closed"] {
+  animation: theme-menu-animate-out 150ms ease-in forwards;
+}
+
+.theme-switcher .dropdown-menu-content[data-state="open"] {
+  animation: theme-menu-animate-in 150ms ease-out forwards;
+}
+
+@keyframes theme-menu-animate-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes theme-menu-animate-out {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(4px);
+  }
+}
+
+/* Item inner layout */
+.theme-menu-item-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.theme-menu-item-check {
+  margin-left: auto;
+  color: var(--color-primary-500);
+  font-size: 12px;
+}

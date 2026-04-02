@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 api = { workspace = true }
 dioxus = { workspace = true }
-dioxus-primitives = { git = "https://github.com/DioxusLabs/components", default-features = false, features = ["router", "web"] }
+dioxus-primitives = { git = "https://github.com/DioxusLabs/components", default-features = false, features = ["router", "web"], version = "0.0.1" }
 dioxus-free-icons = { workspace = true }
 dioxus-i18n = { workspace = true }
 unic-langid = { workspace = true }

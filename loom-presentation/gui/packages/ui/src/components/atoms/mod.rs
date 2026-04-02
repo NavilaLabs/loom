@@ -7,6 +7,9 @@ pub use button::*;
 pub mod card;
 pub use card::*;
 
+pub mod dropdown_menu;
+pub use dropdown_menu::*;
+
 pub mod form;
 pub use form::*;
 
