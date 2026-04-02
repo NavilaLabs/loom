@@ -1,4 +1,5 @@
 use crate::components::atoms::{Button, Headline, Input, Label};
+use crate::components::organisms::Header;
 use crate::layouts::DefaultLayout;
 use dioxus::prelude::*;
 
@@ -6,8 +7,6 @@ use dioxus::prelude::*;
 pub fn Login() -> Element {
     rsx! {
         DefaultLayout {
-            Headline { "Login" }
-
             Label { html_for: "username", "Username" }
             Input { id: "username" }
             Label { html_for: "password", "Password" }

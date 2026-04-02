@@ -1,17 +1,21 @@
 use dioxus::prelude::*;
+use dioxus_primitives::dioxus_attributes::attributes;
+use dioxus_primitives::merge_attributes;
 use dioxus_primitives::navbar::{
     self, NavbarContentProps, NavbarItemProps, NavbarNavProps, NavbarProps, NavbarTriggerProps,
 };
 
 #[component]
 pub fn Navbar(props: NavbarProps) -> Element {
+    let base = attributes!(div { class: "navbar" });
+    let merged = merge_attributes(vec![base, props.attributes.clone()]);
+
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
         navbar::Navbar {
-            class: "navbar",
             disabled: props.disabled,
             roving_loop: props.roving_loop,
-            attributes: props.attributes,
+            attributes: merged,
             {props.children}
         }
     }
@@ -19,12 +23,14 @@ pub fn Navbar(props: NavbarProps) -> Element {
 
 #[component]
 pub fn NavbarNav(props: NavbarNavProps) -> Element {
+    let base = attributes!(div { class: "navbar-nav" });
+    let merged = merge_attributes(vec![base, props.attributes.clone()]);
+
     rsx! {
         navbar::NavbarNav {
-            class: "navbar-nav",
             index: props.index,
             disabled: props.disabled,
-            attributes: props.attributes,
+            attributes: merged,
             {props.children}
         }
     }
@@ -32,8 +38,12 @@ pub fn NavbarNav(props: NavbarNavProps) -> Element {
 
 #[component]
 pub fn NavbarTrigger(props: NavbarTriggerProps) -> Element {
+    let base = attributes!(button { class: "navbar-trigger" });
+    let merged = merge_attributes(vec![base, props.attributes.clone()]);
+
     rsx! {
-        navbar::NavbarTrigger { class: "navbar-trigger", attributes: props.attributes,
+        navbar::NavbarTrigger {
+            attributes: merged,
             {props.children}
             svg {
                 class: "navbar-expand-icon",
@@ -47,28 +57,35 @@ pub fn NavbarTrigger(props: NavbarTriggerProps) -> Element {
 
 #[component]
 pub fn NavbarContent(props: NavbarContentProps) -> Element {
+    let base = attributes!(div { class: "navbar-content" });
+    let merged = merge_attributes(vec![base, props.attributes.clone()]);
+
     rsx! {
-        navbar::NavbarContent {
-            class: "navbar-content",
-            id: props.id,
-            attributes: props.attributes,
-            {props.children}
-        }
+        navbar::NavbarContent { id: props.id, attributes: merged, {props.children} }
     }
 }
 
 #[component]
 pub fn NavbarItem(props: NavbarItemProps) -> Element {
+    let base = attributes!(a { class: "navbar-item" });
+    let user_class = props
+        .class
+        .as_deref()
+        .filter(|c| !c.is_empty())
+        .map(|c| attributes!(a { class: c }))
+        .unwrap_or_default();
+    let merged = merge_attributes(vec![base, user_class, props.attributes.clone()]);
+
     rsx! {
         navbar::NavbarItem {
-            class: "navbar-item",
+            class: None,
             index: props.index,
             value: props.value,
             disabled: props.disabled,
             new_tab: props.new_tab,
             to: props.to,
             active_class: props.active_class,
-            attributes: props.attributes,
+            attributes: merged,
             on_select: props.on_select,
             onclick: props.onclick,
             onmounted: props.onmounted,

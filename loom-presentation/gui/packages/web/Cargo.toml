@@ -6,9 +6,11 @@ edition = "2021"
 [dependencies]
 api = { workspace = true }
 axum = {version="0.8", optional = true}
+convert_case = "0.11.0"
 dioxus = { workspace = true, features = ["router", "fullstack"] }
 dioxus-motion = { git = "https://github.com/wheregmis/dioxus-motion.git", branch = "main", features = ["web", "transitions"] }
 dotenvy = { workspace = true }
+easer = { version = "0.3.0", default-features = false }
 tokio = { version = "1", optional = true }
 ui = { workspace = true }
 

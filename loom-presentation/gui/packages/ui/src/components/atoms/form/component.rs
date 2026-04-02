@@ -1,4 +1,6 @@
 use dioxus::prelude::*;
+use dioxus_primitives::dioxus_attributes::attributes;
+use dioxus_primitives::merge_attributes;
 
 #[component]
 pub fn Form(
@@ -6,14 +8,12 @@ pub fn Form(
     #[props(extends=form)]
     attributes: Vec<Attribute>,
     children: Element,
-    #[props(into, default)] class: String,
 ) -> Element {
+    let base = attributes!(form { class: "form w-full" });
+    let merged = merge_attributes(vec![base, attributes]);
+
     rsx! {
-        form {
-            class: format!("form w-full {}", class),
-            ..attributes,
-            {children}
-        }
+        form { ..merged, {children} }
     }
 }
 
@@ -21,13 +21,11 @@ pub fn Form(
 pub fn FormField(
     #[props(extends=GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
-    #[props(into, default)] class: String,
 ) -> Element {
+    let base = attributes!(div { class: "form-field w-full my-2" });
+    let merged = merge_attributes(vec![base, attributes]);
+
     rsx! {
-        div {
-            class: format!("form-field w-full my-2 {}", class),
-            ..attributes,
-            {children}
-        }
+        div { ..merged, {children} }
     }
 }

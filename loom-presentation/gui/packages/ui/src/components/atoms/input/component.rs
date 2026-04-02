@@ -1,4 +1,6 @@
 use dioxus::prelude::*;
+use dioxus_primitives::dioxus_attributes::attributes;
+use dioxus_primitives::merge_attributes;
 
 #[component]
 pub fn Input(
@@ -24,12 +26,13 @@ pub fn Input(
     #[props(extends=input)]
     attributes: Vec<Attribute>,
     children: Element,
-    #[props(into, default)] class: String,
 ) -> Element {
+    let base = attributes!(input { class: "input" });
+    let merged = merge_attributes(vec![base, attributes]);
+
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
         input {
-            class: format!("input {}", class),
             oninput: move |e| _ = oninput.map(|callback| callback(e)),
             onchange: move |e| _ = onchange.map(|callback| callback(e)),
             oninvalid: move |e| _ = oninvalid.map(|callback| callback(e)),
@@ -48,7 +51,7 @@ pub fn Input(
             oncopy: move |e| _ = oncopy.map(|callback| callback(e)),
             oncut: move |e| _ = oncut.map(|callback| callback(e)),
             onpaste: move |e| _ = onpaste.map(|callback| callback(e)),
-            ..attributes,
+            ..merged,
             {children}
         }
     }

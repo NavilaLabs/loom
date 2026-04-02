@@ -2,6 +2,7 @@ use crate::components::atoms::{
     Button, ButtonVariant, Card, CardContent, CardFooter, Form, FormField, Headline, Input, Label,
     TabContent, TabList, TabTrigger, Tabs,
 };
+use crate::components::organisms::Header;
 use crate::layouts::DefaultLayout;
 use dioxus::prelude::*;
 
@@ -15,9 +16,9 @@ pub fn Setup() -> Element {
     let mut workspace_name = use_signal(String::new);
 
     rsx! {
-        DefaultLayout {
-            headline: rsx! { Headline { "Setup" } },
+        Header {}
 
+        DefaultLayout {
             Card {
                 class: "w-full",
                 data_size: "md",

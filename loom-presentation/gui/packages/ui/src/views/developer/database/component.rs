@@ -5,6 +5,7 @@ use crate::components::atoms::card::{
     Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle,
 };
 use crate::components::atoms::{Button, Headline, Tooltip, TooltipContent, TooltipTrigger};
+use crate::components::organisms::Header;
 use crate::layouts::DefaultLayout;
 use dioxus::prelude::*;
 use dioxus_free_icons::icons::hi_solid_icons::HiArrowRight;
@@ -23,8 +24,6 @@ pub fn Database() -> Element {
 
     rsx! {
         DefaultLayout {
-            Headline { "Developer" }
-
             Accordion { class: "developer-actions",
                 AccordionItem { index: 1, default_open: true,
                     AccordionTrigger { {tid!("developer-actions-database")} }
