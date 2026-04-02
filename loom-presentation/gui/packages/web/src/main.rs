@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use dioxus_motion::prelude::*;
 use ui::{
-    views::{setup::Admin as SetupAdmin, Database, Login},
+    views::{setup::Setup, Database, Login},
     FAVICON,
 };
 
@@ -22,9 +22,9 @@ enum Route {
         #[route("/developer/database")]
         #[transition()]
         Database {},
-        #[route("/setup/admin")]
+        #[route("/setup")]
         #[transition()]
-        SetupAdmin {},
+        Setup {},
 
     #[route("/:..segments")]
     NotFound { segments: Vec<String> },

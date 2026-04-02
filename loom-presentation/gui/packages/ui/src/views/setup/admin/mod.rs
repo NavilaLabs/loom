@@ -1,2 +1,2 @@
 mod component;
-pub use component::Admin;
+pub use component::Setup;
