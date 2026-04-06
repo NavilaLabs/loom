@@ -9,13 +9,10 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table("projections__users")
+                    .table("permissions")
                     .if_not_exists()
                     .col(pk_uuid("id"))
                     .col(string("name"))
-                    .col(string("email"))
-                    .col(string_null("password"))
-                    .col(string_null("salt"))
                     .to_owned(),
             )
             .await
@@ -23,7 +20,7 @@ impl MigrationTrait for Migration {
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table("projections__users").to_owned())
+            .drop_table(Table::drop().table("permissions").to_owned())
             .await
     }
 }

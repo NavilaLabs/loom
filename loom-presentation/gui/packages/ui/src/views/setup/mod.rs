@@ -1,2 +1,2 @@
-pub mod admin;
-pub use admin::*;
+pub mod component;
+pub use component::*;

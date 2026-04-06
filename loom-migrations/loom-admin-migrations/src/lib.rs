@@ -6,6 +6,12 @@ mod m20251214_102201_create_events_table;
 mod m20251215_183831_create_snapshots_table;
 mod m20260325_145345_add_global_position;
 mod m20260325_185315_create_users_projection_table;
+mod m20260406_000001_create_permissions_table;
+mod m20260406_000002_create_workspaces_projection_table;
+mod m20260406_000003_create_workspace_roles_projection_table;
+mod m20260406_000004_create_workspace_user_roles_projection_table;
+mod m20260406_000005_create_workspace_user_permissions_projection_table;
+mod m20260406_000006_create_workspace_role_permissions_projection_table;
 
 pub struct Migrator;
 
@@ -18,6 +24,12 @@ impl MigratorTrait for Migrator {
             Box::new(m20251215_183831_create_snapshots_table::Migration),
             Box::new(m20260325_145345_add_global_position::Migration),
             Box::new(m20260325_185315_create_users_projection_table::Migration),
+            Box::new(m20260406_000001_create_permissions_table::Migration),
+            Box::new(m20260406_000002_create_workspaces_projection_table::Migration),
+            Box::new(m20260406_000003_create_workspace_roles_projection_table::Migration),
+            Box::new(m20260406_000004_create_workspace_user_roles_projection_table::Migration),
+            Box::new(m20260406_000005_create_workspace_user_permissions_projection_table::Migration),
+            Box::new(m20260406_000006_create_workspace_role_permissions_projection_table::Migration),
         ]
     }
 }
