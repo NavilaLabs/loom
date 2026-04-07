@@ -10,7 +10,7 @@ pub struct User {
     id: UserId,
     name: String,
     email: String,
-    password_hash: String,
+    password: String,
 }
 
 impl User {
@@ -54,13 +54,13 @@ impl Aggregate for User {
                     id,
                     name,
                     email,
-                    password_hash,
+                    password,
                 },
             ) => Ok(Self {
                 id,
                 name,
                 email,
-                password_hash,
+                password,
             }),
             (Some(_), UserEvent::Created { .. }) => Err(Error::AlreadyExists),
         }
@@ -82,7 +82,7 @@ mod tests {
             id,
             name: name.to_string(),
             email: "alice@example.com".to_string(),
-            password_hash: "$2b$12$hash".to_string(),
+            password: "$2b$12$hash".to_string(),
         }
     }
 

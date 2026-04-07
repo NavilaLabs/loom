@@ -17,14 +17,14 @@ impl UserCommand {
         id: UserId,
         name: String,
         email: String,
-        password_hash: String,
+        password: String,
     ) -> Result<Self, crate::Error> {
         Ok(aggregate::Root::<User>::record_new(
             UserEvent::Created {
                 id,
                 name,
                 email,
-                password_hash,
+                password,
             }
             .into(),
         )
@@ -48,7 +48,7 @@ mod tests {
                 id: id.clone(),
                 name: "seed".to_string(),
                 email: "seed@example.com".to_string(),
-                password_hash: "$2b$12$hash".to_string(),
+                password: "$2b$12$hash".to_string(),
             },
         )
         .expect("seed user");

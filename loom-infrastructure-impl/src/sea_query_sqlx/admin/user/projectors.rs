@@ -29,7 +29,7 @@ impl Projector for UserProjector {
                     id,
                     name,
                     email,
-                    password_hash,
+                    password,
                 } = serde_json::from_slice(&event.payload_bytes)?;
 
                 let query = Query::insert()
@@ -39,14 +39,12 @@ impl Projector for UserProjector {
                         DynIden::from("name"),
                         DynIden::from("email"),
                         DynIden::from("password"),
-                        DynIden::from("salt"),
                     ])
                     .values_panic([
                         id.to_string().into(),
                         name.into(),
                         email.into(),
-                        password_hash.into(),
-                        "".into(),
+                        password.into(),
                     ])
                     .to_owned();
 

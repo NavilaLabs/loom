@@ -59,7 +59,7 @@ pub mod tests {
                 id: id.clone(),
                 name: "Alice".to_string(),
                 email: "alice@example.com".to_string(),
-                password_hash: "".to_string(),
+                password: "".to_string(),
             }
             .into(),
         )
@@ -86,7 +86,7 @@ pub mod tests {
                 id: id.clone(),
                 name: "Alice".to_string(),
                 email: "alice@example.com".to_string(),
-                password_hash: "".to_string(),
+                password: "".to_string(),
             },
         )
         .expect("first Created is valid");
@@ -97,7 +97,7 @@ pub mod tests {
                 id,
                 name: "Bob".to_string(),
                 email: "bob@example.com".to_string(),
-                password_hash: "".to_string(),
+                password: "".to_string(),
             },
         );
         assert!(
@@ -124,7 +124,7 @@ pub mod tests {
             id: id.clone(),
             name: "Alice".to_string(),
             email: "alice@example.com".to_string(),
-            password_hash: "".to_string(),
+            password: "".to_string(),
         };
         let payload_bytes = serde_json::to_vec(&event)?;
 

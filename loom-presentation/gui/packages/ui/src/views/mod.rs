@@ -1,3 +1,5 @@
+pub mod dashboard;
+pub use dashboard::*;
 pub mod developer;
 pub use developer::*;
 pub mod login;

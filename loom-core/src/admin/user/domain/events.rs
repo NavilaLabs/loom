@@ -9,7 +9,7 @@ pub enum UserEvent {
         id: UserId,
         name: String,
         email: String,
-        password_hash: String,
+        password: String,
     },
 }
 

@@ -3,7 +3,7 @@ use dioxus_motion::prelude::*;
 use easer::functions::Easing;
 use ui::{
     components::{atoms::Headline, molecules::ThemeSwitcher, organisms::Header},
-    views::{setup::Setup, Database, Login},
+    views::{setup::Setup, Dashboard, Database, Login},
     FAVICON,
 };
 
@@ -20,6 +20,8 @@ enum Route {
     #[layout(Layout)]
         #[route("/login")]
         Login {},
+        #[route("/dashboard")]
+        Dashboard {},
         #[route("/developer/database")]
         Database {},
         #[route("/setup")]
@@ -62,6 +64,7 @@ fn App() -> Element {
                 Route::Login { .. } => 0,
                 Route::Setup { .. } => 1,
                 Route::Database { .. } => 2,
+                Route::Dashboard { .. } => 3,
                 _ => -1,
             }
         }

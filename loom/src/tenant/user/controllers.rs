@@ -23,9 +23,9 @@ impl<R: UserRepository> UserController<R> {
         id: UserId,
         name: String,
         email: String,
-        password_hash: String,
+        password: String,
     ) -> Result<()> {
-        let mut root = self.commands.create(id, name, email, password_hash)?;
+        let mut root = self.commands.create(id, name, email, password)?;
         self.repository.save(&mut root).await?;
 
         Ok(())

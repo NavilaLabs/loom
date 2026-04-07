@@ -1,8 +1,9 @@
 use anyhow::Result;
-use eventually::aggregate::repository::Saver;
+use eventually::aggregate::{Root, repository::Saver};
 use loom_core::admin::{
     user::{UserEvent, UserId},
-    workspace::{WorkspaceEvent, WorkspaceId},
+    workspace::{Workspace, WorkspaceEvent, WorkspaceId},
+    workspace_role::{WorkspaceRole, WorkspaceRoleEvent, WorkspaceRoleId},
 };
 use loom_infrastructure_impl::{
     Pool,
@@ -10,6 +11,7 @@ use loom_infrastructure_impl::{
         authentication::hash_password,
         user::repositories::UserRepository,
         workspace::repositories::WorkspaceRepository,
+        workspace_role::repositories::WorkspaceRoleRepository,
     },
 };
 
@@ -27,30 +29,53 @@ pub async fn setup_application(
         anyhow::bail!("application is already set up");
     }
 
-    let password_hash = hash_password(&password)?;
-
+    // 1. Create the admin user.
+    let password = hash_password(&password)?;
     let user_id = UserId::new();
-    let mut user_root = eventually::aggregate::Root::<loom_core::admin::user::User>::record_new(
+    let mut user_root = Root::<loom_core::admin::user::User>::record_new(
         UserEvent::Created {
-            id: user_id,
+            id: user_id.clone(),
             name: username,
             email,
-            password_hash,
+            password,
         }
         .into(),
     )?;
     user_repo.save(&mut user_root).await?;
 
-    let workspace_repo = WorkspaceRepository::from_pool(pool).await?;
+    // 2. Create the workspace.
     let workspace_id = WorkspaceId::new();
-    let mut workspace_root =
-        eventually::aggregate::Root::<loom_core::admin::workspace::Workspace>::record_new(
-            WorkspaceEvent::Created {
-                id: workspace_id,
-                name: Some(workspace_name),
-            }
-            .into(),
-        )?;
+    let mut workspace_root = Root::<Workspace>::record_new(
+        WorkspaceEvent::Created {
+            id: workspace_id.clone(),
+            name: Some(workspace_name),
+        }
+        .into(),
+    )?;
+
+    // 3. Create the "admin" role for this workspace.
+    let role_repo = WorkspaceRoleRepository::from_pool(pool.clone()).await?;
+    let role_id = WorkspaceRoleId::new();
+    let mut role_root = Root::<WorkspaceRole>::record_new(
+        WorkspaceRoleEvent::Created {
+            id: role_id.clone(),
+            workspace_id: workspace_id.clone(),
+            name: Some("admin".to_string()),
+        }
+        .into(),
+    )?;
+    role_repo.save(&mut role_root).await?;
+
+    // 4. Assign the user to the workspace with the admin role.
+    workspace_root.record_that(
+        WorkspaceEvent::UserRoleAssigned {
+            user_id,
+            workspace_role_id: role_id,
+        }
+        .into(),
+    )?;
+
+    let workspace_repo = WorkspaceRepository::from_pool(pool).await?;
     workspace_repo.save(&mut workspace_root).await?;
 
     Ok(())

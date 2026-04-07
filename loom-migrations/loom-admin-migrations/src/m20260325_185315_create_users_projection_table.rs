@@ -14,7 +14,7 @@ impl MigrationTrait for Migration {
                     .col(pk_uuid("id"))
                     .col(string("name"))
                     .col(string("email"))
-                    .col(string("password_hash"))
+                    .col(string("password"))
                     .to_owned(),
             )
             .await

@@ -4,6 +4,7 @@ use loom::infrastructure::{
     admin::{
         user::projectors::UserProjector,
         workspace::projectors::WorkspaceProjector,
+        workspace_role::projectors::WorkspaceRoleProjector,
     },
 };
 
@@ -45,6 +46,13 @@ async fn main() -> Result<()> {
         ProjectionRunner::new(pool.clone().into_pool(), ProjectionSource::AllStreams),
         WorkspaceProjector::new(pool.clone()),
         SqlCheckpoint::new(pool.clone().into_pool(), "workspace_projection").await?,
+        backoff.clone(),
+    );
+
+    daemon.register_with_config(
+        ProjectionRunner::new(pool.clone().into_pool(), ProjectionSource::AllStreams),
+        WorkspaceRoleProjector::new(pool.clone()),
+        SqlCheckpoint::new(pool.clone().into_pool(), "workspace_role_projection").await?,
         backoff,
     );
 

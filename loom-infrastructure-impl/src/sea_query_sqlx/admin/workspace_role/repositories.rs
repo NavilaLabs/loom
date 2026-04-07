@@ -1,9 +1,12 @@
 use std::{ops::Deref, str::FromStr};
 
 use async_trait::async_trait;
+use eventually::aggregate::repository::{GetError, Getter, SaveError, Saver};
 use eventually::serde::Json;
 use eventually_any::snapshot::Repository;
-use loom_core::admin::workspace_role::{WorkspaceRole, WorkspaceRoleEvent, WorkspaceRoleView};
+use loom_core::admin::workspace_role::{
+    WorkspaceRole, WorkspaceRoleEvent, WorkspaceRoleId, WorkspaceRoleView,
+};
 use loom_infrastructure::query::{Query, RowToView};
 use sea_query::{Condition, Expr, ExprTrait, Func, SelectStatement};
 use sqlx::{Row, any::AnyRow, types::Uuid};
@@ -34,6 +37,21 @@ impl WorkspaceRoleRepository {
             database,
             repository,
         }
+    }
+
+    pub async fn from_pool(
+        pool: ConnectedAdminPool,
+    ) -> Result<Self, sqlx::migrate::MigrateError> {
+        let repository = Repository::new(
+            pool.as_ref().clone(),
+            Json::default(),
+            Json::default(),
+        )
+        .await?;
+        Ok(Self {
+            database: pool,
+            repository,
+        })
     }
 
     pub fn event_store(
@@ -148,5 +166,25 @@ impl Query<AnyRow> for WorkspaceRoleRepository {
             .await?;
         let n: i64 = row.try_get(0)?;
         Ok(n as u64)
+    }
+}
+
+#[async_trait]
+impl Getter<WorkspaceRole> for WorkspaceRoleRepository {
+    async fn get(
+        &self,
+        id: &WorkspaceRoleId,
+    ) -> Result<eventually::aggregate::Root<WorkspaceRole>, GetError> {
+        self.repository.get(id).await
+    }
+}
+
+#[async_trait]
+impl Saver<WorkspaceRole> for WorkspaceRoleRepository {
+    async fn save(
+        &self,
+        root: &mut eventually::aggregate::Root<WorkspaceRole>,
+    ) -> Result<(), SaveError> {
+        self.repository.save(root).await
     }
 }

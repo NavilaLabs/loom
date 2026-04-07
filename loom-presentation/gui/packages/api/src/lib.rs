@@ -2,4 +2,5 @@
 use dioxus::prelude::*;
 
 pub mod developer;
+pub mod login;
 pub mod setup;

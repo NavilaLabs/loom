@@ -8,7 +8,7 @@ use loom_core::admin::user::{
     User, UserEvent, UserId, UserRepository as UserRepositoryTrait, UserView,
 };
 use loom_infrastructure::query::{Query, RowToView};
-use sea_query::{Condition, Expr, ExprTrait, Func, SelectStatement};
+use sea_query::{Alias, Condition, Expr, ExprTrait, Func, SelectStatement};
 use sqlx::{Row, any::AnyRow, types::Uuid};
 
 use crate::ConnectedAdminPool;
@@ -39,15 +39,9 @@ impl UserRepository {
         }
     }
 
-    pub async fn from_pool(
-        pool: ConnectedAdminPool,
-    ) -> Result<Self, sqlx::migrate::MigrateError> {
-        let repository = Repository::new(
-            pool.as_ref().clone(),
-            Json::default(),
-            Json::default(),
-        )
-        .await?;
+    pub async fn from_pool(pool: ConnectedAdminPool) -> Result<Self, sqlx::migrate::MigrateError> {
+        let repository =
+            Repository::new(pool.as_ref().clone(), Json::default(), Json::default()).await?;
         Ok(Self {
             database: pool,
             repository,
@@ -58,27 +52,34 @@ impl UserRepository {
         &self.repository
     }
 
-    /// Returns `(user_id, email, password_hash)` for the given email — intended
+    /// Returns `(user_id, email, password)` for the given email — intended
     /// only for authentication flows, not general display.
     pub async fn find_credentials_by_email(
         &self,
         email: &str,
     ) -> Result<Option<(String, String, String)>, crate::Error> {
-        let statement = self
-            .select()
-            .columns(["id", "email", "password_hash"])
-            .cond_where(Condition::all().add(Expr::col("email").eq(email)))
+        // Build an explicit SELECT with named expressions to avoid any
+        // wildcard-expansion quirk in sea-query with AnyPool.
+        let statement = sea_query::Query::select()
+            .expr(Expr::col(Alias::new("id")))
+            .expr(Expr::col(Alias::new("email")))
+            .expr(Expr::col(Alias::new("password")))
+            .from(Alias::new(TABLE))
+            .and_where(Expr::col(Alias::new("email")).eq(email))
             .to_owned();
         let (sql, arguments) = self.database.build_query(&statement);
+
+        tracing::debug!(sql = %sql, "find_credentials_by_email");
 
         let row = sqlx::query_with(&sql, arguments)
             .fetch_optional(self.database.as_ref())
             .await?;
 
         row.map(|r| {
-            let id: String = r.try_get("id")?;
-            let email: String = r.try_get("email")?;
-            let hash: String = r.try_get("password_hash")?;
+            // Use positional indices — immune to column-name aliasing by the driver.
+            let id: String = r.try_get(0usize)?;
+            let email: String = r.try_get(1usize)?;
+            let hash: String = r.try_get(2usize)?;
             Ok((id, email, hash))
         })
         .transpose()
