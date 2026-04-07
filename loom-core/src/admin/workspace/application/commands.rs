@@ -19,11 +19,9 @@ pub struct WorkspaceCommand;
 impl WorkspaceCommand {
     pub fn create(&self, id: WorkspaceId, name: Option<String>) -> Result<Self, crate::Error> {
         Ok(
-            aggregate::Root::<Workspace>::record_new(
-                WorkspaceEvent::Created { id, name }.into(),
-            )
-            .map_err(workspace::DomainError::from)?
-            .into(),
+            aggregate::Root::<Workspace>::record_new(WorkspaceEvent::Created { id, name }.into())
+                .map_err(workspace::DomainError::from)?
+                .into(),
         )
     }
 

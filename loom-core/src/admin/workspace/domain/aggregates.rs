@@ -90,10 +90,7 @@ mod tests {
             },
         )
         .unwrap();
-        let result = Workspace::apply(
-            Some(existing),
-            WorkspaceEvent::Created { id, name: None },
-        );
+        let result = Workspace::apply(Some(existing), WorkspaceEvent::Created { id, name: None });
         assert!(matches!(result, Err(Error::AlreadyExists)));
     }
 

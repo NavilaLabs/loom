@@ -152,7 +152,9 @@ impl InitializationStrategy for PostgresInitializationStrategy {
                     .to_owned(),
             ))
             .build_sqlx(PostgresQueryBuilder);
-        let result = sqlx::query_with(&sql, values).fetch_one(pool.as_ref()).await?;
+        let result = sqlx::query_with(&sql, values)
+            .fetch_one(pool.as_ref())
+            .await?;
 
         Ok(result.get(0))
     }

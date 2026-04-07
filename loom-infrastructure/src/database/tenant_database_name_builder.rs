@@ -33,11 +33,11 @@ impl ConcreteBuilder {
 
 impl Builder for ConcreteBuilder {
     fn with_prefix(&mut self, prefix: &str) {
-        self.0 = TenantDatabaseName(format!("{}{}", prefix, self.0 .0));
+        self.0 = TenantDatabaseName(format!("{}{}", prefix, self.0.0));
     }
 
     fn with_tenant_token(&mut self, tenant_token: &str) {
-        self.0 = TenantDatabaseName(format!("{}{}", self.0 .0, tenant_token));
+        self.0 = TenantDatabaseName(format!("{}{}", self.0.0, tenant_token));
     }
 
     fn get_tenant_database_name(self) -> TenantDatabaseName {

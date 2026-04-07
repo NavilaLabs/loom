@@ -36,9 +36,7 @@ impl PermissionRepository {
         }
     }
 
-    pub fn event_store(
-        &self,
-    ) -> &Repository<Permission, Json<Permission>, Json<PermissionEvent>> {
+    pub fn event_store(&self) -> &Repository<Permission, Json<Permission>, Json<PermissionEvent>> {
         &self.repository
     }
 
@@ -89,10 +87,7 @@ impl Query<AnyRow> for PermissionRepository {
         self.row_to_view(row)
     }
 
-    async fn find_one_by(
-        &self,
-        filter: Condition,
-    ) -> Result<Option<PermissionView>, crate::Error> {
+    async fn find_one_by(&self, filter: Condition) -> Result<Option<PermissionView>, crate::Error> {
         let statement = self.select().cond_where(filter).to_owned();
         let (sql, arguments) = self.database.build_query(&statement);
         let row = sqlx::query_with(&sql, arguments)
@@ -109,10 +104,7 @@ impl Query<AnyRow> for PermissionRepository {
             .await
     }
 
-    async fn find_many_by(
-        &self,
-        filter: Condition,
-    ) -> Result<Vec<PermissionView>, crate::Error> {
+    async fn find_many_by(&self, filter: Condition) -> Result<Vec<PermissionView>, crate::Error> {
         let statement = self.select().cond_where(filter).to_owned();
         let (sql, arguments) = self.database.build_query(&statement);
         let rows = sqlx::query_with(&sql, arguments)

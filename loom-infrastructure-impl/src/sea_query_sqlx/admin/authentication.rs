@@ -1,3 +1,7 @@
+pub fn hash_password(password: &str) -> Result<String, bcrypt::BcryptError> {
+    bcrypt::hash(password, bcrypt::DEFAULT_COST)
+}
+
 pub mod jwt {
     use bcrypt::verify;
     use chrono::Utc;

@@ -1,7 +1,9 @@
 use async_trait::async_trait;
 use eventually_projection::{Projector, RawEvent};
 use loom_core::admin::workspace::WorkspaceEvent;
-use sea_query::{Condition, DynIden, Expr, ExprTrait, PostgresQueryBuilder, Query, SqliteQueryBuilder, TableRef};
+use sea_query::{
+    Condition, DynIden, Expr, ExprTrait, PostgresQueryBuilder, Query, SqliteQueryBuilder, TableRef,
+};
 use sea_query_sqlx::SqlxBinder;
 
 use crate::{DatabaseType, Pool, ScopeAdmin, StateConnected};
@@ -36,10 +38,7 @@ impl Projector for WorkspaceProjector {
                 let query = Query::insert()
                     .into_table(TableRef::from(Self::TABLE))
                     .columns([DynIden::from("id"), DynIden::from("name")])
-                    .values_panic([
-                        id.to_string().into(),
-                        sea_query::Value::String(name).into(),
-                    ])
+                    .values_panic([id.to_string().into(), sea_query::Value::String(name).into()])
                     .to_owned();
 
                 let (sql, values) = match self.pool.get_database_type() {
@@ -98,7 +97,10 @@ impl Projector for WorkspaceProjector {
                         Condition::all()
                             .add(Expr::col("workspace_id").eq(Expr::val(event.stream_id.clone())))
                             .add(Expr::col("user_id").eq(Expr::val(user_id.to_string())))
-                            .add(Expr::col("workspace_role_id").eq(Expr::val(workspace_role_id.to_string()))),
+                            .add(
+                                Expr::col("workspace_role_id")
+                                    .eq(Expr::val(workspace_role_id.to_string())),
+                            ),
                     )
                     .to_owned();
 
@@ -158,7 +160,9 @@ impl Projector for WorkspaceProjector {
                         Condition::all()
                             .add(Expr::col("workspace_id").eq(Expr::val(event.stream_id.clone())))
                             .add(Expr::col("user_id").eq(Expr::val(user_id.to_string())))
-                            .add(Expr::col("permission_id").eq(Expr::val(permission_id.to_string()))),
+                            .add(
+                                Expr::col("permission_id").eq(Expr::val(permission_id.to_string())),
+                            ),
                     )
                     .to_owned();
 

@@ -1,7 +1,9 @@
 pub(crate) mod application;
 pub(crate) mod domain;
 
-pub use application::{Error as ApplicationError, commands::PermissionCommand, views::PermissionView};
+pub use application::{
+    Error as ApplicationError, commands::PermissionCommand, views::PermissionView,
+};
 pub use domain::{
     Error as DomainError,
     aggregates::{Permission, PermissionId},

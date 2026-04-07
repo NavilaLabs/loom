@@ -1,9 +1,13 @@
 use std::{ops::Deref, str::FromStr};
 
 use async_trait::async_trait;
+use eventually::aggregate::repository::{GetError, Getter, SaveError, Saver};
 use eventually::serde::Json;
 use eventually_any::snapshot::Repository;
-use loom_core::admin::workspace::{Workspace, WorkspaceEvent, WorkspaceView};
+use loom_core::admin::workspace::{
+    Workspace, WorkspaceEvent, WorkspaceId, WorkspaceRepository as WorkspaceRepositoryTrait,
+    WorkspaceView,
+};
 use loom_infrastructure::query::{Query, RowToView};
 use sea_query::{Condition, Expr, ExprTrait, Func, SelectStatement};
 use sqlx::{Row, any::AnyRow, types::Uuid};
@@ -36,9 +40,22 @@ impl WorkspaceRepository {
         }
     }
 
-    pub fn event_store(
-        &self,
-    ) -> &Repository<Workspace, Json<Workspace>, Json<WorkspaceEvent>> {
+    pub async fn from_pool(
+        pool: ConnectedAdminPool,
+    ) -> Result<Self, sqlx::migrate::MigrateError> {
+        let repository = Repository::new(
+            pool.as_ref().clone(),
+            Json::default(),
+            Json::default(),
+        )
+        .await?;
+        Ok(Self {
+            database: pool,
+            repository,
+        })
+    }
+
+    pub fn event_store(&self) -> &Repository<Workspace, Json<Workspace>, Json<WorkspaceEvent>> {
         &self.repository
     }
 
@@ -89,10 +106,7 @@ impl Query<AnyRow> for WorkspaceRepository {
         self.row_to_view(row)
     }
 
-    async fn find_one_by(
-        &self,
-        filter: Condition,
-    ) -> Result<Option<WorkspaceView>, crate::Error> {
+    async fn find_one_by(&self, filter: Condition) -> Result<Option<WorkspaceView>, crate::Error> {
         let statement = self.select().cond_where(filter).to_owned();
         let (sql, arguments) = self.database.build_query(&statement);
         let row = sqlx::query_with(&sql, arguments)
@@ -145,3 +159,25 @@ impl Query<AnyRow> for WorkspaceRepository {
         Ok(n as u64)
     }
 }
+
+#[async_trait]
+impl Getter<Workspace> for WorkspaceRepository {
+    async fn get(
+        &self,
+        id: &WorkspaceId,
+    ) -> Result<eventually::aggregate::Root<Workspace>, GetError> {
+        self.repository.get(id).await
+    }
+}
+
+#[async_trait]
+impl Saver<Workspace> for WorkspaceRepository {
+    async fn save(
+        &self,
+        root: &mut eventually::aggregate::Root<Workspace>,
+    ) -> Result<(), SaveError> {
+        self.repository.save(root).await
+    }
+}
+
+impl WorkspaceRepositoryTrait for WorkspaceRepository {}

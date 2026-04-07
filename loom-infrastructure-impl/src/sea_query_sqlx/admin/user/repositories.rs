@@ -1,9 +1,12 @@
 use std::{ops::Deref, str::FromStr};
 
 use async_trait::async_trait;
+use eventually::aggregate::repository::{GetError, Getter, SaveError, Saver};
 use eventually::serde::Json;
 use eventually_any::snapshot::Repository;
-use loom_core::admin::user::{User, UserEvent, UserView};
+use loom_core::admin::user::{
+    User, UserEvent, UserId, UserRepository as UserRepositoryTrait, UserView,
+};
 use loom_infrastructure::query::{Query, RowToView};
 use sea_query::{Condition, Expr, ExprTrait, Func, SelectStatement};
 use sqlx::{Row, any::AnyRow, types::Uuid};
@@ -34,6 +37,21 @@ impl UserRepository {
             database,
             repository,
         }
+    }
+
+    pub async fn from_pool(
+        pool: ConnectedAdminPool,
+    ) -> Result<Self, sqlx::migrate::MigrateError> {
+        let repository = Repository::new(
+            pool.as_ref().clone(),
+            Json::default(),
+            Json::default(),
+        )
+        .await?;
+        Ok(Self {
+            database: pool,
+            repository,
+        })
     }
 
     pub fn event_store(&self) -> &Repository<User, Json<User>, Json<UserEvent>> {
@@ -182,5 +200,33 @@ impl Query<AnyRow> for UserRepository {
 
         let n: i64 = row.try_get(0)?;
         Ok(n as u64)
+    }
+}
+
+#[async_trait]
+impl Getter<User> for UserRepository {
+    async fn get(&self, id: &UserId) -> Result<eventually::aggregate::Root<User>, GetError> {
+        self.repository.get(id).await
+    }
+}
+
+#[async_trait]
+impl Saver<User> for UserRepository {
+    async fn save(&self, root: &mut eventually::aggregate::Root<User>) -> Result<(), SaveError> {
+        self.repository.save(root).await
+    }
+}
+
+#[async_trait]
+impl UserRepositoryTrait for UserRepository {
+    type Error = crate::Error;
+
+    async fn find_credentials_by_email(
+        &self,
+        email: &str,
+    ) -> Result<Option<(String, String, String)>, Self::Error> {
+        // Calls the inherent method defined above; inherent methods take
+        // priority over trait methods in method resolution, so this is not recursive.
+        self.find_credentials_by_email(email).await
     }
 }

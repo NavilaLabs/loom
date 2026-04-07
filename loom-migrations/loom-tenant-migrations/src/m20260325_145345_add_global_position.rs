@@ -10,10 +10,8 @@ impl MigrationTrait for Migration {
 
         match manager.get_database_backend() {
             sea_orm::DatabaseBackend::Postgres => {
-                db.execute_unprepared(
-                    "CREATE SEQUENCE IF NOT EXISTS events_global_position_seq",
-                )
-                .await?;
+                db.execute_unprepared("CREATE SEQUENCE IF NOT EXISTS events_global_position_seq")
+                    .await?;
                 db.execute_unprepared(
                     "ALTER TABLE events \
                         ADD COLUMN global_position BIGINT NOT NULL \
@@ -68,37 +66,23 @@ impl MigrationTrait for Migration {
 
         match manager.get_database_backend() {
             sea_orm::DatabaseBackend::Postgres => {
-                db.execute_unprepared(
-                    "DROP INDEX IF EXISTS events_global_position_idx",
-                )
-                .await?;
-                db.execute_unprepared(
-                    "ALTER TABLE events DROP COLUMN IF EXISTS global_position",
-                )
-                .await?;
-                db.execute_unprepared(
-                    "DROP SEQUENCE IF EXISTS events_global_position_seq",
-                )
-                .await?;
+                db.execute_unprepared("DROP INDEX IF EXISTS events_global_position_idx")
+                    .await?;
+                db.execute_unprepared("ALTER TABLE events DROP COLUMN IF EXISTS global_position")
+                    .await?;
+                db.execute_unprepared("DROP SEQUENCE IF EXISTS events_global_position_seq")
+                    .await?;
             }
             sea_orm::DatabaseBackend::Sqlite => {
-                db.execute_unprepared(
-                    "DROP TRIGGER IF EXISTS events_assign_global_position",
-                )
-                .await?;
-                db.execute_unprepared(
-                    "DROP INDEX IF EXISTS events_global_position_idx",
-                )
-                .await?;
-                db.execute_unprepared(
-                    "CREATE TABLE events_backup AS SELECT * FROM events",
-                )
-                .await?;
+                db.execute_unprepared("DROP TRIGGER IF EXISTS events_assign_global_position")
+                    .await?;
+                db.execute_unprepared("DROP INDEX IF EXISTS events_global_position_idx")
+                    .await?;
+                db.execute_unprepared("CREATE TABLE events_backup AS SELECT * FROM events")
+                    .await?;
                 db.execute_unprepared("DROP TABLE events").await?;
-                db.execute_unprepared(
-                    "ALTER TABLE events_backup RENAME TO events",
-                )
-                .await?;
+                db.execute_unprepared("ALTER TABLE events_backup RENAME TO events")
+                    .await?;
             }
             _ => {}
         }

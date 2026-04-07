@@ -3,8 +3,16 @@ name = "loom"
 version.workspace = true
 edition.workspace = true
 
+[[bin]]
+name = "admin-projection-daemon"
+path = "src/bin/admin_projection_daemon.rs"
+
 [dependencies]
 anyhow = "1"
+dotenvy = { workspace = true }
+eventually = { version = "0.5", git = "https://github.com/get-eventually/eventually-rs" }
+tokio = { workspace = true }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 loom-core = { path = "../loom-core" }
 loom-infrastructure = { path = "../loom-infrastructure" }
 loom-infrastructure-impl = { path = "../loom-infrastructure-impl" }

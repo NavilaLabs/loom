@@ -14,11 +14,9 @@ pub struct PermissionCommand;
 impl PermissionCommand {
     pub fn create(&self, id: PermissionId, name: String) -> Result<Self, crate::Error> {
         Ok(
-            aggregate::Root::<Permission>::record_new(
-                PermissionEvent::Created { id, name }.into(),
-            )
-            .map_err(permission::DomainError::from)?
-            .into(),
+            aggregate::Root::<Permission>::record_new(PermissionEvent::Created { id, name }.into())
+                .map_err(permission::DomainError::from)?
+                .into(),
         )
     }
 }

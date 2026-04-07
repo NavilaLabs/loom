@@ -42,15 +42,6 @@ fn main() {
 async fn main() {
     dotenvy::from_filename_override(".env.dev").ok();
 
-    let projection_daemon = api::configure_admin_projection_daemon()
-        .await
-        .unwrap()
-        .unwrap();
-
-    tokio::spawn(async move {
-        projection_daemon.run_until_cancelled().await;
-    });
-
     let address = dioxus::cli_config::fullstack_address_or_localhost();
 
     let router =

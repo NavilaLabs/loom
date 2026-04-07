@@ -6,6 +6,18 @@ use uuid::Uuid;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AggregateId(pub Uuid);
 
+impl AggregateId {
+    pub fn new() -> Self {
+        Self(Uuid::now_v7())
+    }
+}
+
+impl Default for AggregateId {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Display for AggregateId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)

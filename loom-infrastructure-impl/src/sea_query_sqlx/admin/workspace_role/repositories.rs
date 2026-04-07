@@ -82,10 +82,7 @@ impl Query<AnyRow> for WorkspaceRoleRepository {
             .await
     }
 
-    async fn get_one_by(
-        &self,
-        filter: Condition,
-    ) -> Result<WorkspaceRoleView, crate::Error> {
+    async fn get_one_by(&self, filter: Condition) -> Result<WorkspaceRoleView, crate::Error> {
         let statement = self.select().cond_where(filter).to_owned();
         let (sql, arguments) = self.database.build_query(&statement);
         let row = sqlx::query_with(&sql, arguments)

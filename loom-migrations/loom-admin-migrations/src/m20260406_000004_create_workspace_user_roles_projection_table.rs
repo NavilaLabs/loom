@@ -11,16 +11,8 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table("projections__workspace_user_roles")
                     .if_not_exists()
-                    .col(
-                        ColumnDef::new(Alias::new("workspace_id"))
-                            .uuid()
-                            .not_null(),
-                    )
-                    .col(
-                        ColumnDef::new(Alias::new("user_id"))
-                            .uuid()
-                            .not_null(),
-                    )
+                    .col(ColumnDef::new(Alias::new("workspace_id")).uuid().not_null())
+                    .col(ColumnDef::new(Alias::new("user_id")).uuid().not_null())
                     .col(
                         ColumnDef::new(Alias::new("workspace_role_id"))
                             .uuid()

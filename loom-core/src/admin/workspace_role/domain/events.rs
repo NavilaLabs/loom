@@ -2,9 +2,7 @@ use eventually::message::Message;
 use serde::{Deserialize, Serialize};
 
 use crate::admin::{
-    permission::PermissionId,
-    workspace::WorkspaceId,
-    workspace_role::WorkspaceRoleId,
+    permission::PermissionId, workspace::WorkspaceId, workspace_role::WorkspaceRoleId,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

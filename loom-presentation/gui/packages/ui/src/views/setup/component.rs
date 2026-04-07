@@ -13,6 +13,32 @@ pub fn Setup() -> Element {
     let mut password = use_signal(String::new);
     let mut confirm_password = use_signal(String::new);
     let mut workspace_name = use_signal(String::new);
+    let mut error = use_signal(|| None::<String>);
+    let mut submitting = use_signal(|| false);
+
+    let navigator = use_navigator();
+
+    let on_submit = move |_| {
+        let username = username.read().clone();
+        let email = email.read().clone();
+        let password = password.read().clone();
+        let workspace_name = workspace_name.read().clone();
+
+        async move {
+            submitting.set(true);
+            error.set(None);
+
+            match api::setup::setup(username, email, password, workspace_name).await {
+                Ok(()) => {
+                    navigator.push("/login");
+                }
+                Err(e) => {
+                    error.set(Some(e.to_string()));
+                    submitting.set(false);
+                }
+            }
+        }
+    };
 
     rsx! {
         DefaultLayout {
@@ -57,6 +83,9 @@ pub fn Setup() -> Element {
                                 }
                             }
                         }
+                        if let Some(msg) = error.read().as_deref() {
+                            p { class: "text-red-500 text-sm mt-2", "{msg}" }
+                        }
                     }
                 }
                 CardFooter {
@@ -75,7 +104,13 @@ pub fn Setup() -> Element {
                             "Next"
                         }
                     } else {
-                        Button { class: "ms-auto", r#type: "submit", "Submit" }
+                        Button {
+                            class: "ms-auto",
+                            r#type: "submit",
+                            disabled: *submitting.read(),
+                            onclick: on_submit,
+                            if *submitting.read() { "Submitting…" } else { "Submit" }
+                        }
                     }
                 }
             }

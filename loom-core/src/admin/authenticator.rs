@@ -15,6 +15,7 @@ pub trait AuthenticationStrategy {
     fn authenticate(&self, credentials: Credentials<'_>) -> Result<String, Self::Error>;
 }
 
+#[derive(Debug, Clone)]
 pub struct Authenticator<T: AuthenticationStrategy> {
     strategy: T,
 }

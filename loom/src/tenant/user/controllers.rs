@@ -3,18 +3,14 @@ use std::sync::Arc;
 use anyhow::Result;
 use loom_core::admin::user::{UserCommand, UserId, UserRepository};
 
-pub struct UserController {
-    repository: Arc<dyn UserRepository>,
+pub struct UserController<R: UserRepository> {
+    repository: Arc<R>,
     commands: Arc<UserCommand>,
     _queries: Arc<UserCommand>, // TODO: this is not a query root
 }
 
-impl UserController {
-    pub fn new(
-        repository: Arc<dyn UserRepository>,
-        commands: Arc<UserCommand>,
-        queries: Arc<UserCommand>,
-    ) -> Self {
+impl<R: UserRepository> UserController<R> {
+    pub fn new(repository: Arc<R>, commands: Arc<UserCommand>, queries: Arc<UserCommand>) -> Self {
         Self {
             repository,
             commands,

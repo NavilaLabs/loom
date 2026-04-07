@@ -1,7 +1,9 @@
 use async_trait::async_trait;
 use eventually_projection::{Projector, RawEvent};
 use loom_core::admin::workspace_role::WorkspaceRoleEvent;
-use sea_query::{Condition, DynIden, Expr, ExprTrait, PostgresQueryBuilder, Query, SqliteQueryBuilder, TableRef};
+use sea_query::{
+    Condition, DynIden, Expr, ExprTrait, PostgresQueryBuilder, Query, SqliteQueryBuilder, TableRef,
+};
 use sea_query_sqlx::SqlxBinder;
 
 use crate::{DatabaseType, Pool, ScopeAdmin, StateConnected};
@@ -97,8 +99,13 @@ impl Projector for WorkspaceRoleProjector {
                     .from_table(TableRef::from(Self::PERMISSIONS_TABLE))
                     .cond_where(
                         Condition::all()
-                            .add(Expr::col("workspace_role_id").eq(Expr::val(event.stream_id.clone())))
-                            .add(Expr::col("permission_id").eq(Expr::val(permission_id.to_string()))),
+                            .add(
+                                Expr::col("workspace_role_id")
+                                    .eq(Expr::val(event.stream_id.clone())),
+                            )
+                            .add(
+                                Expr::col("permission_id").eq(Expr::val(permission_id.to_string())),
+                            ),
                     )
                     .to_owned();
 

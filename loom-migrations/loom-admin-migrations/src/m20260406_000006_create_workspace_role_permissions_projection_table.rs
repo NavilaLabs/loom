@@ -28,7 +28,10 @@ impl MigrationTrait for Migration {
                     )
                     .foreign_key(
                         ForeignKey::create()
-                            .from("projections__workspace_role_permissions", "workspace_role_id")
+                            .from(
+                                "projections__workspace_role_permissions",
+                                "workspace_role_id",
+                            )
                             .to("projections__workspace_roles", "id")
                             .on_delete(ForeignKeyAction::Cascade),
                     )

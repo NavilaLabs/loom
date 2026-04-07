@@ -14,9 +14,9 @@ version = "0.1.0"
 edition = "2024"
 
 [workspace.dependencies]
-dioxus = "0.7.3"
-dioxus-free-icons = { version = "0.10.0", features = ["hero-icons-solid"] }
-dioxus-i18n = "0.5.1"
+dioxus = "0.7"
+dioxus-free-icons = { version = "0.10", features = ["hero-icons-solid"] }
+dioxus-i18n = "0.5"
 unic-langid = "0.9.6"
 dotenvy = "0.15.7"
 

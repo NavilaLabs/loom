@@ -1,7 +1,12 @@
 pub(crate) mod application;
 pub(crate) mod domain;
 
-pub use application::{Error as ApplicationError, commands::UserCommand, views::UserView};
+pub use application::{
+    Error as ApplicationError,
+    commands::UserCommand,
+    queries::{LoginQuery, UserQuery},
+    views::UserView,
+};
 pub use domain::{
     Error as DomainError,
     aggregates::{User, UserId},

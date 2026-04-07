@@ -22,18 +22,16 @@ impl WorkspaceRoleCommand {
         workspace_id: WorkspaceId,
         name: Option<String>,
     ) -> Result<Self, crate::Error> {
-        Ok(
-            aggregate::Root::<WorkspaceRole>::record_new(
-                WorkspaceRoleEvent::Created {
-                    id,
-                    workspace_id,
-                    name,
-                }
-                .into(),
-            )
-            .map_err(workspace_role::DomainError::from)?
+        Ok(aggregate::Root::<WorkspaceRole>::record_new(
+            WorkspaceRoleEvent::Created {
+                id,
+                workspace_id,
+                name,
+            }
             .into(),
         )
+        .map_err(workspace_role::DomainError::from)?
+        .into())
     }
 
     pub fn grant_permission(&mut self, permission_id: PermissionId) -> Result<(), crate::Error> {

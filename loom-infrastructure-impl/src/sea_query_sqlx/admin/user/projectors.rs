@@ -38,13 +38,15 @@ impl Projector for UserProjector {
                         DynIden::from("id"),
                         DynIden::from("name"),
                         DynIden::from("email"),
-                        DynIden::from("password_hash"),
+                        DynIden::from("password"),
+                        DynIden::from("salt"),
                     ])
                     .values_panic([
                         id.to_string().into(),
                         name.into(),
                         email.into(),
                         password_hash.into(),
+                        "".into(),
                     ])
                     .to_owned();
 
