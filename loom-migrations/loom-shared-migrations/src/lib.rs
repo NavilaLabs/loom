@@ -12,12 +12,16 @@ pub fn create_events_table_migration() -> (TableCreateStatement, Vec<IndexCreate
     let table_create_statement = Table::create()
         .if_not_exists()
         .table(name)
-        .col(string("event_stream_id").primary_key())
+        .col(string("event_stream_id"))
         .col(string("type"))
         .col(integer("version").check(Expr::col("version").gt(0)))
         .col(binary("event"))
         .col(json_binary("metadata"))
-        .col(integer("schema_version").check(Expr::col("version").gt(0)))
+        .primary_key(
+            Index::create()
+                .col("event_stream_id")
+                .col("version"),
+        )
         .foreign_key(
             ForeignKey::create()
                 .name("fk_events_event_stream_id")
@@ -25,7 +29,8 @@ pub fn create_events_table_migration() -> (TableCreateStatement, Vec<IndexCreate
                 .to(
                     TableRef::Table("event_streams".into(), None),
                     "event_stream_id",
-                ),
+                )
+                .on_delete(ForeignKeyAction::Cascade),
         )
         .to_owned();
     let index_create_statements = vec![];
@@ -82,4 +87,17 @@ pub fn create_snapshots_table_migration() -> (TableCreateStatement, Vec<IndexCre
     ];
 
     (table_create_statement, index_create_statements)
+}
+
+#[cfg(test)]
+mod tests {
+    use sea_orm_migration::prelude::SqliteQueryBuilder;
+
+    #[test]
+    fn events_table_has_composite_pk() {
+        let (stmt, _) = super::create_events_table_migration();
+        let sql = stmt.to_string(SqliteQueryBuilder);
+        println!("Generated SQL: {sql}");
+        assert!(!sql.contains("event_stream_id\" PRIMARY KEY"), "event_stream_id is still sole PK: {sql}");
+    }
 }

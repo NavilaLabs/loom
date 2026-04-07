@@ -43,8 +43,9 @@ pub async fn setup_application(
     )?;
     user_repo.save(&mut user_root).await?;
 
-    // 2. Create the workspace.
+    // 2. Create the workspace (save first so the projection row exists before the role).
     let workspace_id = WorkspaceId::new();
+    let workspace_repo = WorkspaceRepository::from_pool(pool.clone()).await?;
     let mut workspace_root = Root::<Workspace>::record_new(
         WorkspaceEvent::Created {
             id: workspace_id.clone(),
@@ -52,6 +53,7 @@ pub async fn setup_application(
         }
         .into(),
     )?;
+    workspace_repo.save(&mut workspace_root).await?;
 
     // 3. Create the "admin" role for this workspace.
     let role_repo = WorkspaceRoleRepository::from_pool(pool.clone()).await?;
@@ -74,8 +76,6 @@ pub async fn setup_application(
         }
         .into(),
     )?;
-
-    let workspace_repo = WorkspaceRepository::from_pool(pool).await?;
     workspace_repo.save(&mut workspace_root).await?;
 
     Ok(())
