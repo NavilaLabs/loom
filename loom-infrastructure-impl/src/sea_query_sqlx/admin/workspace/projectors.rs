@@ -1,0 +1,179 @@
+use async_trait::async_trait;
+use eventually_projection::{Projector, RawEvent};
+use loom_core::admin::workspace::WorkspaceEvent;
+use sea_query::{Condition, DynIden, Expr, ExprTrait, PostgresQueryBuilder, Query, SqliteQueryBuilder, TableRef};
+use sea_query_sqlx::SqlxBinder;
+
+use crate::{DatabaseType, Pool, ScopeAdmin, StateConnected};
+
+pub struct WorkspaceProjector {
+    pool: Pool<ScopeAdmin, StateConnected>,
+}
+
+impl WorkspaceProjector {
+    const TABLE: &'static str = "projections__workspaces";
+    const USER_ROLES_TABLE: &'static str = "projections__workspace_user_roles";
+    const USER_PERMISSIONS_TABLE: &'static str = "projections__workspace_user_permissions";
+
+    pub fn new(pool: Pool<ScopeAdmin, StateConnected>) -> Self {
+        Self { pool }
+    }
+}
+
+#[async_trait]
+impl Projector for WorkspaceProjector {
+    type Error = crate::Error;
+
+    async fn handle(&mut self, event: RawEvent) -> Result<(), Self::Error> {
+        match event.event_type.as_str() {
+            "WorkspaceCreated" => {
+                let WorkspaceEvent::Created { id, name } =
+                    serde_json::from_slice(&event.payload_bytes)?
+                else {
+                    return Ok(());
+                };
+
+                let query = Query::insert()
+                    .into_table(TableRef::from(Self::TABLE))
+                    .columns([DynIden::from("id"), DynIden::from("name")])
+                    .values_panic([
+                        id.to_string().into(),
+                        sea_query::Value::String(name).into(),
+                    ])
+                    .to_owned();
+
+                let (sql, values) = match self.pool.get_database_type() {
+                    DatabaseType::Sqlite => query.build_sqlx(SqliteQueryBuilder),
+                    DatabaseType::Postgres => query.build_sqlx(PostgresQueryBuilder),
+                };
+
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
+            }
+            "WorkspaceUserRoleAssigned" => {
+                let WorkspaceEvent::UserRoleAssigned {
+                    user_id,
+                    workspace_role_id,
+                } = serde_json::from_slice(&event.payload_bytes)?
+                else {
+                    return Ok(());
+                };
+
+                let query = Query::insert()
+                    .into_table(TableRef::from(Self::USER_ROLES_TABLE))
+                    .columns([
+                        DynIden::from("workspace_id"),
+                        DynIden::from("user_id"),
+                        DynIden::from("workspace_role_id"),
+                    ])
+                    .values_panic([
+                        event.stream_id.clone().into(),
+                        user_id.to_string().into(),
+                        workspace_role_id.to_string().into(),
+                    ])
+                    .to_owned();
+
+                let (sql, values) = match self.pool.get_database_type() {
+                    DatabaseType::Sqlite => query.build_sqlx(SqliteQueryBuilder),
+                    DatabaseType::Postgres => query.build_sqlx(PostgresQueryBuilder),
+                };
+
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
+            }
+            "WorkspaceUserRoleRevoked" => {
+                let WorkspaceEvent::UserRoleRevoked {
+                    user_id,
+                    workspace_role_id,
+                } = serde_json::from_slice(&event.payload_bytes)?
+                else {
+                    return Ok(());
+                };
+
+                let query = Query::delete()
+                    .from_table(TableRef::from(Self::USER_ROLES_TABLE))
+                    .cond_where(
+                        Condition::all()
+                            .add(Expr::col("workspace_id").eq(Expr::val(event.stream_id.clone())))
+                            .add(Expr::col("user_id").eq(Expr::val(user_id.to_string())))
+                            .add(Expr::col("workspace_role_id").eq(Expr::val(workspace_role_id.to_string()))),
+                    )
+                    .to_owned();
+
+                let (sql, values) = match self.pool.get_database_type() {
+                    DatabaseType::Sqlite => query.build_sqlx(SqliteQueryBuilder),
+                    DatabaseType::Postgres => query.build_sqlx(PostgresQueryBuilder),
+                };
+
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
+            }
+            "WorkspaceUserPermissionGranted" => {
+                let WorkspaceEvent::UserPermissionGranted {
+                    user_id,
+                    permission_id,
+                } = serde_json::from_slice(&event.payload_bytes)?
+                else {
+                    return Ok(());
+                };
+
+                let query = Query::insert()
+                    .into_table(TableRef::from(Self::USER_PERMISSIONS_TABLE))
+                    .columns([
+                        DynIden::from("workspace_id"),
+                        DynIden::from("user_id"),
+                        DynIden::from("permission_id"),
+                    ])
+                    .values_panic([
+                        event.stream_id.clone().into(),
+                        user_id.to_string().into(),
+                        permission_id.to_string().into(),
+                    ])
+                    .to_owned();
+
+                let (sql, values) = match self.pool.get_database_type() {
+                    DatabaseType::Sqlite => query.build_sqlx(SqliteQueryBuilder),
+                    DatabaseType::Postgres => query.build_sqlx(PostgresQueryBuilder),
+                };
+
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
+            }
+            "WorkspaceUserPermissionRevoked" => {
+                let WorkspaceEvent::UserPermissionRevoked {
+                    user_id,
+                    permission_id,
+                } = serde_json::from_slice(&event.payload_bytes)?
+                else {
+                    return Ok(());
+                };
+
+                let query = Query::delete()
+                    .from_table(TableRef::from(Self::USER_PERMISSIONS_TABLE))
+                    .cond_where(
+                        Condition::all()
+                            .add(Expr::col("workspace_id").eq(Expr::val(event.stream_id.clone())))
+                            .add(Expr::col("user_id").eq(Expr::val(user_id.to_string())))
+                            .add(Expr::col("permission_id").eq(Expr::val(permission_id.to_string()))),
+                    )
+                    .to_owned();
+
+                let (sql, values) = match self.pool.get_database_type() {
+                    DatabaseType::Sqlite => query.build_sqlx(SqliteQueryBuilder),
+                    DatabaseType::Postgres => query.build_sqlx(PostgresQueryBuilder),
+                };
+
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
+            }
+            _ => {}
+        }
+
+        Ok(())
+    }
+}
