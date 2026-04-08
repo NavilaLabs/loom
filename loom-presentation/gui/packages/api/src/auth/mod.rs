@@ -8,6 +8,9 @@ pub struct UserInfo {
     pub id: String,
     pub email: String,
     pub is_admin: bool,
+    /// The workspace (tenant) this user belongs to. `None` for users with no
+    /// workspace assignment (should not happen in a properly set-up instance).
+    pub workspace_id: Option<String>,
 }
 
 /// Returns the currently authenticated user, or `None` if not logged in.

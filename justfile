@@ -7,6 +7,10 @@ project-admin:
     just update && \
     cargo run -p loom --bin admin-projection-daemon
 
+project-tenant:
+    just update && \
+    cargo run -p loom --bin tenant-projection-daemon
+
 watch-tw:
     just update && \
     cd /workspaces/loom/loom-presentation/gui/packages/ui && \

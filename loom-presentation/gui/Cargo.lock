@@ -4117,6 +4117,7 @@ name = "loom"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "chrono",
  "dotenvy",
  "eventually",
  "jsonwebtoken",
@@ -4126,6 +4127,7 @@ dependencies = [
  "serde",
  "sqlx",
  "tokio",
+ "tracing",
  "tracing-subscriber",
 ]
 

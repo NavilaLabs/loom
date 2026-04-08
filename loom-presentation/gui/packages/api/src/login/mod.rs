@@ -43,6 +43,11 @@ async fn _login(email: String, password: String) -> Result<(), ServerFnError> {
             details: None,
         })?;
 
+    let workspace_id = loom::auth::get_user_workspace(&current_user.id)
+        .await
+        .ok()
+        .flatten();
+
     let session: Session = extract().await?;
     session
         .insert(
@@ -51,6 +56,7 @@ async fn _login(email: String, password: String) -> Result<(), ServerFnError> {
                 id: current_user.id,
                 email: current_user.email,
                 is_admin,
+                workspace_id,
             },
         )
         .await

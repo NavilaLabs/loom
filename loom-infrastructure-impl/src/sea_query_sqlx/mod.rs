@@ -1,4 +1,5 @@
 pub mod admin;
+pub mod tenant;
 pub(crate) mod infrastructure;
 
 pub use infrastructure::*;

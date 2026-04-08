@@ -3,7 +3,11 @@ use loom_core::admin::{authenticator::Authenticator, user::LoginQuery};
 use loom_infrastructure::config::CONFIG;
 use loom_infrastructure_impl::{
     Pool,
-    admin::{authentication::jwt::JwtAuthentication, user::repositories::UserRepository},
+    admin::{
+        authentication::jwt::JwtAuthentication,
+        user::repositories::UserRepository,
+        workspace::repositories::WorkspaceRepository,
+    },
 };
 use serde::{Deserialize, Serialize};
 
@@ -53,4 +57,11 @@ pub fn validate_token(token: &str) -> Result<CurrentUser> {
         id: token_data.claims.sub,
         email: token_data.claims.email,
     })
+}
+
+/// Returns the first workspace ID the given user belongs to, or `None`.
+pub async fn get_user_workspace(user_id: &str) -> Result<Option<String>> {
+    let pool = Pool::connect_admin().await?;
+    let workspace_repo = WorkspaceRepository::from_pool(pool).await?;
+    Ok(workspace_repo.find_workspace_for_user(user_id).await?)
 }

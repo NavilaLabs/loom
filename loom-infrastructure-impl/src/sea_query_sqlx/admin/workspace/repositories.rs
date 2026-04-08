@@ -59,6 +59,29 @@ impl WorkspaceRepository {
         &self.repository
     }
 
+    /// Returns the first workspace ID the given user belongs to, or `None`.
+    pub async fn find_workspace_for_user(
+        &self,
+        user_id: &str,
+    ) -> Result<Option<String>, crate::Error> {
+        use sea_query::{Alias, Expr, ExprTrait};
+
+        let statement = sea_query::Query::select()
+            .expr(Expr::col(Alias::new("workspace_id")))
+            .from(Alias::new("projections__workspace_user_roles"))
+            .and_where(Expr::col(Alias::new("user_id")).eq(user_id))
+            .limit(1)
+            .to_owned();
+
+        let (sql, arguments) = self.database.build_query(&statement);
+        let row = sqlx::query_with(&sql, arguments)
+            .fetch_optional(self.database.as_ref())
+            .await?;
+
+        row.map(|r| r.try_get::<String, _>(0usize).map_err(crate::Error::from))
+            .transpose()
+    }
+
     fn select(&self) -> SelectStatement {
         sea_query::Query::select().from(TABLE).to_owned()
     }

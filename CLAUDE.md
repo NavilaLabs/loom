@@ -37,6 +37,14 @@ dx serve --platform desktop          # Serve desktop app
 dx build --release                   # Build for release
 ```
 
+### Projection daemons (run from workspace root)
+
+```bash
+cargo run -p loom --bin admin-projection-daemon   # Admin projections (users, workspaces, roles, permissions)
+cargo run -p loom --bin tenant-projection-daemon  # Tenant projections (customers, projects, activities, timesheets, tags, rates)
+                                                  # Discovers all workspaces from the admin DB automatically
+```
+
 ### Dev utilities
 
 ```bash
@@ -95,7 +103,7 @@ Each domain aggregate follows this pattern:
 ### Multi-Tenant Database Strategy
 
 - **Admin database** (`loom_admin`) — single shared database for system-wide operations
-- **Tenant databases** (`loom_tenant_{token}`) — one isolated database per tenant
+- **Tenant databases** (`loom_tenant_{token}`) — one isolated database per tenant. A tenant is also refered as a workspace in the codebase and the ui
 
 Both use the same event store schema:
 - `event_streams` — stream metadata

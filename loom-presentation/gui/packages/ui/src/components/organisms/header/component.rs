@@ -52,9 +52,33 @@ pub fn Header() -> Element {
                                 to: "/dashboard",
                                 "Dashboard"
                             }
+                            NavbarItem {
+                                index: 1usize,
+                                value: "timesheets".to_string(),
+                                to: "/timesheets",
+                                "Timesheets"
+                            }
+                            NavbarItem {
+                                index: 2usize,
+                                value: "customers".to_string(),
+                                to: "/customers",
+                                "Customers"
+                            }
+                            NavbarItem {
+                                index: 3usize,
+                                value: "projects".to_string(),
+                                to: "/projects",
+                                "Projects"
+                            }
+                            NavbarItem {
+                                index: 4usize,
+                                value: "activities".to_string(),
+                                to: "/activities",
+                                "Activities"
+                            }
                             if u.is_admin {
                                 NavbarItem {
-                                    index: 1usize,
+                                    index: 5usize,
                                     value: "database".to_string(),
                                     to: "/developer/database",
                                     "Database"

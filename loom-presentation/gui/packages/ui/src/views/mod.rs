@@ -1,8 +1,16 @@
+pub mod activities;
+pub use activities::*;
+pub mod customers;
+pub use customers::*;
 pub mod dashboard;
 pub use dashboard::*;
 pub mod developer;
 pub use developer::*;
 pub mod login;
 pub use login::*;
+pub mod projects;
+pub use projects::*;
 pub mod setup;
 pub use setup::*;
+pub mod timesheets;
+pub use timesheets::*;

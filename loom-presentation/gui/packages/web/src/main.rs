@@ -4,7 +4,7 @@ use dioxus_motion::prelude::*;
 use easer::functions::Easing;
 use ui::{
     components::{atoms::Headline, molecules::ThemeSwitcher, organisms::Header},
-    views::{setup::Setup, Dashboard, Database, Login},
+    views::{setup::Setup, Activities, Customers, Dashboard, Database, Login, Projects, Timesheets},
     FAVICON,
 };
 
@@ -37,6 +37,18 @@ enum Route {
         #[layout(RequireAuth)]
             #[route("/dashboard")]
             Dashboard {},
+
+            #[route("/customers")]
+            Customers {},
+
+            #[route("/projects")]
+            Projects {},
+
+            #[route("/activities")]
+            Activities {},
+
+            #[route("/timesheets")]
+            Timesheets {},
 
             #[layout(RequireAdmin)]
                 #[route("/developer/database")]
@@ -87,8 +99,12 @@ fn App() -> Element {
             match route {
                 Route::Login { .. } => 0,
                 Route::Setup { .. } => 1,
-                Route::Database { .. } => 2,
-                Route::Dashboard { .. } => 3,
+                Route::Dashboard { .. } => 2,
+                Route::Customers { .. } => 3,
+                Route::Projects { .. } => 4,
+                Route::Activities { .. } => 5,
+                Route::Timesheets { .. } => 6,
+                Route::Database { .. } => 7,
                 _ => -1,
             }
         }
