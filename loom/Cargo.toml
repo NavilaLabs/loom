@@ -7,6 +7,11 @@ edition.workspace = true
 name = "admin-projection-daemon"
 path = "src/bin/admin_projection_daemon.rs"
 
+[[test]]
+name = "security"
+path = "tests/security/mod.rs"
+required-features = ["sqlite"]
+
 [dependencies]
 anyhow = "1"
 dotenvy = { workspace = true }
@@ -19,6 +24,13 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 loom-core = { path = "../loom-core" }
 loom-infrastructure = { path = "../loom-infrastructure" }
 loom-infrastructure-impl = { path = "../loom-infrastructure-impl" }
+
+[dev-dependencies]
+jsonwebtoken = { version = "10.3.0", features = ["rust_crypto"] }
+loom-tests = { path = "../loom-tests" }
+serial_test = "3.0"
+tokio = { workspace = true }
+with-lifecycle = { path = "../with-lifecycle" }
 
 [features]
 default = ["sea-query-sqlx"]

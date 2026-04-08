@@ -1664,10 +1664,13 @@ dependencies = [
  "loom-core",
  "loom-infrastructure",
  "loom-infrastructure-impl",
+ "loom-tests",
  "serde",
+ "serial_test",
  "sqlx",
  "tokio",
  "tracing-subscriber",
+ "with-lifecycle",
 ]
 
 [[package]]
