@@ -1,21 +1,20 @@
-/* ─── Button ─────────────────────────────────────────────────── */
 .button {
     padding: 8px 18px;
-    border: 2px solid transparent; /* reserves space — prevents layout shift on bordered variants */
+    border: 2px solid transparent;
     border-radius: var(--radius-md);
     cursor: pointer;
     font-size: 1rem;
     transition:
-        background-color 100ms ease-out,
-        color 100ms ease-out,
-        border-color 100ms ease-out,
-        box-shadow 100ms ease-out;
+        background-color var(--transition-fast),
+        color var(--transition-fast),
+        border-color var(--transition-fast),
+        box-shadow var(--transition-fast);
 }
 
 .button:focus-visible {
     outline: none;
     box-shadow: 0 0 0 3px
-        color-mix(in srgb, var(--color-btn-focus-ring) 35%, transparent);
+        color-mix(in srgb, var(--color-focus-ring) 35%, transparent);
 }
 
 .button:disabled {
@@ -26,7 +25,6 @@
     pointer-events: none;
 }
 
-/* Primary */
 .button[data-style="primary"] {
     background-color: var(--color-btn-primary-bg);
     color: var(--color-btn-primary-text);
@@ -35,7 +33,6 @@
     background-color: var(--color-btn-primary-hover);
 }
 
-/* Secondary */
 .button[data-style="secondary"] {
     background-color: var(--color-btn-secondary-bg);
     color: var(--color-btn-secondary-text);
@@ -45,7 +42,6 @@
     background-color: var(--color-surface-tonal);
 }
 
-/* Ghost */
 .button[data-style="ghost"] {
     background-color: transparent;
     color: var(--color-btn-ghost-text);
@@ -55,7 +51,6 @@
     color: var(--color-text-primary);
 }
 
-/* Outline */
 .button[data-style="outline"] {
     background-color: var(--color-btn-outlined-bg);
     color: var(--color-btn-outlined-text);
@@ -65,7 +60,6 @@
     background-color: var(--color-surface-tonal);
 }
 
-/* Destructive */
 .button[data-style="destructive"] {
     background-color: var(--color-btn-destructive-bg);
     color: var(--color-btn-destructive-text);

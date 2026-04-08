@@ -1,19 +1,27 @@
 use dioxus::prelude::*;
 
-use crate::components::molecules::ThemeSwitcher;
-use crate::components::organisms::Header;
+use crate::layouts::default::WorkspaceAccent;
 
 #[component]
-pub fn DefaultLayout(#[props(into)] headline: Option<Element>, children: Element) -> Element {
+pub fn DefaultLayout(
+    /// Optional workspace accent color, e.g. `"#6366f1"`.
+    /// Defaults to the brand green defined in `theme.css`.
+    #[props(default)]
+    accent: Option<String>,
+    children: Element,
+) -> Element {
+    let accent = use_memo(move || accent.clone().map(WorkspaceAccent).unwrap_or_default());
+    use_context_provider(move || accent());
+
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("/assets/theme.css") }
         document::Link { rel: "stylesheet", href: asset!("/assets/tailwind.css") }
-
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
 
-        div { class: "default-layout w-full px-4",
-            div { class: "default-layout-headline", {headline} },
-            div { class: "default-layout-content w-full sm:pt-2 md:pt-4 lg:pt-8 self-center", {children} }
+        div {
+            style: accent().as_css_var(),
+            class: "default-layout",
+            div { class: "default-layout-content", {children} }
         }
     }
 }

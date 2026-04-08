@@ -91,8 +91,6 @@ fn App() -> Element {
     });
     use_context_provider(|| tween);
 
-    resource_pools::init_high_performance();
-
     rsx! {
         // Global app resources
         document::Title { "Loom" }

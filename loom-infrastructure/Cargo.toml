@@ -7,7 +7,6 @@ edition.workspace = true
 async-trait = { workspace = true }
 chrono = { workspace = true }
 dotenvy = { workspace = true }
-regex = { workspace = true }
 serde = { workspace = true }
 serde-vars = "0.3.1"
 serde_yaml = "0.9"
@@ -17,8 +16,6 @@ tracing = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
 uuid = { workspace = true }
-sha2 = "0.11"
-serde_jcs = "0.2.0"
 
 [dev-dependencies]
 loom-tests = { path = "../loom-tests" }

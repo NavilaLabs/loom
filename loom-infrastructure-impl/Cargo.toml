@@ -10,8 +10,11 @@ embassy-futures = { workspace = true }
 eventually = { version = "0.5", git = "https://github.com/get-eventually/eventually-rs" }
 eventually-any = { version = "0.1", git = "https://github.com/NavilaLabs/eventually-any", features = [
   "snapshots",
+  "tracing",
 ] }
-eventually-projection = { version = "0.1", git = "https://github.com/NavilaLabs/eventually-projection" }
+eventually-projection = { version = "0.1", git = "https://github.com/NavilaLabs/eventually-projection", features = [
+  "tracing",
+] }
 loom-core = { path = "../loom-core" }
 loom-admin-migrations = { path = "../loom-migrations/loom-admin-migrations" }
 loom-infrastructure = { path = "../loom-infrastructure" }
@@ -21,7 +24,7 @@ sea-query = { version = "1.0.0-rc.28", optional = true }
 sea-query-sqlx = { version = "0.8.0-rc.11", features = ["sqlx-any", "runtime-tokio-rustls", "with-json", "with-chrono", "with-time", "with-uuid", "with-rust_decimal"], optional = true }
 serde.workspace = true
 serde_json = { workspace = true }
-sqlx = { version = "0.8.6", features = ["runtime-tokio"], optional = true }
+sqlx = { workspace = true, optional = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 url = { workspace = true }

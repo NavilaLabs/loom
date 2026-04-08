@@ -9,35 +9,31 @@
     display: flex;
     width: fit-content;
     box-sizing: border-box;
-    flex: 1;
     flex-direction: row;
     padding: 0.25rem;
     border: none;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-md);
     gap: 0.25rem;
-}
-
-[data-variant="default"] .tabs-list {
-    background: var(--color-surface-tonal);
+    background-color: var(--color-tabs-list-bg);
 }
 
 .tabs-trigger {
     padding: 4px 8px;
     border: none;
-    border-radius: calc(0.5rem - 0.25rem);
+    border-radius: var(--radius-sm);
     background: none;
-    color: var(--color-text-secondary);
+    color: var(--color-tabs-trigger-text);
     cursor: pointer;
-}
-
-[data-variant="default"] .tabs-trigger[data-state="active"] {
-    background-color: var(--color-surface-raised);
-    box-shadow: var(--dark, inset 0 0 0 1px var(--color-border))
-        var(--light, 0 1px 2px rgb(0 0 0 / 18%));
+    font-size: 0.875rem;
+    transition:
+        background-color var(--transition-fast),
+        color var(--transition-fast);
 }
 
 .tabs-trigger[data-state="active"] {
-    color: var(--color-text-primary);
+    background-color: var(--color-tabs-trigger-active-bg);
+    color: var(--color-tabs-trigger-active-text);
+    box-shadow: var(--shadow-card);
 }
 
 .tabs-trigger[data-disabled="true"] {
@@ -45,9 +41,10 @@
     cursor: not-allowed;
 }
 
-.tabs-trigger:hover:not([data-disabled="true"]),
-.tabs-trigger:focus-visible {
-    color: var(--color-text-primary);
+.tabs-trigger:hover:not([data-disabled="true"]):not([data-state="active"]),
+.tabs-trigger:focus-visible:not([data-state="active"]) {
+    color: var(--color-tabs-trigger-hover-text);
+    outline: none;
 }
 
 .tabs-content {
@@ -56,11 +53,11 @@
     padding: 0.25rem;
 }
 
-.tabs-content[data-variant="outlined"] .tabs-content-themed {
-    border: 1px solid var(--color-border);
-    border-radius: 0.5rem;
-    background: var(--color-surface);
-    box-shadow: var(--light, 0 1px 2px rgb(0 0 0 / 18%)) var(--dark, none);
+.tabs-content-themed {
+    border: 1px solid var(--color-tabs-content-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-tabs-content-bg);
+    box-shadow: var(--shadow-card);
 }
 
 .tabs-content[data-state="inactive"] {

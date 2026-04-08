@@ -1,2 +1,2 @@
 mod default;
-pub use default::DefaultLayout;
+pub use default::{DefaultLayout, WorkspaceAccent};

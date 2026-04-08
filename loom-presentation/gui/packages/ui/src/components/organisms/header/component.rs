@@ -8,6 +8,8 @@ use crate::components::{
 #[component]
 pub fn Header() -> Element {
     rsx! {
+        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+
         header { class: "header p-4 w-full",
             div { class: "header-content h-16 flex flex-row items-center justify-between",
                 div { class: "logos flex flex-row items-center space-x-2",

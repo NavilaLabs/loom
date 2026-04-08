@@ -17,11 +17,8 @@ pub fn create_events_table_migration() -> (TableCreateStatement, Vec<IndexCreate
         .col(integer("version").check(Expr::col("version").gt(0)))
         .col(binary("event"))
         .col(json_binary("metadata"))
-        .primary_key(
-            Index::create()
-                .col("event_stream_id")
-                .col("version"),
-        )
+        .col(integer("schema_version").check(Expr::col("version").gt(0)))
+        .primary_key(Index::create().col("event_stream_id").col("version"))
         .foreign_key(
             ForeignKey::create()
                 .name("fk_events_event_stream_id")
@@ -98,6 +95,9 @@ mod tests {
         let (stmt, _) = super::create_events_table_migration();
         let sql = stmt.to_string(SqliteQueryBuilder);
         println!("Generated SQL: {sql}");
-        assert!(!sql.contains("event_stream_id\" PRIMARY KEY"), "event_stream_id is still sole PK: {sql}");
+        assert!(
+            !sql.contains("event_stream_id\" PRIMARY KEY"),
+            "event_stream_id is still sole PK: {sql}"
+        );
     }
 }
