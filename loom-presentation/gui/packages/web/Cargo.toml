@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 api = { workspace = true }
 axum = {version="0.8", optional = true}
+loom = { path = "../../../../loom", optional = true }
 convert_case = "0.11.0"
 dioxus = { workspace = true, features = ["router", "fullstack"] }
 dioxus-motion = { git = "https://github.com/wheregmis/dioxus-motion.git", branch = "main", features = ["web", "transitions"] }
@@ -18,4 +19,4 @@ ui = { workspace = true }
 [features]
 # default = ["server"]
 web = ["dioxus/web"]
-server = ["dioxus/server", "axum", "api/server", "dep:tokio", "dep:tower-sessions", "ui/server"]
+server = ["dioxus/server", "axum", "api/server", "dep:loom", "loom/sqlite", "dep:tokio", "dep:tower-sessions", "ui/server"]

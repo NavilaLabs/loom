@@ -91,7 +91,7 @@ async fn session_user() -> Result<crate::auth::UserInfo, ServerFnError> {
 }
 
 #[cfg(feature = "server")]
-fn row_to_dto(r: loom_infrastructure_impl::tenant::timesheet::repositories::TimesheetRow) -> TimesheetDto {
+fn row_to_dto(r: loom::infrastructure::tenant::timesheet::repositories::TimesheetRow) -> TimesheetDto {
     TimesheetDto {
         id: r.id,
         user_id: r.user_id,

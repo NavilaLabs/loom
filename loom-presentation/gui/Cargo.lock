@@ -7941,6 +7941,7 @@ dependencies = [
  "dioxus-motion",
  "dotenvy",
  "easer",
+ "loom",
  "tokio",
  "tower-sessions",
  "ui",

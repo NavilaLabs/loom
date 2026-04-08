@@ -51,7 +51,8 @@ pub fn Timesheets() -> Element {
     };
 
     let on_stop = move |_| async move {
-        if let Some(ts) = running.peek().clone() {
+        let maybe_ts = running.peek().clone();
+        if let Some(ts) = maybe_ts {
             match api::timesheet::stop_timesheet(ts.id).await {
                 Ok(()) => reload().await,
                 Err(e) => error.set(Some(e.to_string())),

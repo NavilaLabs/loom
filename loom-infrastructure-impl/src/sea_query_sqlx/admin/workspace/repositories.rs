@@ -59,6 +59,28 @@ impl WorkspaceRepository {
         &self.repository
     }
 
+    /// Returns all (workspace_id, workspace_name) pairs the given user belongs to.
+    pub async fn find_workspaces_for_user(
+        &self,
+        user_id: &str,
+    ) -> Result<Vec<(String, Option<String>)>, crate::Error> {
+        let rows = sqlx::query(
+            "SELECT DISTINCT w.id, w.name \
+             FROM projections__workspaces w \
+             INNER JOIN projections__workspace_user_roles r ON w.id = r.workspace_id \
+             WHERE r.user_id = ?",
+        )
+        .bind(user_id)
+        .fetch_all(self.database.as_ref())
+        .await?;
+
+        rows.into_iter()
+            .map(|row| -> Result<_, crate::Error> {
+                Ok((row.try_get::<String, _>("id")?, row.try_get::<Option<String>, _>("name")?))
+            })
+            .collect()
+    }
+
     /// Returns the first workspace ID the given user belongs to, or `None`.
     pub async fn find_workspace_for_user(
         &self,
@@ -83,7 +105,10 @@ impl WorkspaceRepository {
     }
 
     fn select(&self) -> SelectStatement {
-        sea_query::Query::select().from(TABLE).to_owned()
+        sea_query::Query::select()
+            .expr(Expr::col(sea_query::Asterisk))
+            .from(TABLE)
+            .to_owned()
     }
 
     fn select_count(&self) -> SelectStatement {

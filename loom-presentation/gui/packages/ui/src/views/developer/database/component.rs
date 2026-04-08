@@ -5,7 +5,6 @@ use crate::components::atoms::card::{
     Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle,
 };
 use crate::components::atoms::{Button, Headline, Tooltip, TooltipContent, TooltipTrigger};
-use crate::components::organisms::Header;
 use crate::layouts::DefaultLayout;
 use dioxus::prelude::*;
 use dioxus_free_icons::icons::hi_solid_icons::HiArrowRight;
@@ -29,6 +28,8 @@ pub fn Database() -> Element {
                     AccordionTrigger { {tid!("developer-actions-database")} }
                     AccordionContent {
                         div { class: "grid grid-cols-1 md:grid-cols-2 md:gap-6 lg:grid-cols-3",
+
+                            // Admin DB migrations
                             Card {
                                 CardHeader {
                                     CardTitle { {tid!("developer-actions-database-migrations")} }
@@ -54,9 +55,39 @@ pub fn Database() -> Element {
                                             }
                                         }
                                         TooltipContent { side: ContentSide::Bottom,
-                                            p {
-                                                {tid!("developer-actions-database-migrations-run.tooltip")}
+                                            p { {tid!("developer-actions-database-migrations-run.tooltip")} }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Tenant DB migrations
+                            Card {
+                                CardHeader {
+                                    CardTitle { {tid!("developer-actions-database-tenant-migrations")} }
+                                    CardDescription { {tid!("developer-actions-database-tenant-migrations.description")} }
+                                }
+                                CardContent {
+                                    Tooltip {
+                                        TooltipTrigger {
+                                            CardAction {
+                                                Button {
+                                                    onclick: move |_| async move {
+                                                        let _ = api::developer::migrate_tenant_database().await;
+                                                    },
+                                                    div { class: "flex flex-col items-center",
+                                                        Icon {
+                                                            fill: "black",
+                                                            icon: HiArrowRight,
+                                                            style: "color: var(--color-btn-icon)",
+                                                        }
+                                                        {tid!("developer-actions-database-tenant-migrations-run")}
+                                                    }
+                                                }
                                             }
+                                        }
+                                        TooltipContent { side: ContentSide::Bottom,
+                                            p { {tid!("developer-actions-database-tenant-migrations-run.tooltip")} }
                                         }
                                     }
                                 }

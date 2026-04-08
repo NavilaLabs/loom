@@ -43,10 +43,7 @@ async fn _login(email: String, password: String) -> Result<(), ServerFnError> {
             details: None,
         })?;
 
-    let workspace_id = loom::auth::get_user_workspace(&current_user.id)
-        .await
-        .ok()
-        .flatten();
+    let workspace_id = None; // User selects workspace after login.
 
     let session: Session = extract().await?;
     session

@@ -22,7 +22,7 @@ impl MigrationTrait for Migration {
                     .col(integer_null("duration"))
                     .col(string_null("description"))
                     .col(string("timezone").default("Europe/Berlin"))
-                    .col(boolean("billable").default(true))
+                    .col(integer("billable").default(1))
                     // Snapshot der Stundensätze zum Buchungszeitpunkt in Cent
                     .col(big_integer_null("hourly_rate"))
                     .col(big_integer_null("fixed_rate"))
@@ -30,19 +30,10 @@ impl MigrationTrait for Migration {
                     // Gesamtbetrag = hourly_rate * duration / 3600, in Cent
                     .col(big_integer_null("rate"))
                     // true sobald in einer Rechnung exportiert — sperrt den Eintrag
-                    .col(boolean("exported").default(false))
+                    .col(integer("exported").default(0))
                     .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
                     .col(timestamp_with_time_zone("updated_at").default(Expr::current_timestamp()))
-                    .foreign_key(
-                        ForeignKey::create()
-                            .name("fk_timesheets_user_id")
-                            .from(
-                                TableRef::Table("projections__timesheets".into(), None),
-                                "user_id",
-                            )
-                            .to(TableRef::Table("projections__users".into(), None), "id")
-                            .on_delete(ForeignKeyAction::Restrict),
-                    )
+                    // No FK on user_id — users live in the admin database (cross-DB FK not supported).
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk_timesheets_project_id")

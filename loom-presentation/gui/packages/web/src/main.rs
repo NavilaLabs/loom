@@ -4,7 +4,10 @@ use dioxus_motion::prelude::*;
 use easer::functions::Easing;
 use ui::{
     components::{atoms::Headline, molecules::ThemeSwitcher, organisms::Header},
-    views::{setup::Setup, Activities, Customers, Dashboard, Database, Login, Projects, Timesheets},
+    views::{
+        setup::Setup, Activities, Customers, Dashboard, Database, Login, Projects, SelectWorkspace,
+        Timesheets,
+    },
     FAVICON,
 };
 
@@ -26,35 +29,48 @@ fn NotFound(route: Vec<String>) -> Element {
 #[rustfmt::skip]
 enum Route {
     #[layout(Layout)]
-        #[route("/login")]
-        Login {},
 
+        // Setup — only accessible when setup is NOT yet complete.
         #[layout(RequireSetupIncomplete)]
             #[route("/setup")]
             Setup {},
         #[end_layout]
 
-        #[layout(RequireAuth)]
-            #[route("/dashboard")]
-            Dashboard {},
+        // All remaining routes — only accessible after setup IS complete.
+        #[layout(RequireSetupComplete)]
+            #[route("/login")]
+            Login {},
 
-            #[route("/customers")]
-            Customers {},
+            #[layout(RequireAuth)]
+                // Workspace selection — accessible to any authenticated user.
+                #[route("/select-workspace")]
+                SelectWorkspace {},
 
-            #[route("/projects")]
-            Projects {},
+                // All routes below additionally require a workspace to be selected.
+                #[layout(RequireWorkspace)]
+                    #[route("/dashboard")]
+                    Dashboard {},
 
-            #[route("/activities")]
-            Activities {},
+                    #[route("/customers")]
+                    Customers {},
 
-            #[route("/timesheets")]
-            Timesheets {},
+                    #[route("/projects")]
+                    Projects {},
 
-            #[layout(RequireAdmin)]
-                #[route("/developer/database")]
-                Database {},
+                    #[route("/activities")]
+                    Activities {},
+
+                    #[route("/timesheets")]
+                    Timesheets {},
+
+                    #[layout(RequireAdmin)]
+                        #[route("/developer/database")]
+                        Database {},
+                    #[end_layout]
+                #[end_layout]
             #[end_layout]
         #[end_layout]
+
     #[end_layout]
 
     #[route("/:..route")]
@@ -71,6 +87,11 @@ fn main() {
 #[tokio::main]
 async fn main() {
     dotenvy::from_filename_override(".env.dev").ok();
+
+    // Ensure the admin database exists and is fully migrated before serving.
+    loom::setup::init_admin_db()
+        .await
+        .expect("failed to initialise admin database");
 
     let address = dioxus::cli_config::fullstack_address_or_localhost();
 
@@ -99,12 +120,13 @@ fn App() -> Element {
             match route {
                 Route::Login { .. } => 0,
                 Route::Setup { .. } => 1,
-                Route::Dashboard { .. } => 2,
-                Route::Customers { .. } => 3,
-                Route::Projects { .. } => 4,
-                Route::Activities { .. } => 5,
-                Route::Timesheets { .. } => 6,
-                Route::Database { .. } => 7,
+                Route::SelectWorkspace { .. } => 2,
+                Route::Dashboard { .. } => 3,
+                Route::Customers { .. } => 4,
+                Route::Projects { .. } => 5,
+                Route::Activities { .. } => 6,
+                Route::Timesheets { .. } => 7,
+                Route::Database { .. } => 8,
                 _ => -1,
             }
         }
@@ -147,8 +169,6 @@ fn Layout() -> Element {
     let mut auth: AuthState = use_context();
 
     // Fetch session auth state once when the layout mounts.
-    // Login/logout handlers update the signal directly, so no re-fetch is needed
-    // on navigation — the signal is already up to date.
     use_resource(move || async move {
         let user = api::auth::get_current_user().await.ok().flatten();
         auth.set(Some(user));
@@ -176,6 +196,23 @@ fn Layout() -> Element {
 
 // ── Route guards ──────────────────────────────────────────────────────────────
 
+/// Redirects to /setup when setup is NOT complete; renders children otherwise.
+#[component]
+fn RequireSetupComplete() -> Element {
+    let nav = use_navigator();
+    let complete = use_resource(|| async { api::setup::is_setup_complete().await });
+
+    match complete.value().cloned() {
+        None => rsx! {},
+        Some(Ok(true)) => rsx! { Outlet::<Route> {} },
+        Some(Ok(false)) | Some(Err(_)) => {
+            nav.replace(Route::Setup {});
+            rsx! {}
+        }
+    }
+}
+
+/// Redirects to /login when setup IS complete; renders children otherwise.
 #[component]
 fn RequireSetupIncomplete() -> Element {
     let nav = use_navigator();
@@ -205,6 +242,27 @@ fn RequireAuth() -> Element {
             rsx! {}
         }
         Some(Some(_)) => rsx! { AnimatedOutlet::<Route> {} },
+    }
+}
+
+/// Redirects to /select-workspace when the authenticated user has not yet
+/// chosen a workspace for this session.
+#[component]
+fn RequireWorkspace() -> Element {
+    let nav = use_navigator();
+    let auth: AuthState = use_context();
+
+    match auth.cloned() {
+        Some(Some(user)) if user.workspace_id.is_some() => {
+            rsx! { AnimatedOutlet::<Route> {} }
+        }
+        Some(Some(_)) => {
+            // Authenticated but no workspace selected yet.
+            nav.replace(Route::SelectWorkspace {});
+            rsx! {}
+        }
+        // Loading or unauthenticated — RequireAuth above handles these.
+        _ => rsx! {},
     }
 }
 

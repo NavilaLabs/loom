@@ -10,6 +10,8 @@ pub mod login;
 pub use login::*;
 pub mod projects;
 pub use projects::*;
+pub mod select_workspace;
+pub use select_workspace::*;
 pub mod setup;
 pub use setup::*;
 pub mod timesheets;

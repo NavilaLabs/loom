@@ -5,8 +5,10 @@ use loom_core::admin::{
     workspace::{Workspace, WorkspaceEvent, WorkspaceId},
     workspace_role::{WorkspaceRole, WorkspaceRoleEvent, WorkspaceRoleId},
 };
+use loom_infrastructure::database::Migrate;
 use loom_infrastructure_impl::{
-    Pool,
+    Pool, ScopeDefault, ScopeTenant, StateDisconnected,
+    database::{Initializer, SqliteInitializationStrategy},
     admin::{
         authentication::hash_password,
         user::repositories::UserRepository,
@@ -14,6 +16,22 @@ use loom_infrastructure_impl::{
         workspace_role::repositories::WorkspaceRoleRepository,
     },
 };
+
+/// Ensures the admin SQLite file exists and all migrations are up to date.
+/// Call once at server startup before accepting requests.
+pub async fn init_admin_db() -> Result<()> {
+    // Create the file if it doesn't exist.
+    let default_pool = Pool::<ScopeDefault, StateDisconnected>::connect_default().await?;
+    Initializer::new(SqliteInitializationStrategy)
+        .initialize_admin(&default_pool)
+        .await?;
+
+    // Run pending migrations.
+    let admin_pool = Pool::connect_admin().await?;
+    admin_pool.migrate_database().await?;
+
+    Ok(())
+}
 
 /// Returns `true` if at least one user exists, meaning setup has already been run.
 pub async fn is_setup_complete() -> Result<bool> {
@@ -84,6 +102,15 @@ pub async fn setup_application(
         .into(),
     )?;
     workspace_repo.save(&mut workspace_root).await?;
+
+    // 5. Create and migrate the tenant database for this workspace.
+    let tenant_token = workspace_id.to_string();
+    let default_pool = Pool::<ScopeDefault, StateDisconnected>::connect_default().await?;
+    Initializer::new(SqliteInitializationStrategy)
+        .initialize_tenant(&default_pool, Some(&tenant_token))
+        .await?;
+    let tenant_pool = Pool::<ScopeTenant, StateDisconnected>::connect_tenant(&tenant_token).await?;
+    tenant_pool.migrate_database().await?;
 
     Ok(())
 }

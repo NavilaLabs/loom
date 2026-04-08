@@ -29,7 +29,7 @@ pub fn Login() -> Element {
                     if let Ok(user) = api::auth::get_current_user().await {
                         auth.set(Some(user));
                     }
-                    navigator.push("/dashboard");
+                    navigator.push("/select-workspace");
                 }
                 Err(e) => {
                     error.set(Some(e.to_string()));
