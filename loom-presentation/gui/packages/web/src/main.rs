@@ -1,3 +1,4 @@
+use api::auth::UserInfo;
 use dioxus::prelude::*;
 use dioxus_motion::prelude::*;
 use easer::functions::Easing;
@@ -6,6 +7,13 @@ use ui::{
     views::{setup::Setup, Dashboard, Database, Login},
     FAVICON,
 };
+
+/// Three-state auth signal shared across the whole app.
+///
+/// - `None`           → still checking (initial page load)
+/// - `Some(None)`     → confirmed not authenticated
+/// - `Some(Some(u))`  → confirmed authenticated as `u`
+pub type AuthState = Signal<Option<Option<UserInfo>>>;
 
 #[component]
 fn NotFound(route: Vec<String>) -> Element {
@@ -20,12 +28,21 @@ enum Route {
     #[layout(Layout)]
         #[route("/login")]
         Login {},
-        #[route("/dashboard")]
-        Dashboard {},
-        #[route("/developer/database")]
-        Database {},
-        #[route("/setup")]
-        Setup {},
+
+        #[layout(RequireSetupIncomplete)]
+            #[route("/setup")]
+            Setup {},
+        #[end_layout]
+
+        #[layout(RequireAuth)]
+            #[route("/dashboard")]
+            Dashboard {},
+
+            #[layout(RequireAdmin)]
+                #[route("/developer/database")]
+                Database {},
+            #[end_layout]
+        #[end_layout]
     #[end_layout]
 
     #[route("/:..route")]
@@ -35,7 +52,6 @@ enum Route {
 #[cfg(not(feature = "server"))]
 fn main() {
     dotenvy::from_filename_override(".env.dev").ok();
-
     dioxus::launch(App);
 }
 
@@ -46,8 +62,14 @@ async fn main() {
 
     let address = dioxus::cli_config::fullstack_address_or_localhost();
 
-    let router =
-        axum::Router::new().serve_dioxus_application(dioxus_server::ServeConfig::new(), App);
+    let session_store = tower_sessions::MemoryStore::default();
+    let session_layer = tower_sessions::SessionManagerLayer::new(session_store)
+        .with_secure(false)
+        .with_same_site(tower_sessions::cookie::SameSite::Lax);
+
+    let router = axum::Router::new()
+        .serve_dioxus_application(dioxus_server::ServeConfig::new(), App)
+        .layer(session_layer);
 
     let listener = tokio::net::TcpListener::bind(address).await.unwrap();
     axum::serve(listener, router.into_make_service())
@@ -57,7 +79,9 @@ async fn main() {
 
 #[component]
 fn App() -> Element {
-    // Build cool things ✌️
+    // Global auth state — available to every component in the tree.
+    use_context_provider(|| Signal::new(None::<Option<UserInfo>>));
+
     let resolver: TransitionVariantResolver<Route> = std::rc::Rc::new(|from, to| {
         fn idx(route: &Route) -> i32 {
             match route {
@@ -84,7 +108,6 @@ fn App() -> Element {
     });
     use_context_provider(|| resolver);
 
-    // To use a Tween for page transitions, provide it via context:
     let tween = use_signal(|| Tween {
         duration: std::time::Duration::from_millis(500),
         easing: easer::functions::Cubic::ease_in_out,
@@ -92,7 +115,6 @@ fn App() -> Element {
     use_context_provider(|| tween);
 
     rsx! {
-        // Global app resources
         document::Title { "Loom" }
         document::Meta { name: "description", content: "Loom" }
         document::Meta { name: "viewport", content: "width=device-width, initial-scale=1" }
@@ -102,10 +124,20 @@ fn App() -> Element {
     }
 }
 
-// A web-specific Router around the shared `Navbar` component
-// which allows us to use the web-specific `Route` enum.
+// ── Top-level layout ──────────────────────────────────────────────────────────
+
 #[component]
 fn Layout() -> Element {
+    let mut auth: AuthState = use_context();
+
+    // Fetch session auth state once when the layout mounts.
+    // Login/logout handlers update the signal directly, so no re-fetch is needed
+    // on navigation — the signal is already up to date.
+    use_resource(move || async move {
+        let user = api::auth::get_current_user().await.ok().flatten();
+        auth.set(Some(user));
+    });
+
     let route = use_route::<Route>();
     let route_parts: Vec<String> = route
         .to_string()
@@ -118,15 +150,61 @@ fn Layout() -> Element {
         .collect::<Vec<String>>()[0]
         .clone();
 
-    dbg!(route.to_string());
-
     rsx! {
         Header {}
-
         Headline { { convert_case::ccase!(title, last_path_part) } }
-
         AnimatedOutlet::<Route> {}
-
         ThemeSwitcher {}
+    }
+}
+
+// ── Route guards ──────────────────────────────────────────────────────────────
+
+#[component]
+fn RequireSetupIncomplete() -> Element {
+    let nav = use_navigator();
+    let complete = use_resource(|| async { api::setup::is_setup_complete().await });
+
+    match complete.value().cloned() {
+        None => rsx! {},
+        Some(Err(_)) | Some(Ok(false)) => rsx! { Outlet::<Route> {} },
+        Some(Ok(true)) => {
+            nav.replace(Route::Login {});
+            rsx! {}
+        }
+    }
+}
+
+/// Reads global auth state. Shows nothing while loading, redirects to /login
+/// when unauthenticated, and renders the outlet when authenticated.
+#[component]
+fn RequireAuth() -> Element {
+    let nav = use_navigator();
+    let auth: AuthState = use_context();
+
+    match auth.cloned() {
+        None => rsx! {},
+        Some(None) => {
+            nav.replace(Route::Login {});
+            rsx! {}
+        }
+        Some(Some(_)) => rsx! { AnimatedOutlet::<Route> {} },
+    }
+}
+
+/// Redirects to /dashboard when the authenticated user is not an admin.
+#[component]
+fn RequireAdmin() -> Element {
+    let nav = use_navigator();
+    let auth: AuthState = use_context();
+
+    match auth.cloned() {
+        Some(Some(user)) if user.is_admin => rsx! { Outlet::<Route> {} },
+        Some(Some(_)) => {
+            nav.replace(Route::Dashboard {});
+            rsx! {}
+        }
+        // Loading or unauthenticated — RequireAuth handles these cases above us.
+        _ => rsx! {},
     }
 }

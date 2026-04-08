@@ -1660,9 +1660,12 @@ dependencies = [
  "anyhow",
  "dotenvy",
  "eventually",
+ "jsonwebtoken",
  "loom-core",
  "loom-infrastructure",
  "loom-infrastructure-impl",
+ "serde",
+ "sqlx",
  "tokio",
  "tracing-subscriber",
 ]

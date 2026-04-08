@@ -15,13 +15,47 @@ pub async fn migrate_database() -> Result<(), ServerFnError> {
 
 #[cfg(feature = "server")]
 async fn _migrate_database() -> Result<(), ServerFnError> {
+    use dioxus::fullstack::extract;
     use loom::{
+        authorization::AuthorizationService,
         infrastructure::{
             database::{Initializer, SqliteInitializationStrategy},
             Pool,
         },
         Migrate,
     };
+    use tower_sessions::Session;
+
+    // Require admin — only admins may trigger migrations.
+    let session: Session = extract().await?;
+    let user: Option<crate::auth::UserInfo> =
+        session
+            .get("user")
+            .await
+            .map_err(|e| ServerFnError::ServerError {
+                message: e.to_string(),
+                code: 500,
+                details: None,
+            })?;
+
+    let user = user.ok_or_else(|| ServerFnError::ServerError {
+        message: "unauthorized".to_string(),
+        code: 401,
+        details: None,
+    })?;
+
+    let current_user = loom::auth::CurrentUser {
+        id: user.id,
+        email: user.email,
+    };
+
+    AuthorizationService::require_admin(&current_user)
+        .await
+        .map_err(|_| ServerFnError::ServerError {
+            message: "forbidden".to_string(),
+            code: 403,
+            details: None,
+        })?;
 
     let default_pool =
         Pool::connect_default()

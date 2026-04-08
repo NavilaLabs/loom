@@ -1,5 +1,6 @@
 mod tenant;
 pub mod auth;
+pub mod authorization;
 pub mod setup;
 
 pub use loom_core as core;

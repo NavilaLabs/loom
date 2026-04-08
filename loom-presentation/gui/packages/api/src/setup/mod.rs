@@ -1,5 +1,27 @@
 use dioxus::prelude::*;
 
+/// Returns `true` if setup has already been completed (at least one user exists).
+/// The GUI uses this to redirect away from `/setup` when not needed.
+#[get("/api/setup/complete")]
+pub async fn is_setup_complete() -> Result<bool, ServerFnError> {
+    #[cfg(feature = "server")]
+    {
+        loom::setup::is_setup_complete()
+            .await
+            .map_err(|e| ServerFnError::ServerError {
+                message: e.to_string(),
+                code: 500,
+                details: None,
+            })
+    }
+    #[cfg(not(feature = "server"))]
+    {
+        Ok(false)
+    }
+}
+
+/// Runs first-time setup: creates the admin user, workspace, and admin role.
+/// Returns an error if setup has already been completed.
 #[post("/api/setup")]
 pub async fn setup(
     username: String,

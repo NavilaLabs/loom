@@ -15,6 +15,13 @@ use loom_infrastructure_impl::{
     },
 };
 
+/// Returns `true` if at least one user exists, meaning setup has already been run.
+pub async fn is_setup_complete() -> Result<bool> {
+    let pool = Pool::connect_admin().await?;
+    let user_repo = UserRepository::from_pool(pool).await?;
+    Ok(user_repo.has_at_least_one_user().await?)
+}
+
 pub async fn setup_application(
     username: String,
     email: String,

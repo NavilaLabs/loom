@@ -12,9 +12,10 @@ dioxus-motion = { git = "https://github.com/wheregmis/dioxus-motion.git", branch
 dotenvy = { workspace = true }
 easer = { version = "0.3.0", default-features = false }
 tokio = { version = "1", optional = true }
+tower-sessions = { version = "0.14", optional = true }
 ui = { workspace = true }
 
 [features]
 # default = ["server"]
 web = ["dioxus/web"]
-server = ["dioxus/server", "axum", "api/server", "dep:tokio", "ui/server"]
+server = ["dioxus/server", "axum", "api/server", "dep:tokio", "dep:tower-sessions", "ui/server"]

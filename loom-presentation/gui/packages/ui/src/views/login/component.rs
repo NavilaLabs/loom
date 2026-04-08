@@ -2,6 +2,8 @@ use crate::components::atoms::{Button, Card, CardContent, CardFooter, Form, Form
 use crate::layouts::DefaultLayout;
 use dioxus::prelude::*;
 
+type AuthState = Signal<Option<Option<api::auth::UserInfo>>>;
+
 #[component]
 pub fn Login() -> Element {
     let mut email = use_signal(String::new);
@@ -10,6 +12,7 @@ pub fn Login() -> Element {
     let mut submitting = use_signal(|| false);
 
     let navigator = use_navigator();
+    let mut auth: AuthState = use_context();
 
     let on_submit = move |_| {
         let email = email.read().clone();
@@ -20,14 +23,11 @@ pub fn Login() -> Element {
             error.set(None);
 
             match api::login::login(email, password).await {
-                Ok(_token) => {
-                    #[cfg(target_arch = "wasm32")]
-                    {
-                        let js = format!(
-                            "localStorage.setItem('auth_token', '{}');",
-                            _token.replace('\'', "\\'")
-                        );
-                        let _ = document::eval(&js).await;
+                Ok(()) => {
+                    // Fetch fresh user info and push it into the global auth signal
+                    // so the navbar updates immediately without waiting for a re-mount.
+                    if let Ok(user) = api::auth::get_current_user().await {
+                        auth.set(Some(user));
                     }
                     navigator.push("/dashboard");
                 }

@@ -6,10 +6,11 @@ edition = "2021"
 [dependencies]
 dioxus = { workspace = true, features = ["fullstack"] }
 loom = { path = "../../../../loom", optional = true }
-# tokio-util = { version = "0.7", optional = true }
+serde = { version = "1", features = ["derive"] }
+tower-sessions = { version = "0.14", optional = true }
 
 [features]
 # default = ["server"]
-server = ["dioxus/server", "dep:loom", "sqlite"]
+server = ["dioxus/server", "dep:loom", "dep:tower-sessions", "sqlite"]
 postgres = ["loom/postgres"]
 sqlite = ["loom/sqlite"]
