@@ -1,11 +1,7 @@
 use anyhow::Result;
 use loom::infrastructure::{
     BackoffConfig, Pool, ProjectionDaemon, ProjectionRunner, ProjectionSource, SqlCheckpoint,
-    admin::{
-        user::projectors::UserProjector,
-        workspace::projectors::WorkspaceProjector,
-        workspace_role::projectors::WorkspaceRoleProjector,
-    },
+    admin::projectors::AdminProjector,
 };
 
 #[tokio::main]
@@ -35,24 +31,13 @@ async fn main() -> Result<()> {
 
     let mut daemon = ProjectionDaemon::new();
 
+    // All admin projectors run under a single runner with a single checkpoint.
+    // This guarantees events are applied sequentially across all projection
+    // tables, preventing FK race conditions between independent runners.
     daemon.register_with_config(
         ProjectionRunner::new(pool.clone().into_pool(), ProjectionSource::AllStreams),
-        UserProjector::new(pool.clone()),
-        SqlCheckpoint::new(pool.clone().into_pool(), "user_projection").await?,
-        backoff.clone(),
-    );
-
-    daemon.register_with_config(
-        ProjectionRunner::new(pool.clone().into_pool(), ProjectionSource::AllStreams),
-        WorkspaceProjector::new(pool.clone()),
-        SqlCheckpoint::new(pool.clone().into_pool(), "workspace_projection").await?,
-        backoff.clone(),
-    );
-
-    daemon.register_with_config(
-        ProjectionRunner::new(pool.clone().into_pool(), ProjectionSource::AllStreams),
-        WorkspaceRoleProjector::new(pool.clone()),
-        SqlCheckpoint::new(pool.clone().into_pool(), "workspace_role_projection").await?,
+        AdminProjector::new(pool.clone()),
+        SqlCheckpoint::new(pool.clone().into_pool(), "admin_projection").await?,
         backoff,
     );
 

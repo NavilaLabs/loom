@@ -2,7 +2,8 @@ use async_trait::async_trait;
 use eventually_projection::{Projector, RawEvent};
 use loom_core::admin::workspace_role::WorkspaceRoleEvent;
 use sea_query::{
-    Condition, DynIden, Expr, ExprTrait, PostgresQueryBuilder, Query, SqliteQueryBuilder, TableRef,
+    Condition, DynIden, Expr, ExprTrait, OnConflict, PostgresQueryBuilder, Query,
+    SqliteQueryBuilder, TableRef,
 };
 use sea_query_sqlx::SqlxBinder;
 
@@ -49,6 +50,7 @@ impl Projector for WorkspaceRoleProjector {
                         workspace_id.to_string().into(),
                         sea_query::Value::String(name).into(),
                     ])
+                    .on_conflict(OnConflict::new().do_nothing().to_owned())
                     .to_owned();
 
                 let (sql, values) = match self.pool.get_database_type() {
@@ -77,6 +79,7 @@ impl Projector for WorkspaceRoleProjector {
                         event.stream_id.clone().into(),
                         permission_id.to_string().into(),
                     ])
+                    .on_conflict(OnConflict::new().do_nothing().to_owned())
                     .to_owned();
 
                 let (sql, values) = match self.pool.get_database_type() {

@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use eventually_projection::{Projector, RawEvent};
 use loom_core::admin::permission::PermissionEvent;
-use sea_query::{DynIden, PostgresQueryBuilder, Query, SqliteQueryBuilder, TableRef};
+use sea_query::{DynIden, OnConflict, PostgresQueryBuilder, Query, SqliteQueryBuilder, TableRef};
 use sea_query_sqlx::SqlxBinder;
 
 use crate::{DatabaseType, Pool, ScopeAdmin, StateConnected};
@@ -32,6 +32,7 @@ impl Projector for PermissionProjector {
                     .into_table(TableRef::from(Self::TABLE))
                     .columns([DynIden::from("id"), DynIden::from("name")])
                     .values_panic([id.to_string().into(), name.into()])
+                    .on_conflict(OnConflict::new().do_nothing().to_owned())
                     .to_owned();
 
                 let (sql, values) = match self.pool.get_database_type() {
