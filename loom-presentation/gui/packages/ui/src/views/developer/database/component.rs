@@ -4,7 +4,7 @@ use crate::components::atoms::accordion::{
 use crate::components::atoms::card::{
     Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle,
 };
-use crate::components::atoms::{Button, Headline, Tooltip, TooltipContent, TooltipTrigger};
+use crate::components::atoms::{Button, Tooltip, TooltipContent, TooltipTrigger};
 use crate::layouts::DefaultLayout;
 use dioxus::prelude::*;
 use dioxus_free_icons::icons::hi_solid_icons::HiArrowRight;

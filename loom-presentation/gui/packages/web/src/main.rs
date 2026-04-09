@@ -3,7 +3,10 @@ use dioxus::prelude::*;
 use dioxus_motion::prelude::*;
 use easer::functions::Easing;
 use ui::{
-    components::{atoms::Headline, molecules::ThemeSwitcher, organisms::Header},
+    components::{
+        atoms::{ToastMessage, ToastStack},
+        organisms::{Header, Sidebar},
+    },
     views::{
         setup::Setup, Activities, Customers, Dashboard, Database, Login, Projects, SelectWorkspace,
         Timesheets,
@@ -157,6 +160,19 @@ fn App() -> Element {
         document::Meta { name: "description", content: "Loom" }
         document::Meta { name: "viewport", content: "width=device-width, initial-scale=1" }
         document::Link { rel: "icon", href: FAVICON }
+        document::Link {
+            rel: "preconnect",
+            href: "https://fonts.googleapis.com"
+        }
+        document::Link {
+            rel: "preconnect",
+            href: "https://fonts.gstatic.com",
+            crossorigin: "anonymous"
+        }
+        document::Link {
+            rel: "stylesheet",
+            href: "https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+        }
 
         Router::<Route> {}
     }
@@ -168,29 +184,39 @@ fn App() -> Element {
 fn Layout() -> Element {
     let mut auth: AuthState = use_context();
 
+    // Provide toast context for all descendant views.
+    use_context_provider(|| Signal::new(Vec::<ToastMessage>::new()));
+
     // Fetch session auth state once when the layout mounts.
     use_resource(move || async move {
         let user = api::auth::get_current_user().await.ok().flatten();
         auth.set(Some(user));
     });
 
-    let route = use_route::<Route>();
-    let route_parts: Vec<String> = route
-        .to_string()
-        .split("/")
-        .map(|part| part.to_string())
-        .collect();
-    let last_path_part: String = route_parts[route_parts.len() - 1]
-        .split("?")
-        .map(|path| path.to_string())
-        .collect::<Vec<String>>()[0]
-        .clone();
+    let route: Route = use_route();
+    let page_title = match &route {
+        Route::Dashboard {} => "Dashboard",
+        Route::Customers {} => "Customers",
+        Route::Projects {} => "Projects",
+        Route::Activities {} => "Activities",
+        Route::Timesheets {} => "Timesheets",
+        Route::Database {} => "Developer",
+        Route::SelectWorkspace {} => "Workspaces",
+        Route::Login {} | Route::Setup {} => "",
+        Route::NotFound { .. } => "Not Found",
+    };
 
     rsx! {
-        Header {}
-        Headline { { convert_case::ccase!(title, last_path_part) } }
-        AnimatedOutlet::<Route> {}
-        ThemeSwitcher {}
+        div { class: "app-shell",
+            Sidebar {}
+            div { class: "app-right",
+                Header { title: page_title.to_string() }
+                main { class: "app-main",
+                    AnimatedOutlet::<Route> {}
+                }
+            }
+        }
+        ToastStack {}
     }
 }
 

@@ -140,6 +140,8 @@ A **separate Cargo workspace** using [Dioxus 0.7](https://dioxuslabs.com/learn/0
 - Server functions use `#[post]`/`#[get]` macros
 - Components require `#[component]` macro; function name must start with uppercase or contain `_`
 
+In the `assets` directory there are mockups of what I expect the application is supposed to look like.
+
 ### Code Quality
 
 Clippy is configured at `deny` level for `all`, `correctness`, `complexity`, `perf`, and `style`, with `warn` for `pedantic` and `nursery`. Pre-commit hooks enforce `cargo fmt`, `cargo clippy`, and `cargo test` (test runs on push only).

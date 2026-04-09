@@ -4,6 +4,8 @@ use crate::components::atoms::{
 };
 use crate::layouts::DefaultLayout;
 use dioxus::prelude::*;
+use dioxus_free_icons::icons::hi_solid_icons::{HiCheck, HiChevronLeft, HiChevronRight, HiRefresh};
+use dioxus_free_icons::Icon;
 
 #[component]
 pub fn Setup() -> Element {
@@ -94,6 +96,7 @@ pub fn Setup() -> Element {
                         Button {
                             variant: ButtonVariant::Secondary,
                             onclick: move |_| active_tab.set(Some("admin".to_string())),
+                            Icon { icon: HiChevronLeft, width: 16, height: 16 }
                             "Back"
                         }
                     }
@@ -102,6 +105,7 @@ pub fn Setup() -> Element {
                             class: "ms-auto",
                             onclick: move |_| active_tab.set(Some("workspace".to_string())),
                             "Next"
+                            Icon { icon: HiChevronRight, width: 16, height: 16 }
                         }
                     } else {
                         Button {
@@ -109,7 +113,13 @@ pub fn Setup() -> Element {
                             r#type: "submit",
                             disabled: *submitting.read(),
                             onclick: on_submit,
-                            if *submitting.read() { "Submitting…" } else { "Submit" }
+                            if *submitting.read() {
+                                Icon { icon: HiRefresh, width: 16, height: 16 }
+                                "Submitting…"
+                            } else {
+                                Icon { icon: HiCheck, width: 16, height: 16 }
+                                "Submit"
+                            }
                         }
                     }
                 }

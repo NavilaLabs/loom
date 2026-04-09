@@ -1,96 +1,28 @@
 use dioxus::prelude::*;
 
-use crate::components::{
-    atoms::{Navbar, NavbarItem},
-    molecules::{LoomLogo, NavilaLabsLogo, Seperator},
-};
-
-/// Mirrors the `AuthState` type alias from the `web` crate.
-/// Both sides must use `Signal<Option<Option<api::auth::UserInfo>>>`.
-type AuthState = Signal<Option<Option<api::auth::UserInfo>>>;
+use crate::components::molecules::SettingsMenu;
 
 #[component]
-pub fn Header() -> Element {
-    let auth: AuthState = use_context();
-    let user = auth.cloned().flatten();
-
-    let nav = use_navigator();
-
-    let mut auth: AuthState = use_context();
-
-    let on_logout = move |_| async move {
-        let _ = api::auth::logout().await;
-        auth.set(Some(None));
-        nav.replace("/login");
-    };
-
+pub fn Header(
+    /// Current page title shown on the left of the header bar.
+    /// Pass an empty string to show only the actions area (e.g. on login/setup).
+    #[props(default)]
+    title: String,
+) -> Element {
     rsx! {
+        // Load global stylesheets here (in addition to DefaultLayout) so they
+        // are never removed from the document head during route transitions.
+        document::Link { rel: "stylesheet", href: asset!("/assets/theme.css") }
+        document::Link { rel: "stylesheet", href: asset!("/assets/tailwind.css") }
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
 
-        header { class: "header p-4 w-full",
-            div { class: "header-content h-16 flex flex-row items-center justify-between",
-                div { class: "logos flex flex-row items-center space-x-2",
-                    NavilaLabsLogo { class: "h-16" }
-                    Seperator { class: "h-16" }
-                    LoomLogo { class: "h-16" }
+        header { class: "header",
+            div { class: "header-content",
+                if !title.is_empty() {
+                    h1 { class: "header-title", "{title}" }
                 }
-
-                Navbar {
-                    match user {
-                        None => rsx! {
-                            NavbarItem {
-                                index: 0usize,
-                                value: "login".to_string(),
-                                to: "/login",
-                                "Login"
-                            }
-                        },
-                        Some(ref u) => rsx! {
-                            NavbarItem {
-                                index: 0usize,
-                                value: "dashboard".to_string(),
-                                to: "/dashboard",
-                                "Dashboard"
-                            }
-                            NavbarItem {
-                                index: 1usize,
-                                value: "timesheets".to_string(),
-                                to: "/timesheets",
-                                "Timesheets"
-                            }
-                            NavbarItem {
-                                index: 2usize,
-                                value: "customers".to_string(),
-                                to: "/customers",
-                                "Customers"
-                            }
-                            NavbarItem {
-                                index: 3usize,
-                                value: "projects".to_string(),
-                                to: "/projects",
-                                "Projects"
-                            }
-                            NavbarItem {
-                                index: 4usize,
-                                value: "activities".to_string(),
-                                to: "/activities",
-                                "Activities"
-                            }
-                            if u.is_admin {
-                                NavbarItem {
-                                    index: 5usize,
-                                    value: "database".to_string(),
-                                    to: "/developer/database",
-                                    "Database"
-                                }
-                            }
-                            button {
-                                class: "navbar-item",
-                                onclick: on_logout,
-                                "Logout"
-                            }
-                        },
-                    }
+                div { class: "header-actions",
+                    SettingsMenu {}
                 }
             }
         }

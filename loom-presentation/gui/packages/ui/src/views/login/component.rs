@@ -1,6 +1,8 @@
 use crate::components::atoms::{Button, Card, CardContent, CardFooter, Form, FormField, Input, Label};
 use crate::layouts::DefaultLayout;
 use dioxus::prelude::*;
+use dioxus_free_icons::icons::hi_solid_icons::{HiLogin, HiRefresh};
+use dioxus_free_icons::Icon;
 
 type AuthState = Signal<Option<Option<api::auth::UserInfo>>>;
 
@@ -75,7 +77,13 @@ pub fn Login() -> Element {
                         r#type: "submit",
                         disabled: *submitting.read(),
                         onclick: on_submit,
-                        if *submitting.read() { "Signing in…" } else { "Sign in" }
+                        if *submitting.read() {
+                            Icon { icon: HiRefresh, width: 16, height: 16 }
+                            "Signing in…"
+                        } else {
+                            Icon { icon: HiLogin, width: 16, height: 16 }
+                            "Sign in"
+                        }
                     }
                 }
             }

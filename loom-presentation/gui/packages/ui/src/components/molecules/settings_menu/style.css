@@ -1,0 +1,56 @@
+/* Settings Menu — icon button trigger, right-anchored dropdown */
+
+.settings-menu .dropdown-menu-trigger {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: var(--radius-md);
+    border-color: transparent;
+    background-color: transparent;
+    color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.settings-menu .dropdown-menu-trigger:hover {
+    background-color: var(--color-surface-tonal);
+    border-color: transparent;
+    color: var(--color-text-primary);
+}
+
+/* Anchor the panel to the right edge of the trigger */
+.settings-menu .dropdown-menu-content {
+    left: auto;
+    right: 0;
+    min-width: 180px;
+}
+
+/* Section heading (e.g. "Theme") */
+.settings-section-label {
+    padding: 4px 10px 2px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-secondary);
+}
+
+/* Label text inside each item */
+.settings-item-label {
+    flex: 1;
+}
+
+/* Check mark for active theme */
+.settings-item-check {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--color-primary-500);
+}
+
+/* Divider between sections */
+.settings-separator {
+    height: 1px;
+    background-color: var(--color-border);
+    margin: 0.25rem 0;
+}

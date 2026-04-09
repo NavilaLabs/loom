@@ -23,7 +23,9 @@ pub fn Navbar(props: NavbarProps) -> Element {
 
 #[component]
 pub fn NavbarNav(props: NavbarNavProps) -> Element {
-    let base = attributes!(div { class: "navbar-nav" });
+    let base = attributes!(div {
+        class: "navbar-nav"
+    });
     let merged = merge_attributes(vec![base, props.attributes.clone()]);
 
     rsx! {
@@ -38,7 +40,9 @@ pub fn NavbarNav(props: NavbarNavProps) -> Element {
 
 #[component]
 pub fn NavbarTrigger(props: NavbarTriggerProps) -> Element {
-    let base = attributes!(button { class: "navbar-trigger" });
+    let base = attributes!(button {
+        class: "navbar-trigger"
+    });
     let merged = merge_attributes(vec![base, props.attributes.clone()]);
 
     rsx! {
@@ -57,7 +61,9 @@ pub fn NavbarTrigger(props: NavbarTriggerProps) -> Element {
 
 #[component]
 pub fn NavbarContent(props: NavbarContentProps) -> Element {
-    let base = attributes!(div { class: "navbar-content" });
+    let base = attributes!(div {
+        class: "navbar-content"
+    });
     let merged = merge_attributes(vec![base, props.attributes.clone()]);
 
     rsx! {
@@ -67,7 +73,9 @@ pub fn NavbarContent(props: NavbarContentProps) -> Element {
 
 #[component]
 pub fn NavbarItem(props: NavbarItemProps) -> Element {
-    let base = attributes!(a { class: "navbar-item" });
+    let base = attributes!(a {
+        class: "navbar-item"
+    });
     let user_class = props
         .class
         .as_deref()
@@ -78,7 +86,6 @@ pub fn NavbarItem(props: NavbarItemProps) -> Element {
 
     rsx! {
         navbar::NavbarItem {
-            class: None,
             index: props.index,
             value: props.value,
             disabled: props.disabled,

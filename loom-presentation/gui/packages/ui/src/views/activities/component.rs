@@ -1,19 +1,21 @@
-use crate::components::atoms::{Button, Input};
-use crate::components::atoms::card::{Card, CardContent, CardHeader, CardTitle};
+use crate::components::atoms::card::{Card, CardContent, CardFooter, CardHeader, CardTitle};
+use crate::components::atoms::{Button, Input, ToastMessage, Toasts};
 use crate::layouts::DefaultLayout;
 use api::activity::ActivityDto;
 use dioxus::prelude::*;
+use dioxus_free_icons::icons::hi_solid_icons::{HiPlus, HiTag};
+use dioxus_free_icons::Icon;
 
 #[component]
 pub fn Activities() -> Element {
     let mut activities = use_signal(Vec::<ActivityDto>::new);
     let mut name = use_signal(String::new);
-    let mut error = use_signal(|| Option::<String>::None);
+    let mut toasts: Toasts = use_context();
 
     use_resource(move || async move {
         match api::activity::list_activities().await {
             Ok(list) => activities.set(list),
-            Err(e) => error.set(Some(e.to_string())),
+            Err(e) => toasts.write().push(ToastMessage::error(e.to_string())),
         }
     });
 
@@ -26,8 +28,9 @@ pub fn Activities() -> Element {
             Ok(dto) => {
                 activities.write().push(dto);
                 name.set(String::new());
+                toasts.write().push(ToastMessage::success("Activity created"));
             }
-            Err(e) => error.set(Some(e.to_string())),
+            Err(e) => toasts.write().push(ToastMessage::error(e.to_string())),
         }
     };
 
@@ -35,16 +38,31 @@ pub fn Activities() -> Element {
         DefaultLayout {
             div { class: "space-y-6",
                 // Create form
-                div { class: "flex flex-col gap-2 p-4 border rounded-md",
-                    h2 { class: "text-lg font-semibold", "New Activity" }
-                    Input {
-                        placeholder: "Activity name",
-                        value: name.read().clone(),
-                        oninput: move |e: FormEvent| name.set(e.value()),
+                Card { data_size: "md",
+                    CardHeader {
+                        CardTitle {
+                            div { class: "flex items-center gap-2",
+                                Icon { icon: HiTag, width: 18, height: 18 }
+                                "New Activity"
+                            }
+                        }
                     }
-                    Button { onclick: on_create, "Create" }
-                    if let Some(err) = error.read().as_ref() {
-                        p { class: "text-destructive text-sm", "{err}" }
+                    CardContent {
+                        div { class: "form-field",
+                            label { class: "form-label", r#for: "activity-name", "Name" }
+                            Input {
+                                id: "activity-name",
+                                placeholder: "Development",
+                                value: name.read().clone(),
+                                oninput: move |e: FormEvent| name.set(e.value()),
+                            }
+                        }
+                    }
+                    CardFooter {
+                        Button { onclick: on_create,
+                            Icon { icon: HiPlus, width: 16, height: 16 }
+                            "Create"
+                        }
                     }
                 }
 

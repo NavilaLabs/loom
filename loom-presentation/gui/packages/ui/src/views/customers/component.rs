@@ -1,8 +1,10 @@
-use crate::components::atoms::{Button, Input};
-use crate::components::atoms::card::{Card, CardContent, CardHeader, CardTitle};
+use crate::components::atoms::card::{Card, CardContent, CardFooter, CardHeader, CardTitle};
+use crate::components::atoms::{Button, Input, ToastMessage, Toasts};
 use crate::layouts::DefaultLayout;
 use api::customer::CustomerDto;
 use dioxus::prelude::*;
+use dioxus_free_icons::icons::hi_solid_icons::{HiOfficeBuilding, HiPlus};
+use dioxus_free_icons::Icon;
 
 #[component]
 pub fn Customers() -> Element {
@@ -10,13 +12,12 @@ pub fn Customers() -> Element {
     let mut name = use_signal(String::new);
     let mut currency = use_signal(|| "EUR".to_string());
     let mut timezone = use_signal(|| "UTC".to_string());
-    let mut error = use_signal(|| Option::<String>::None);
+    let mut toasts: Toasts = use_context();
 
-    // Load on mount
     use_resource(move || async move {
         match api::customer::list_customers().await {
             Ok(list) => customers.set(list),
-            Err(e) => error.set(Some(e.to_string())),
+            Err(e) => toasts.write().push(ToastMessage::error(e.to_string())),
         }
     });
 
@@ -31,8 +32,9 @@ pub fn Customers() -> Element {
             Ok(dto) => {
                 customers.write().push(dto);
                 name.set(String::new());
+                toasts.write().push(ToastMessage::success("Customer created"));
             }
-            Err(e) => error.set(Some(e.to_string())),
+            Err(e) => toasts.write().push(ToastMessage::error(e.to_string())),
         }
     };
 
@@ -40,26 +42,51 @@ pub fn Customers() -> Element {
         DefaultLayout {
             div { class: "space-y-6",
                 // Create form
-                div { class: "flex flex-col gap-2 p-4 border rounded-md",
-                    h2 { class: "text-lg font-semibold", "New Customer" }
-                    Input {
-                        placeholder: "Name",
-                        value: name.read().clone(),
-                        oninput: move |e: FormEvent| name.set(e.value()),
+                Card { data_size: "md",
+                    CardHeader {
+                        CardTitle {
+                            div { class: "flex items-center gap-2",
+                                Icon { icon: HiOfficeBuilding, width: 18, height: 18 }
+                                "New Customer"
+                            }
+                        }
                     }
-                    Input {
-                        placeholder: "Currency (e.g. EUR)",
-                        value: currency.read().clone(),
-                        oninput: move |e: FormEvent| currency.set(e.value()),
+                    CardContent {
+                        div { class: "flex flex-col gap-4",
+                            div { class: "form-field",
+                                label { class: "form-label", r#for: "customer-name", "Name" }
+                                Input {
+                                    id: "customer-name",
+                                    placeholder: "Acme Corp",
+                                    value: name.read().clone(),
+                                    oninput: move |e: FormEvent| name.set(e.value()),
+                                }
+                            }
+                            div { class: "form-field",
+                                label { class: "form-label", r#for: "customer-currency", "Currency" }
+                                Input {
+                                    id: "customer-currency",
+                                    placeholder: "EUR",
+                                    value: currency.read().clone(),
+                                    oninput: move |e: FormEvent| currency.set(e.value()),
+                                }
+                            }
+                            div { class: "form-field",
+                                label { class: "form-label", r#for: "customer-timezone", "Timezone" }
+                                Input {
+                                    id: "customer-timezone",
+                                    placeholder: "UTC",
+                                    value: timezone.read().clone(),
+                                    oninput: move |e: FormEvent| timezone.set(e.value()),
+                                }
+                            }
+                        }
                     }
-                    Input {
-                        placeholder: "Timezone (e.g. UTC)",
-                        value: timezone.read().clone(),
-                        oninput: move |e: FormEvent| timezone.set(e.value()),
-                    }
-                    Button { onclick: on_create, "Create" }
-                    if let Some(err) = error.read().as_ref() {
-                        p { class: "text-destructive text-sm", "{err}" }
+                    CardFooter {
+                        Button { onclick: on_create,
+                            Icon { icon: HiPlus, width: 16, height: 16 }
+                            "Create"
+                        }
                     }
                 }
 

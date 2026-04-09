@@ -118,10 +118,10 @@
     SURFACES & BACKGROUNDS
     ============================================================ */
 
-    --color-bg: var(--dark, #1a1a1a) var(--light, #e8e8e3);
-    --color-surface: var(--dark, #242424) var(--light, #f0f0ea);
-    --color-surface-raised: var(--dark, #2c2c2c) var(--light, #f7f7f2);
-    --color-surface-tonal: var(--dark, #333333) var(--light, #e4e4de);
+    --color-bg: var(--dark, #1a1a1a) var(--light, #fafaf5);
+    --color-surface: var(--dark, #242424) var(--light, #f4f4ef);
+    --color-surface-raised: var(--dark, #2c2c2c) var(--light, #ffffff);
+    --color-surface-tonal: var(--dark, #333333) var(--light, #eeeee9);
     --color-surface-overlay: var(--dark, rgba(0, 0, 0, 0.6))
         var(--light, rgba(0, 0, 0, 0.4));
 
@@ -129,16 +129,16 @@
     BORDERS & DIVIDERS
     ============================================================ */
 
-    --color-border: var(--dark, #3a3a3a) var(--light, #d0d0c8);
-    --color-border-subtle: var(--dark, #2e2e2e) var(--light, #e0e0d8);
-    --color-border-strong: var(--dark, #555555) var(--light, #b0b0a8);
+    --color-border: var(--dark, #3a3a3a) var(--light, #dcdcd4);
+    --color-border-subtle: var(--dark, #2e2e2e) var(--light, #ebebE5);
+    --color-border-strong: var(--dark, #555555) var(--light, #707a6c);
 
     /* ============================================================
     TEXT
     ============================================================ */
 
-    --color-text-primary: var(--dark, #e8e8e0) var(--light, #1a1a1a);
-    --color-text-secondary: var(--dark, #a0a09a) var(--light, #455a64);
+    --color-text-primary: var(--dark, #e8e8e0) var(--light, #1a1c19);
+    --color-text-secondary: var(--dark, #a0a09a) var(--light, #40493d);
     --color-text-disabled: var(--dark, #606060) var(--light, #9e9e98);
     --color-text-on-primary: var(--dark, #ffffff) var(--light, #ffffff);
 
@@ -161,7 +161,7 @@
     --color-btn-primary-text: var(--dark, #ffffff) var(--light, #ffffff);
     --color-btn-primary-hover: var(--dark, #4caf50) var(--light, #245c27);
 
-    --color-btn-secondary-bg: var(--dark, #2c2c2c) var(--light, #f0f0ea);
+    --color-btn-secondary-bg: var(--dark, #2c2c2c) var(--light, #eeeee9);
     --color-btn-secondary-text: var(--dark, #e8e8e0) var(--light, #1a1a1a);
     --color-btn-secondary-border: var(--dark, #3a3a3a) var(--light, #c8c8c0);
 
@@ -251,7 +251,7 @@
     Focus ring derives from workspace accent via --color-focus-ring.
     ============================================================ */
 
-    --color-input-bg: var(--dark, #2c2c2c) var(--light, #f0f0ea);
+    --color-input-bg: var(--dark, #2c2c2c) var(--light, #f4f4ef);
     --color-input-border: var(--dark, #3a3a3a) var(--light, #d0d0c8);
     --color-input-text: var(--dark, #e8e8e0) var(--light, #1a1a1a);
     --color-input-placeholder: var(--dark, #707068) var(--light, #9e9e98);
@@ -259,6 +259,15 @@
     --color-input-disabled: var(--dark, #1e1e1e) var(--light, #e4e4de);
     --color-input-text-disabled: var(--dark, #606060) var(--light, #b0b0a8);
     --color-input-ring: var(--color-focus-ring);
+
+    /* ============================================================
+    TYPOGRAPHY
+    --font-display: Noto Serif for editorial/display headings.
+    --font-body:    Inter for all functional UI text.
+    ============================================================ */
+
+    --font-display: "Noto Serif", Georgia, serif;
+    --font-body: Inter, system-ui, sans-serif;
 
     /* ============================================================
     TRANSITIONS
@@ -273,9 +282,9 @@
     ============================================================ */
 
     --shadow-card: var(--dark, 0 1px 3px rgba(0, 0, 0, 0.5))
-        var(--light, 0 1px 4px rgba(0, 0, 0, 0.08));
+        var(--light, 0 4px 20px -2px rgba(26, 28, 25, 0.06));
     --shadow-raised: var(--dark, 0 4px 16px rgba(0, 0, 0, 0.6))
-        var(--light, 0 4px 12px rgba(0, 0, 0, 0.1));
+        var(--light, 0 8px 24px -4px rgba(26, 28, 25, 0.08));
 
     /* ============================================================
     RADIUS
