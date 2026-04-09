@@ -69,3 +69,21 @@ pub async fn update(
     repo.save(&mut root).await?;
     Ok(())
 }
+
+pub async fn set_budget(
+    workspace_id: &str,
+    id: &str,
+    time_budget: Option<i32>,
+    money_budget: Option<i64>,
+    budget_is_monthly: bool,
+) -> Result<()> {
+    let pool = tenant_pool(workspace_id).await?;
+    let repo = CustomerRepository::from_pool(pool).await?;
+    let agg_id: CustomerId = id.parse()?;
+    let mut root = repo.get(&agg_id).await?;
+    root.record_that(
+        CustomerEvent::BudgetUpdated { time_budget, money_budget, budget_is_monthly }.into(),
+    )?;
+    repo.save(&mut root).await?;
+    Ok(())
+}

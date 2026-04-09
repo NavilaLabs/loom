@@ -1,0 +1,78 @@
+/* ── Quick Start card ─────────────────────────────────────────────────────── */
+
+.qs-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.qs-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.qs-label {
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+}
+
+.qs-start-btn {
+    width: 100%;
+    justify-content: center;
+}
+
+/* ── Running Timer display ───────────────────────────────────────────────── */
+
+.dashboard-timer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.dashboard-timer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dashboard-timer-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dashboard-timer-status-label {
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+}
+
+.dashboard-timer-time {
+    display: flex;
+    justify-content: center;
+    padding: 0.75rem 0 0.5rem;
+}
+
+.dashboard-timer-elapsed {
+    font-size: 2.75rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    color: var(--color-workspace-accent);
+    font-family: var(--font-mono, ui-monospace, "Courier New", monospace);
+    line-height: 1;
+}
+
+.dashboard-timer-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    padding-bottom: 0.25rem;
+}

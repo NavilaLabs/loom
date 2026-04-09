@@ -13,8 +13,8 @@ pub type TimesheetId = AggregateId;
 pub struct Timesheet {
     id: TimesheetId,
     user_id: UserId,
-    project_id: ProjectId,
-    activity_id: ActivityId,
+    project_id: Option<ProjectId>,
+    activity_id: Option<ActivityId>,
     start_time: String,
     end_time: Option<String>,
     duration: Option<i32>,
@@ -27,8 +27,8 @@ pub struct Timesheet {
 impl Timesheet {
     pub fn id(&self) -> &TimesheetId { &self.id }
     pub fn user_id(&self) -> &UserId { &self.user_id }
-    pub fn project_id(&self) -> &ProjectId { &self.project_id }
-    pub fn activity_id(&self) -> &ActivityId { &self.activity_id }
+    pub fn project_id(&self) -> Option<&ProjectId> { self.project_id.as_ref() }
+    pub fn activity_id(&self) -> Option<&ActivityId> { self.activity_id.as_ref() }
     pub fn start_time(&self) -> &str { &self.start_time }
     pub fn end_time(&self) -> Option<&str> { self.end_time.as_deref() }
     pub fn duration(&self) -> Option<i32> { self.duration }
@@ -96,6 +96,11 @@ impl Aggregate for Timesheet {
             (Some(mut t), TimesheetEvent::Updated { description, billable }) => {
                 t.description = description;
                 t.billable = billable;
+                Ok(t)
+            }
+            (Some(mut t), TimesheetEvent::Reassigned { project_id, activity_id }) => {
+                t.project_id = Some(project_id);
+                t.activity_id = Some(activity_id);
                 Ok(t)
             }
             (Some(t), TimesheetEvent::Exported) => {

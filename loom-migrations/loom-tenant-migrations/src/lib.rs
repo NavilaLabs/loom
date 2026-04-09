@@ -10,6 +10,7 @@ mod m20260408_000002_create_timesheets_projection_table;
 mod m20260408_000003_create_timesheet_tags_projection_table;
 mod m20260408_000004_create_rates_projection_tables;
 mod m20260409_000001_fix_timesheets_user_id_fk;
+mod m20260409_000002_make_timesheet_project_activity_nullable;
 
 pub struct Migrator;
 
@@ -28,6 +29,9 @@ impl MigratorTrait for Migrator {
             Box::new(m20260408_000003_create_timesheet_tags_projection_table::Migration),
             Box::new(m20260408_000004_create_rates_projection_tables::Migration),
             Box::new(m20260409_000001_fix_timesheets_user_id_fk::Migration),
+            Box::new(
+                m20260409_000002_make_timesheet_project_activity_nullable::Migration,
+            ),
         ]
     }
 }

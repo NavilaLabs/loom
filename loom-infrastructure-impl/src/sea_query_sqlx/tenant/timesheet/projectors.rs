@@ -52,8 +52,8 @@ impl Projector for TimesheetProjector {
                     .values_panic([
                         id.to_string().into(),
                         user_id.to_string().into(),
-                        project_id.to_string().into(),
-                        activity_id.to_string().into(),
+                        project_id.map(|v| v.to_string()).into(),
+                        activity_id.map(|v| v.to_string()).into(),
                         start_time.into(),
                         timezone.into(),
                         billable.into(),
@@ -111,6 +111,31 @@ impl Projector for TimesheetProjector {
                     .values([
                         (DynIden::from("description"), description.into()),
                         (DynIden::from("billable"), billable.into()),
+                    ])
+                    .cond_where(
+                        Condition::all()
+                            .add(Expr::col("id").eq(Expr::val(event.stream_id.clone()))),
+                    )
+                    .to_owned();
+
+                let (sql, values) = match self.pool.get_database_type() {
+                    DatabaseType::Sqlite => query.build_sqlx(sea_query::SqliteQueryBuilder),
+                    DatabaseType::Postgres => query.build_sqlx(sea_query::PostgresQueryBuilder),
+                };
+                sqlx::query_with(&sql, values).execute(self.pool.as_ref()).await?;
+            }
+            "TimesheetReassigned" => {
+                let TimesheetEvent::Reassigned { project_id, activity_id } =
+                    serde_json::from_slice(&event.payload_bytes)?
+                else {
+                    return Ok(());
+                };
+
+                let query = Query::update()
+                    .table(TableRef::from(Self::TABLE))
+                    .values([
+                        (DynIden::from("project_id"), project_id.to_string().into()),
+                        (DynIden::from("activity_id"), activity_id.to_string().into()),
                     ])
                     .cond_where(
                         Condition::all()

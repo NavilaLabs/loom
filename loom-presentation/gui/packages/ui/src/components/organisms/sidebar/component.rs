@@ -1,10 +1,10 @@
 use dioxus::prelude::*;
 use dioxus_free_icons::icons::hi_solid_icons::{
-    HiBriefcase, HiClock, HiHome, HiLogout, HiOfficeBuilding, HiTag,
+    HiBriefcase, HiClock, HiHashtag, HiHome, HiLogout, HiOfficeBuilding, HiPlay, HiStop, HiTag,
 };
 use dioxus_free_icons::Icon;
 
-use crate::components::atoms::{Button, ButtonVariant, Navbar, NavbarItem};
+use crate::components::atoms::{Button, ButtonVariant, Navbar, NavbarItem, ToastMessage, Toasts};
 
 /// Mirrors the `AuthState` type alias from the `web` crate.
 type AuthState = Signal<Option<Option<api::auth::UserInfo>>>;
@@ -16,6 +16,8 @@ pub fn Sidebar() -> Element {
 
     let nav = use_navigator();
     let mut auth: AuthState = use_context();
+    let mut running: crate::RunningTimer = use_context();
+    let mut toasts: Toasts = use_context();
 
     let on_logout = move |_| async move {
         let _ = api::auth::logout().await;
@@ -23,11 +25,25 @@ pub fn Sidebar() -> Element {
         nav.replace("/login");
     };
 
+    let elapsed_secs: crate::RunningElapsed = use_context();
+
+    let on_stop = move |_| async move {
+        let ts_id = running.peek().as_ref().map(|ts| ts.id.clone());
+        if let Some(id) = ts_id {
+            match api::timesheet::stop_timesheet(id).await {
+                Ok(()) => running.set(None),
+                Err(e) => toasts.write().push(ToastMessage::error(e.to_string())),
+            }
+        }
+    };
+
     // Only render the sidebar when the user has an active workspace session.
     let Some(user) = user else { return rsx! {} };
     if user.workspace_id.is_none() {
         return rsx! {};
     }
+
+    let is_running = running.read().is_some();
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
@@ -74,6 +90,43 @@ pub fn Sidebar() -> Element {
                         to: "/activities",
                         Icon { icon: HiTag, width: 16, height: 16 }
                         "Activities"
+                    }
+                    NavbarItem {
+                        index: 5usize,
+                        value: "tags".to_string(),
+                        to: "/tags",
+                        Icon { icon: HiHashtag, width: 16, height: 16 }
+                        "Tags"
+                    }
+                }
+            }
+            div { class: "sidebar-timer",
+                if is_running {
+                    div { class: "sidebar-timer-running",
+                        div { class: "sidebar-timer-info",
+                            div { class: "sidebar-timer-indicator",
+                                span { class: "sidebar-timer-dot" }
+                                span { class: "sidebar-timer-label", "Timer Running" }
+                            }
+                            span { class: "sidebar-timer-elapsed",
+                                {
+                                    let e = *elapsed_secs.read();
+                                    format!("{:02}:{:02}:{:02}", e / 3600, (e % 3600) / 60, e % 60)
+                                }
+                            }
+                        }
+                        Button {
+                            variant: ButtonVariant::Ghost,
+                            onclick: on_stop,
+                            Icon { icon: HiStop, width: 14, height: 14 }
+                            "Stop"
+                        }
+                    }
+                } else {
+                    Button {
+                        onclick: move |_| { nav.push("/timesheets"); },
+                        Icon { icon: HiPlay, width: 14, height: 14 }
+                        "Start Timer"
                     }
                 }
             }

@@ -10,6 +10,9 @@ pub struct ProjectDto {
     pub order_number: Option<String>,
     pub visible: bool,
     pub billable: bool,
+    pub time_budget: Option<i32>,
+    pub money_budget: Option<i64>,
+    pub budget_is_monthly: bool,
 }
 
 #[get("/api/projects")]
@@ -100,6 +103,9 @@ async fn _list_projects() -> Result<Vec<ProjectDto>, ServerFnError> {
             order_number: r.order_number,
             visible: r.visible,
             billable: r.billable,
+            time_budget: r.time_budget,
+            money_budget: r.money_budget,
+            budget_is_monthly: r.budget_is_monthly,
         })
         .collect())
 }
@@ -125,6 +131,9 @@ async fn _create_project(
         order_number: r.order_number,
         visible: r.visible,
         billable: r.billable,
+        time_budget: None,
+        money_budget: None,
+        budget_is_monthly: false,
     })
 }
 
@@ -139,6 +148,41 @@ async fn _update_project(
 ) -> Result<(), ServerFnError> {
     let workspace_id = workspace_id_from_session().await?;
     loom::tenant::project::update(&workspace_id, &id, name, comment, order_number, visible, billable)
+        .await
+        .map_err(|e| ServerFnError::ServerError {
+            message: e.to_string(),
+            code: 500,
+            details: None,
+        })
+}
+
+#[post("/api/projects/budget")]
+pub async fn set_project_budget(
+    id: String,
+    time_budget: Option<i32>,
+    money_budget: Option<i64>,
+    budget_is_monthly: bool,
+) -> Result<(), ServerFnError> {
+    #[cfg(feature = "server")]
+    {
+        _set_project_budget(id, time_budget, money_budget, budget_is_monthly).await
+    }
+    #[cfg(not(feature = "server"))]
+    {
+        let _ = (id, time_budget, money_budget, budget_is_monthly);
+        Ok(())
+    }
+}
+
+#[cfg(feature = "server")]
+async fn _set_project_budget(
+    id: String,
+    time_budget: Option<i32>,
+    money_budget: Option<i64>,
+    budget_is_monthly: bool,
+) -> Result<(), ServerFnError> {
+    let workspace_id = workspace_id_from_session().await?;
+    loom::tenant::project::set_budget(&workspace_id, &id, time_budget, money_budget, budget_is_monthly)
         .await
         .map_err(|e| ServerFnError::ServerError {
             message: e.to_string(),

@@ -9,9 +9,9 @@ use ui::{
     },
     views::{
         setup::Setup, Activities, Customers, Dashboard, Database, Login, Projects, SelectWorkspace,
-        Timesheets,
+        Tags, Timesheets,
     },
-    FAVICON,
+    RunningElapsed, RunningTimer, FAVICON,
 };
 
 /// Three-state auth signal shared across the whole app.
@@ -65,6 +65,9 @@ enum Route {
 
                     #[route("/timesheets")]
                     Timesheets {},
+
+                    #[route("/tags")]
+                    Tags {},
 
                     #[layout(RequireAdmin)]
                         #[route("/developer/database")]
@@ -129,7 +132,8 @@ fn App() -> Element {
                 Route::Projects { .. } => 5,
                 Route::Activities { .. } => 6,
                 Route::Timesheets { .. } => 7,
-                Route::Database { .. } => 8,
+                Route::Tags { .. } => 8,
+                Route::Database { .. } => 9,
                 _ => -1,
             }
         }
@@ -187,10 +191,48 @@ fn Layout() -> Element {
     // Provide toast context for all descendant views.
     use_context_provider(|| Signal::new(Vec::<ToastMessage>::new()));
 
+    // Provide global running-timer context for Sidebar, Dashboard, and Timesheets.
+    let mut running: RunningTimer =
+        use_context_provider(|| Signal::new(None::<api::timesheet::TimesheetDto>));
+
+    // Provide shared elapsed-seconds counter — updated by one coroutine, read everywhere.
+    #[cfg(target_arch = "wasm32")]
+    let mut elapsed: RunningElapsed = use_context_provider(|| Signal::new(0u64));
+    #[cfg(not(target_arch = "wasm32"))]
+    let _elapsed: RunningElapsed = use_context_provider(|| Signal::new(0u64));
+
+    // Single coroutine that owns the tick; computes immediately then every second.
+    #[cfg(target_arch = "wasm32")]
+    {
+        let _timer = use_coroutine(move |_: UnboundedReceiver<()>| async move {
+            loop {
+                if let Some(ref ts) = *running.read() {
+                    let start_ms = js_sys::Date::parse(&ts.start_time);
+                    if !start_ms.is_nan() {
+                        #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+                        let secs = ((js_sys::Date::now() - start_ms) / 1000.0).max(0.0) as u64;
+                        elapsed.set(secs);
+                    }
+                } else {
+                    elapsed.set(0);
+                }
+                gloo_timers::future::TimeoutFuture::new(1_000).await;
+            }
+        });
+    }
+
     // Fetch session auth state once when the layout mounts.
     use_resource(move || async move {
         let user = api::auth::get_current_user().await.ok().flatten();
         auth.set(Some(user));
+    });
+
+    // Re-fetch running timer whenever auth state changes (e.g. after login/workspace select).
+    use_resource(move || async move {
+        let _ = auth.read(); // subscribe — re-runs when auth changes
+        if let Ok(r) = api::timesheet::running_timesheet().await {
+            running.set(r);
+        }
     });
 
     let route: Route = use_route();
@@ -200,6 +242,7 @@ fn Layout() -> Element {
         Route::Projects {} => "Projects",
         Route::Activities {} => "Activities",
         Route::Timesheets {} => "Timesheets",
+        Route::Tags {} => "Tags",
         Route::Database {} => "Developer",
         Route::SelectWorkspace {} => "Workspaces",
         Route::Login {} | Route::Setup {} => "",

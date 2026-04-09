@@ -19,8 +19,8 @@ impl TimesheetCommand {
         &self,
         id: TimesheetId,
         user_id: UserId,
-        project_id: ProjectId,
-        activity_id: ActivityId,
+        project_id: Option<ProjectId>,
+        activity_id: Option<ActivityId>,
         start_time: String,
         timezone: String,
         billable: bool,
@@ -66,6 +66,15 @@ impl TimesheetCommand {
         billable: bool,
     ) -> Result<(), crate::Error> {
         self.record_that(TimesheetEvent::Updated { description, billable }.into())
+            .map_err(|e| timesheet::DomainError::AggregateError(e).into())
+    }
+
+    pub fn reassign(
+        &mut self,
+        project_id: ProjectId,
+        activity_id: ActivityId,
+    ) -> Result<(), crate::Error> {
+        self.record_that(TimesheetEvent::Reassigned { project_id, activity_id }.into())
             .map_err(|e| timesheet::DomainError::AggregateError(e).into())
     }
 

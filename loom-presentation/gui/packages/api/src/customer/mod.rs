@@ -10,6 +10,9 @@ pub struct CustomerDto {
     pub timezone: String,
     pub country: Option<String>,
     pub visible: bool,
+    pub time_budget: Option<i32>,
+    pub money_budget: Option<i64>,
+    pub budget_is_monthly: bool,
 }
 
 #[get("/api/customers")]
@@ -38,6 +41,24 @@ pub async fn create_customer(
     {
         let _ = (name, currency, timezone);
         Err(ServerFnError::ServerError { message: "server only".into(), code: 500, details: None })
+    }
+}
+
+#[post("/api/customers/budget")]
+pub async fn set_customer_budget(
+    id: String,
+    time_budget: Option<i32>,
+    money_budget: Option<i64>,
+    budget_is_monthly: bool,
+) -> Result<(), ServerFnError> {
+    #[cfg(feature = "server")]
+    {
+        _set_customer_budget(id, time_budget, money_budget, budget_is_monthly).await
+    }
+    #[cfg(not(feature = "server"))]
+    {
+        let _ = (id, time_budget, money_budget, budget_is_monthly);
+        Ok(())
     }
 }
 
@@ -102,6 +123,9 @@ async fn _list_customers() -> Result<Vec<CustomerDto>, ServerFnError> {
             timezone: r.timezone,
             country: r.country,
             visible: r.visible,
+            time_budget: r.time_budget,
+            money_budget: r.money_budget,
+            budget_is_monthly: r.budget_is_monthly,
         })
         .collect())
 }
@@ -128,6 +152,9 @@ async fn _create_customer(
         timezone: r.timezone,
         country: r.country,
         visible: r.visible,
+        time_budget: None,
+        money_budget: None,
+        budget_is_monthly: false,
     })
 }
 
@@ -143,6 +170,23 @@ async fn _update_customer(
 ) -> Result<(), ServerFnError> {
     let workspace_id = workspace_id_from_session().await?;
     loom::tenant::customer::update(&workspace_id, &id, name, comment, currency, timezone, country, visible)
+        .await
+        .map_err(|e| ServerFnError::ServerError {
+            message: e.to_string(),
+            code: 500,
+            details: None,
+        })
+}
+
+#[cfg(feature = "server")]
+async fn _set_customer_budget(
+    id: String,
+    time_budget: Option<i32>,
+    money_budget: Option<i64>,
+    budget_is_monthly: bool,
+) -> Result<(), ServerFnError> {
+    let workspace_id = workspace_id_from_session().await?;
+    loom::tenant::customer::set_budget(&workspace_id, &id, time_budget, money_budget, budget_is_monthly)
         .await
         .map_err(|e| ServerFnError::ServerError {
             message: e.to_string(),

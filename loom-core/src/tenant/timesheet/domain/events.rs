@@ -14,8 +14,10 @@ pub enum TimesheetEvent {
     Started {
         id: TimesheetId,
         user_id: UserId,
-        project_id: ProjectId,
-        activity_id: ActivityId,
+        /// None when started via quick timer — assigned later via `Reassigned`.
+        project_id: Option<ProjectId>,
+        /// None when started via quick timer — assigned later via `Reassigned`.
+        activity_id: Option<ActivityId>,
         /// RFC-3339 timestamp string.
         start_time: String,
         timezone: String,
@@ -36,6 +38,10 @@ pub enum TimesheetEvent {
         description: Option<String>,
         billable: bool,
     },
+    Reassigned {
+        project_id: ProjectId,
+        activity_id: ActivityId,
+    },
     Exported,
 }
 
@@ -45,6 +51,7 @@ impl Message for TimesheetEvent {
             TimesheetEvent::Started { .. } => "TimesheetStarted",
             TimesheetEvent::Stopped { .. } => "TimesheetStopped",
             TimesheetEvent::Updated { .. } => "TimesheetUpdated",
+            TimesheetEvent::Reassigned { .. } => "TimesheetReassigned",
             TimesheetEvent::Exported => "TimesheetExported",
         }
     }

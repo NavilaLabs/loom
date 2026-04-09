@@ -14,5 +14,7 @@ pub mod select_workspace;
 pub use select_workspace::*;
 pub mod setup;
 pub use setup::*;
+pub mod tags;
+pub use tags::*;
 pub mod timesheets;
 pub use timesheets::*;

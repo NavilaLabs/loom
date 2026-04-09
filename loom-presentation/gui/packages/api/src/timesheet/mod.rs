@@ -5,8 +5,8 @@ use serde::{Deserialize, Serialize};
 pub struct TimesheetDto {
     pub id: String,
     pub user_id: String,
-    pub project_id: String,
-    pub activity_id: String,
+    pub project_id: Option<String>,
+    pub activity_id: Option<String>,
     pub start_time: String,
     pub end_time: Option<String>,
     pub duration: Option<i32>,
@@ -14,6 +14,12 @@ pub struct TimesheetDto {
     pub timezone: String,
     pub billable: bool,
     pub exported: bool,
+    /// Billable hourly rate snapshot in cents.
+    pub hourly_rate: Option<i64>,
+    /// Internal (cost) rate snapshot in cents.
+    pub internal_rate: Option<i64>,
+    /// Total billable amount in cents (`hourly_rate * duration / 3600`).
+    pub rate: Option<i64>,
 }
 
 #[get("/api/timesheets/recent")]
@@ -42,8 +48,8 @@ pub async fn running_timesheet() -> Result<Option<TimesheetDto>, ServerFnError> 
 
 #[post("/api/timesheets/start")]
 pub async fn start_timesheet(
-    project_id: String,
-    activity_id: String,
+    project_id: Option<String>,
+    activity_id: Option<String>,
     description: Option<String>,
     billable: bool,
 ) -> Result<TimesheetDto, ServerFnError> {
@@ -58,11 +64,58 @@ pub async fn start_timesheet(
     }
 }
 
+#[post("/api/timesheets/reassign")]
+pub async fn reassign_timesheet(
+    timesheet_id: String,
+    project_id: String,
+    activity_id: String,
+) -> Result<(), ServerFnError> {
+    #[cfg(feature = "server")]
+    {
+        _reassign_timesheet(timesheet_id, project_id, activity_id).await
+    }
+    #[cfg(not(feature = "server"))]
+    {
+        let _ = (timesheet_id, project_id, activity_id);
+        Ok(())
+    }
+}
+
+#[post("/api/timesheets/update")]
+pub async fn update_timesheet(
+    timesheet_id: String,
+    description: Option<String>,
+    billable: bool,
+) -> Result<(), ServerFnError> {
+    #[cfg(feature = "server")]
+    {
+        _update_timesheet(timesheet_id, description, billable).await
+    }
+    #[cfg(not(feature = "server"))]
+    {
+        let _ = (timesheet_id, description, billable);
+        Ok(())
+    }
+}
+
 #[post("/api/timesheets/stop")]
 pub async fn stop_timesheet(timesheet_id: String) -> Result<(), ServerFnError> {
     #[cfg(feature = "server")]
     {
         _stop_timesheet(timesheet_id).await
+    }
+    #[cfg(not(feature = "server"))]
+    {
+        let _ = timesheet_id;
+        Ok(())
+    }
+}
+
+#[post("/api/timesheets/export")]
+pub async fn export_timesheet(timesheet_id: String) -> Result<(), ServerFnError> {
+    #[cfg(feature = "server")]
+    {
+        _export_timesheet(timesheet_id).await
     }
     #[cfg(not(feature = "server"))]
     {
@@ -104,6 +157,9 @@ fn row_to_dto(r: loom::infrastructure::tenant::timesheet::repositories::Timeshee
         timezone: r.timezone,
         billable: r.billable,
         exported: r.exported,
+        hourly_rate: r.hourly_rate,
+        internal_rate: r.internal_rate,
+        rate: r.rate,
     }
 }
 
@@ -145,8 +201,8 @@ async fn _running_timesheet() -> Result<Option<TimesheetDto>, ServerFnError> {
 
 #[cfg(feature = "server")]
 async fn _start_timesheet(
-    project_id: String,
-    activity_id: String,
+    project_id: Option<String>,
+    activity_id: Option<String>,
     description: Option<String>,
     billable: bool,
 ) -> Result<TimesheetDto, ServerFnError> {
@@ -156,6 +212,21 @@ async fn _start_timesheet(
         code: 401,
         details: None,
     })?;
+    // Reject if a timer is already running
+    let existing = loom::tenant::timesheet::running(&workspace_id, &user.id)
+        .await
+        .map_err(|e| ServerFnError::ServerError {
+            message: e.to_string(),
+            code: 500,
+            details: None,
+        })?;
+    if existing.is_some() {
+        return Err(ServerFnError::ServerError {
+            message: "A timer is already running. Stop it before starting a new one.".into(),
+            code: 409,
+            details: None,
+        });
+    }
     let r = loom::tenant::timesheet::start(
         &workspace_id,
         &user.id,
@@ -174,6 +245,48 @@ async fn _start_timesheet(
 }
 
 #[cfg(feature = "server")]
+async fn _reassign_timesheet(
+    timesheet_id: String,
+    project_id: String,
+    activity_id: String,
+) -> Result<(), ServerFnError> {
+    let user = session_user().await?;
+    let workspace_id = user.workspace_id.ok_or_else(|| ServerFnError::ServerError {
+        message: "no workspace".into(),
+        code: 401,
+        details: None,
+    })?;
+    loom::tenant::timesheet::reassign(&workspace_id, &timesheet_id, project_id, activity_id)
+        .await
+        .map_err(|e| ServerFnError::ServerError {
+            message: e.to_string(),
+            code: 500,
+            details: None,
+        })
+}
+
+#[cfg(feature = "server")]
+async fn _update_timesheet(
+    timesheet_id: String,
+    description: Option<String>,
+    billable: bool,
+) -> Result<(), ServerFnError> {
+    let user = session_user().await?;
+    let workspace_id = user.workspace_id.ok_or_else(|| ServerFnError::ServerError {
+        message: "no workspace".into(),
+        code: 401,
+        details: None,
+    })?;
+    loom::tenant::timesheet::update(&workspace_id, &timesheet_id, description, billable)
+        .await
+        .map_err(|e| ServerFnError::ServerError {
+            message: e.to_string(),
+            code: 500,
+            details: None,
+        })
+}
+
+#[cfg(feature = "server")]
 async fn _stop_timesheet(timesheet_id: String) -> Result<(), ServerFnError> {
     let user = session_user().await?;
     let workspace_id = user.workspace_id.ok_or_else(|| ServerFnError::ServerError {
@@ -182,6 +295,23 @@ async fn _stop_timesheet(timesheet_id: String) -> Result<(), ServerFnError> {
         details: None,
     })?;
     loom::tenant::timesheet::stop(&workspace_id, &timesheet_id)
+        .await
+        .map_err(|e| ServerFnError::ServerError {
+            message: e.to_string(),
+            code: 500,
+            details: None,
+        })
+}
+
+#[cfg(feature = "server")]
+async fn _export_timesheet(timesheet_id: String) -> Result<(), ServerFnError> {
+    let user = session_user().await?;
+    let workspace_id = user.workspace_id.ok_or_else(|| ServerFnError::ServerError {
+        message: "no workspace".into(),
+        code: 401,
+        details: None,
+    })?;
+    loom::tenant::timesheet::export(&workspace_id, &timesheet_id)
         .await
         .map_err(|e| ServerFnError::ServerError {
             message: e.to_string(),
