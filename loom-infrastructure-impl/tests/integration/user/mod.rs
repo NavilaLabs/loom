@@ -8,10 +8,8 @@ use loom_core::admin::user::{User, UserEvent, UserId};
 use loom_infrastructure_impl::{
     Pool, ScopeAdmin, StateConnected, admin::user::projectors::UserProjector,
 };
+use loom_tests::TestFixture;
 use sqlx::Row;
-use with_lifecycle::with_lifecycle;
-
-use crate::database::{get_admin_pool, get_default_pool, refresh_databases, test_lifecycle};
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -37,21 +35,16 @@ async fn make_repository(
 // ── tests ─────────────────────────────────────────────────────────────────────
 
 pub mod tests {
-    use serial_test::serial;
-
     use super::*;
 
     /// Saving a new aggregate root persists it; loading it back returns the
     /// same state and version.
-    #[serial]
-    #[with_lifecycle(test_lifecycle)]
     #[tokio::test]
-    async fn test_save_and_get_user() -> Result<(), Box<dyn std::error::Error>> {
-        let default_pool = get_default_pool().await?;
-        refresh_databases(&default_pool, "test_token").await?;
-
-        let admin_pool = get_admin_pool().await?;
-        let repo = make_repository(&admin_pool).await?;
+    async fn test_save_and_get_user() {
+        let db = TestFixture::setup().await;
+        let repo = make_repository(&db.admin)
+            .await
+            .expect("repository must be created");
         let id = test_id();
 
         let mut root = eventually::aggregate::Root::<User>::record_new(
@@ -65,14 +58,12 @@ pub mod tests {
         )
         .expect("Created event on a new aggregate is always valid");
 
-        repo.save(&mut root).await?;
+        repo.save(&mut root).await.expect("save must succeed");
 
-        let loaded = repo.get(&id).await?;
+        let loaded = repo.get(&id).await.expect("get must succeed");
         assert_eq!(loaded.aggregate_id(), &id);
         assert_eq!(loaded.name(), "Alice");
         assert_eq!(loaded.version(), 1);
-
-        Ok(())
     }
 
     /// Applying a second `Created` event to an already-existing `User` must
@@ -108,16 +99,10 @@ pub mod tests {
 
     /// The projector must insert a row into the projection table when it
     /// receives a `UserCreated` event.
-    #[serial]
-    #[with_lifecycle(test_lifecycle)]
     #[tokio::test]
-    async fn test_projector_inserts_row_on_user_created() -> Result<(), Box<dyn std::error::Error>>
-    {
-        let default_pool = get_default_pool().await?;
-        refresh_databases(&default_pool, "test_token").await?;
-
-        let admin_pool = get_admin_pool().await?;
-        let mut projector = UserProjector::new(admin_pool.clone());
+    async fn test_projector_inserts_row_on_user_created() {
+        let db = TestFixture::setup().await;
+        let mut projector = UserProjector::new(db.admin.clone());
 
         let id = test_id();
         let event = UserEvent::Created {
@@ -126,7 +111,7 @@ pub mod tests {
             email: "alice@example.com".to_string(),
             password: "".to_string(),
         };
-        let payload_bytes = serde_json::to_vec(&event)?;
+        let payload_bytes = serde_json::to_vec(&event).expect("serialization must succeed");
 
         projector
             .handle(RawEvent {
@@ -138,31 +123,26 @@ pub mod tests {
                 metadata: serde_json::Value::Null,
                 schema_version: 1,
             })
-            .await?;
+            .await
+            .expect("projector must handle UserCreated");
 
         let rows = sqlx::query("SELECT name FROM projections__users")
-            .fetch_all(admin_pool.as_ref())
-            .await?;
+            .fetch_all(db.admin.as_ref())
+            .await
+            .expect("query must succeed");
 
         let found = rows.iter().any(|r| {
             let name: String = r.get("name");
             name == "Alice"
         });
         assert!(found, "projection table should contain a row for Alice");
-
-        Ok(())
     }
 
     /// The projector must silently ignore event types it does not handle.
-    #[serial]
-    #[with_lifecycle(test_lifecycle)]
     #[tokio::test]
-    async fn test_projector_ignores_unknown_event_type() -> Result<(), Box<dyn std::error::Error>> {
-        let default_pool = get_default_pool().await?;
-        refresh_databases(&default_pool, "test_token").await?;
-
-        let admin_pool = get_admin_pool().await?;
-        let mut projector = UserProjector::new(admin_pool);
+    async fn test_projector_ignores_unknown_event_type() {
+        let db = TestFixture::setup().await;
+        let mut projector = UserProjector::new(db.admin);
 
         let result = projector
             .handle(RawEvent {
@@ -180,7 +160,5 @@ pub mod tests {
             result.is_ok(),
             "unknown event type must not produce an error"
         );
-
-        Ok(())
     }
 }

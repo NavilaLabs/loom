@@ -1,91 +1,38 @@
-use loom_infrastructure::database::{
-    Migrate,
-    database_uri_factory::{self, DatabaseUriType},
-};
-use loom_infrastructure_impl::{
-    Error, {DatabaseType, Pool, ScopeAdmin, ScopeDefault, ScopeTenant, StateConnected},
-};
-use tracing::info;
-use url::Url;
-
-use super::ConnectedDefaultPool;
-use super::initialize_databases;
-
-async fn reset_entire_database() -> Result<(), Error> {
-    let admin_database_uri =
-        database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Admin)
-            .get_uri(&DatabaseType::Sqlite.to_string(), None)?
-            .to_string()
-            .replace("sqlite://", "");
-    if std::path::Path::new(&admin_database_uri).exists() {
-        std::fs::remove_file(admin_database_uri)?;
-    }
-
-    let tenant_template_database_uri =
-        database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Tenant)
-            .get_uri(&DatabaseType::Sqlite.to_string(), Some("test_token"))?
-            .to_string()
-            .replace("sqlite://", "");
-    if std::path::Path::new(&tenant_template_database_uri).exists() {
-        std::fs::remove_file(tenant_template_database_uri)?;
-    }
-
-    Ok(())
-}
-
-pub(crate) async fn get_default_pool() -> Result<Pool<ScopeDefault, StateConnected>, Error> {
-    let url = Url::parse("sqlite::memory:").unwrap();
-    let default_pool = Pool::connect(&url).await?;
-    Ok(default_pool)
-}
-
-pub(crate) async fn get_admin_pool() -> Result<Pool<ScopeAdmin, StateConnected>, Error> {
-    let uri = database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Admin)
-        .get_uri(&DatabaseType::Sqlite.to_string(), None)?;
-    let admin_pool = Pool::connect(&uri).await?;
-    Ok(admin_pool)
-}
-
-async fn get_tenant_pool(tenant_token: &str) -> Result<Pool<ScopeTenant, StateConnected>, Error> {
-    let uri = database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Tenant)
-        .get_uri(&DatabaseType::Sqlite.to_string(), Some(tenant_token))?;
-    let tenant_pool = Pool::connect(&uri).await?;
-    Ok(tenant_pool)
-}
-
-pub(crate) async fn refresh_databases(
-    pool: &ConnectedDefaultPool,
-    tenant_token: &str,
-) -> Result<(), Error> {
-    reset_entire_database().await?;
-    info!("Database successfully reseted");
-    initialize_databases(pool, tenant_token).await?;
-    info!("Database successfully initialized");
-
-    let admin_pool = get_admin_pool().await?;
-    admin_pool.migrate_database().await?;
-    let tenant_pool = get_tenant_pool(tenant_token).await?;
-    tenant_pool.migrate_database().await?;
-    info!("Database successfully migrated");
-
-    Ok(())
-}
+use loom_tests::TestFixture;
 
 pub mod tests {
-    use serial_test::serial;
-    use with_lifecycle::with_lifecycle;
-
-    use crate::database::test_lifecycle;
-
     use super::*;
 
-    #[serial]
-    #[with_lifecycle(test_lifecycle)]
+    /// Verifies that admin and tenant migrations run successfully on a fresh
+    /// isolated database.  If any migration panics or fails, the test fails.
     #[tokio::test]
-    async fn test_setup_sqlite_database() -> Result<(), Error> {
-        let default_pool = get_default_pool().await?;
-        refresh_databases(&default_pool, "test_token").await?;
+    async fn test_setup_sqlite_database() {
+        // TestFixture::setup runs all migrations; if any fail it panics.
+        let _db = TestFixture::setup().await;
+    }
 
-        Ok(())
+    /// Verify that the expected tables are visible in the admin pool AFTER setup.
+    ///
+    /// Guards against a subtle failure mode: if migrations run on a different
+    /// connection/database than the pool (e.g. with named in-memory SQLite),
+    /// the pool's database would be empty even though migrations "succeeded".
+    #[tokio::test]
+    async fn test_tables_visible_in_admin_pool() {
+        let db = TestFixture::setup().await;
+        let rows: Vec<(String,)> = sqlx::query_as(
+            "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name",
+        )
+        .fetch_all(db.admin.as_ref())
+        .await
+        .expect("sqlite_master query must succeed");
+        let names: Vec<&str> = rows.iter().map(|(n, )| n.as_str()).collect();
+        assert!(
+            names.contains(&"event_streams"),
+            "event_streams must exist after setup, found: {names:?}"
+        );
+        assert!(
+            names.contains(&"projections__users"),
+            "projections__users must exist after setup, found: {names:?}"
+        );
     }
 }

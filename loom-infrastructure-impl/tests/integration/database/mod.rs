@@ -9,8 +9,6 @@ pub mod sqlite;
 
 type ConnectedDefaultPool = Pool<ScopeDefault, StateConnected>;
 
-pub(crate) use sqlite::{get_admin_pool, get_default_pool, refresh_databases};
-
 async fn initialize_databases(
     pool: &ConnectedDefaultPool,
     tenant_token: &str,
@@ -33,7 +31,6 @@ pub(crate) mod test_lifecycle {
 
     pub fn before() {
         test_lifecycle::before();
-
         install_default_drivers();
     }
 

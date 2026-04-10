@@ -49,10 +49,12 @@ pub async fn session_workspace() -> Result<(crate::auth::UserInfo, String), Serv
     Ok((user, workspace_id))
 }
 
-/// Require that the session user holds the named permission.
+/// Require that the session user holds the named permission in their current
+/// workspace.
 ///
-/// Admins (any user assigned the "admin" workspace role) implicitly pass
-/// every check. Returns 403 Forbidden when the user lacks the permission.
+/// Admins (any user assigned the "admin" workspace role) implicitly pass every
+/// check. Returns 401 when no workspace is selected, 403 when the user lacks
+/// the permission.
 #[cfg(feature = "server")]
 pub async fn require_permission(
     user: &crate::auth::UserInfo,
@@ -61,11 +63,20 @@ pub async fn require_permission(
     use loom::auth::CurrentUser;
     use loom::authorization::AuthorizationService;
 
+    let workspace_id =
+        user.workspace_id
+            .as_deref()
+            .ok_or_else(|| ServerFnError::ServerError {
+                message: "no workspace selected".into(),
+                code: 401,
+                details: None,
+            })?;
+
     let current_user = CurrentUser {
         id: user.id.clone(),
         email: user.email.clone(),
     };
-    AuthorizationService::require_permission(&current_user, permission)
+    AuthorizationService::require_permission(&current_user, workspace_id, permission)
         .await
         .map_err(|_| ServerFnError::ServerError {
             message: "forbidden".into(),

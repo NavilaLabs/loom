@@ -34,6 +34,7 @@ bcrypt = "0.15"
 [dev-dependencies]
 eventually = { version = "0.5", git = "https://github.com/get-eventually/eventually-rs" }
 serial_test = "3.0"
+tempfile = "3"
 tokio = { workspace = true }
 loom-tests = { path = "../loom-tests" }
 with-lifecycle = { path = "../with-lifecycle" }

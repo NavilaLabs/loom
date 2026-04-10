@@ -189,6 +189,42 @@ async fn alg_none_unsigned_token_is_rejected() {
     );
 }
 
+// ── token lifetime ────────────────────────────────────────────────────────────
+
+/// A token whose expiry is exactly `now + 3600` (1 hour) must be accepted.
+/// This confirms that the 1-hour lifetime the server issues is valid on receipt.
+#[serial]
+#[with_lifecycle(test_lifecycle)]
+#[tokio::test]
+async fn token_expiring_in_one_hour_is_accepted() {
+    let exp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as usize
+        + 3_600;
+    let token = make_hs256_token(TEST_SECRET, "user-abc", "alice@example.com", exp);
+    assert!(
+        validate_token(&token).is_ok(),
+        "token with 1-hour expiry must be accepted"
+    );
+}
+
+/// A token that expired one second ago must be rejected.
+/// This guards against clock-skew exploits that allow marginally-expired tokens.
+#[serial]
+#[with_lifecycle(test_lifecycle)]
+#[tokio::test]
+async fn token_expired_one_second_ago_is_rejected() {
+    // jsonwebtoken has a built-in leeway of 60 s by default, so we use a
+    // timestamp well in the past (Unix epoch) to be unambiguously expired.
+    let exp = 1_u64; // 1970-01-01 00:00:01 UTC
+    let token = make_hs256_token(TEST_SECRET, "user-abc", "alice@example.com", exp as usize);
+    assert!(
+        validate_token(&token).is_err(),
+        "token with past expiry must be rejected"
+    );
+}
+
 // ── garbage input ─────────────────────────────────────────────────────────────
 
 #[serial]

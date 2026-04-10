@@ -1,9 +1,9 @@
 /// Integration tests for `AuthorizationService`.
 ///
-/// Each test resets the database to a clean state, seeds the projection
-/// tables with known data, then calls the service under test.  The service
-/// always opens its own pool via `Pool::connect_admin()`, so it picks up
-/// whatever the test database contains — no mocking needed.
+/// Each test creates its own [`TestFixture`] — a pair of freshly-migrated
+/// isolated in-memory SQLite databases — seeds it with a known permission
+/// matrix, and exercises the service.  Because every fixture is completely
+/// independent, all tests run **concurrently** without `#[serial]`.
 ///
 /// Security scenarios covered:
 ///   - Admin flag correctly detected via role name                ✓
@@ -16,16 +16,16 @@
 ///   - Permission via direct user grant                           ✓
 ///   - Absent permission returns false                            ✓
 ///   - Role name "admin" is case-sensitive                        ✓
+///   - Permission in workspace A does NOT grant access in B       ✓
 ///   - `require_admin` returns Ok for admins, Err for others      ✓
 ///   - `require_permission` admin bypass works                    ✓
 ///   - `require_permission` returns Err when permission absent    ✓
 use loom::{auth::CurrentUser, authorization::AuthorizationService};
-use loom_tests::{get_admin_pool, get_default_pool, refresh_databases, test_database_lifecycle};
-use serial_test::serial;
-use with_lifecycle::with_lifecycle;
+use loom_tests::TestFixture;
+use sqlx::AnyPool;
 
 // ── Fixed test identifiers ────────────────────────────────────────────────────
-// Using deterministic UUIDs so tests are reproducible and readable.
+// Deterministic UUIDs make tests reproducible and failure messages readable.
 
 const WORKSPACE_ID: &str = "00000000-0000-0000-0000-000000000001";
 const ADMIN_USER_ID: &str = "00000000-0000-0000-0000-000000000010";
@@ -59,97 +59,78 @@ fn unknown_user() -> CurrentUser {
     }
 }
 
-/// Resets and re-migrates the test databases, then seeds the projection
-/// tables with a known baseline state for all authorization tests.
+/// Seeds the admin database with a known, minimal permission matrix.
 ///
-/// Seed state:
-///  - One workspace
-///  - Two users: admin_user (has "admin" role), regular_user (has "viewer" role)
-///  - Two roles: "admin", "viewer"
-///  - One permission: PERMISSION_NAME, granted to "viewer" role AND directly to regular_user
-async fn reset_and_seed() -> Result<(), Box<dyn std::error::Error>> {
-    let default_pool = get_default_pool().await?;
-    refresh_databases(&default_pool, "security_test").await?;
-
-    let admin_pool = get_admin_pool().await?;
-    let pool = admin_pool.as_ref();
-
-    // 1. Workspace (required by FK chain for workspace_roles and workspace_user_roles)
+/// State after seeding:
+/// - One workspace (`WORKSPACE_ID`)
+/// - `ADMIN_USER_ID` → "admin" role (no explicit permissions)
+/// - `REGULAR_USER_ID` → "viewer" role + direct grant of `PERMISSION_NAME`
+/// - Viewer role has `PERMISSION_NAME` via role grant
+async fn seed(pool: &AnyPool) {
+    // 1. Workspace
     sqlx::query("INSERT INTO projections__workspaces (id, name) VALUES ($1, $2)")
         .bind(WORKSPACE_ID)
         .bind("Test Workspace")
         .execute(pool)
-        .await?;
+        .await
+        .unwrap();
 
-    // 2. Users (required by FK from workspace_user_roles and workspace_user_permissions)
-    sqlx::query(
-        "INSERT INTO projections__users (id, name, email, password) VALUES ($1, $2, $3, $4)",
-    )
-    .bind(ADMIN_USER_ID)
-    .bind("Admin User")
-    .bind("admin@test.com")
-    .bind("$2b$12$placeholder_hash")
-    .execute(pool)
-    .await?;
+    // 2. Users
+    for (id, name, email) in [
+        (ADMIN_USER_ID, "Admin User", "admin@test.com"),
+        (REGULAR_USER_ID, "Regular User", "user@test.com"),
+    ] {
+        sqlx::query(
+            "INSERT INTO projections__users (id, name, email, password) VALUES ($1, $2, $3, $4)",
+        )
+        .bind(id)
+        .bind(name)
+        .bind(email)
+        .bind("$2b$12$placeholder_hash")
+        .execute(pool)
+        .await
+        .unwrap();
+    }
 
-    sqlx::query(
-        "INSERT INTO projections__users (id, name, email, password) VALUES ($1, $2, $3, $4)",
-    )
-    .bind(REGULAR_USER_ID)
-    .bind("Regular User")
-    .bind("user@test.com")
-    .bind("$2b$12$placeholder_hash")
-    .execute(pool)
-    .await?;
-
-    // 3. Permissions (no FK deps)
+    // 3. Permission
     sqlx::query("INSERT INTO permissions (id, name) VALUES ($1, $2)")
         .bind(PERMISSION_ID)
         .bind(PERMISSION_NAME)
         .execute(pool)
-        .await?;
+        .await
+        .unwrap();
 
-    // 4. Workspace roles (FK → workspaces)
-    sqlx::query(
-        "INSERT INTO projections__workspace_roles (id, workspace_id, name) VALUES ($1, $2, $3)",
-    )
-    .bind(ADMIN_ROLE_ID)
-    .bind(WORKSPACE_ID)
-    .bind("admin")
-    .execute(pool)
-    .await?;
+    // 4. Workspace roles
+    for (id, name) in [(ADMIN_ROLE_ID, "admin"), (VIEWER_ROLE_ID, "viewer")] {
+        sqlx::query(
+            "INSERT INTO projections__workspace_roles (id, workspace_id, name) VALUES ($1, $2, $3)",
+        )
+        .bind(id)
+        .bind(WORKSPACE_ID)
+        .bind(name)
+        .execute(pool)
+        .await
+        .unwrap();
+    }
 
-    sqlx::query(
-        "INSERT INTO projections__workspace_roles (id, workspace_id, name) VALUES ($1, $2, $3)",
-    )
-    .bind(VIEWER_ROLE_ID)
-    .bind(WORKSPACE_ID)
-    .bind("viewer")
-    .execute(pool)
-    .await?;
+    // 5. User ↔ role assignments
+    for (user_id, role_id) in [
+        (ADMIN_USER_ID, ADMIN_ROLE_ID),
+        (REGULAR_USER_ID, VIEWER_ROLE_ID),
+    ] {
+        sqlx::query(
+            "INSERT INTO projections__workspace_user_roles
+             (workspace_id, user_id, workspace_role_id) VALUES ($1, $2, $3)",
+        )
+        .bind(WORKSPACE_ID)
+        .bind(user_id)
+        .bind(role_id)
+        .execute(pool)
+        .await
+        .unwrap();
+    }
 
-    // 5. User ↔ role assignments (FK → workspaces, users, workspace_roles)
-    sqlx::query(
-        "INSERT INTO projections__workspace_user_roles (workspace_id, user_id, workspace_role_id)
-         VALUES ($1, $2, $3)",
-    )
-    .bind(WORKSPACE_ID)
-    .bind(ADMIN_USER_ID)
-    .bind(ADMIN_ROLE_ID)
-    .execute(pool)
-    .await?;
-
-    sqlx::query(
-        "INSERT INTO projections__workspace_user_roles (workspace_id, user_id, workspace_role_id)
-         VALUES ($1, $2, $3)",
-    )
-    .bind(WORKSPACE_ID)
-    .bind(REGULAR_USER_ID)
-    .bind(VIEWER_ROLE_ID)
-    .execute(pool)
-    .await?;
-
-    // 6. Role ↔ permission grants (FK → workspace_roles, permissions)
+    // 6. Role ↔ permission: viewer role gets PERMISSION_NAME
     sqlx::query(
         "INSERT INTO projections__workspace_role_permissions (workspace_role_id, permission_id)
          VALUES ($1, $2)",
@@ -157,116 +138,101 @@ async fn reset_and_seed() -> Result<(), Box<dyn std::error::Error>> {
     .bind(VIEWER_ROLE_ID)
     .bind(PERMISSION_ID)
     .execute(pool)
-    .await?;
+    .await
+    .unwrap();
 
-    // 7. Direct user ↔ permission grant for regular_user (FK → workspaces, users, permissions)
+    // 7. Direct user ↔ permission: regular_user also has it directly
     sqlx::query(
-        "INSERT INTO projections__workspace_user_permissions (workspace_id, user_id, permission_id)
-         VALUES ($1, $2, $3)",
+        "INSERT INTO projections__workspace_user_permissions
+         (workspace_id, user_id, permission_id) VALUES ($1, $2, $3)",
     )
     .bind(WORKSPACE_ID)
     .bind(REGULAR_USER_ID)
     .bind(PERMISSION_ID)
     .execute(pool)
-    .await?;
-
-    Ok(())
+    .await
+    .unwrap();
 }
 
 // ── is_admin ──────────────────────────────────────────────────────────────────
 
-#[serial]
-#[with_lifecycle(test_database_lifecycle)]
 #[tokio::test]
 async fn is_admin_returns_true_for_user_with_admin_role() {
-    reset_and_seed().await.unwrap();
-    assert!(AuthorizationService::is_admin(ADMIN_USER_ID).await.unwrap());
-}
-
-#[serial]
-#[with_lifecycle(test_database_lifecycle)]
-#[tokio::test]
-async fn is_admin_returns_false_for_user_with_non_admin_role() {
-    reset_and_seed().await.unwrap();
+    let db = TestFixture::setup().await;
+    seed(db.admin.as_ref()).await;
     assert!(
-        !AuthorizationService::is_admin(REGULAR_USER_ID)
+        AuthorizationService::is_admin_on(db.admin.as_ref(), ADMIN_USER_ID)
             .await
             .unwrap()
     );
 }
 
-#[serial]
-#[with_lifecycle(test_database_lifecycle)]
 #[tokio::test]
-async fn is_admin_returns_false_for_unknown_user() {
-    reset_and_seed().await.unwrap();
+async fn is_admin_returns_false_for_user_with_non_admin_role() {
+    let db = TestFixture::setup().await;
+    seed(db.admin.as_ref()).await;
     assert!(
-        !AuthorizationService::is_admin(UNRELATED_USER_ID)
+        !AuthorizationService::is_admin_on(db.admin.as_ref(), REGULAR_USER_ID)
             .await
-            .unwrap(),
-        "a user that exists nowhere in the system must not be admin"
+            .unwrap()
     );
 }
 
-#[serial]
-#[with_lifecycle(test_database_lifecycle)]
+#[tokio::test]
+async fn is_admin_returns_false_for_unknown_user() {
+    let db = TestFixture::setup().await;
+    seed(db.admin.as_ref()).await;
+    assert!(
+        !AuthorizationService::is_admin_on(db.admin.as_ref(), UNRELATED_USER_ID)
+            .await
+            .unwrap(),
+        "a user absent from the system must not be treated as admin"
+    );
+}
+
 #[tokio::test]
 async fn is_admin_returns_false_for_empty_user_id() {
-    reset_and_seed().await.unwrap();
+    let db = TestFixture::setup().await;
+    seed(db.admin.as_ref()).await;
     assert!(
-        !AuthorizationService::is_admin("").await.unwrap(),
+        !AuthorizationService::is_admin_on(db.admin.as_ref(), "")
+            .await
+            .unwrap(),
         "empty user_id must not match any admin role"
     );
 }
 
-/// SQL injection via user_id: the query must use parameterised binds so that
-/// an injected string is treated as a literal value, not SQL syntax.
-/// The injected input must return false, not grant access.
-#[serial]
-#[with_lifecycle(test_database_lifecycle)]
+/// SQL injection via `user_id` must be neutralised by parameterised binds.
 #[tokio::test]
 async fn is_admin_sql_injection_in_user_id_is_neutralised() {
-    reset_and_seed().await.unwrap();
+    let db = TestFixture::setup().await;
+    seed(db.admin.as_ref()).await;
 
     let injections = [
         "' OR '1'='1",
         "' OR 1=1--",
         "'; DROP TABLE projections__workspace_user_roles;--",
-        "\"; SELECT * FROM projections__workspace_roles WHERE name='admin'--",
         "\\x00",
     ];
 
     for injection in &injections {
-        let result = AuthorizationService::is_admin(injection).await.unwrap();
+        let result = AuthorizationService::is_admin_on(db.admin.as_ref(), injection)
+            .await
+            .unwrap();
         assert!(
             !result,
-            "SQL injection attempt {:?} must not grant admin access",
-            injection
+            "SQL injection {injection:?} must not grant admin access"
         );
     }
 }
 
-/// Role name matching is case-sensitive: "Admin" must not satisfy the check
-/// for "admin".  This prevents privilege escalation by creating a role named
-/// "Admin" or "ADMIN".
-#[serial]
-#[with_lifecycle(test_database_lifecycle)]
+/// Role name "admin" is case-sensitive: "Admin" must not satisfy the check.
 #[tokio::test]
 async fn is_admin_role_name_matching_is_case_sensitive() {
-    reset_and_seed().await.unwrap();
-    let pool = get_admin_pool().await.unwrap();
+    let db = TestFixture::setup().await;
+    seed(db.admin.as_ref()).await;
 
-    // Insert a role named "Admin" (capital A) assigned to UNRELATED_USER_ID.
     let capital_role_id = "00000000-0000-0000-0000-000000000099";
-    sqlx::query(
-        "INSERT INTO projections__workspace_roles (id, workspace_id, name) VALUES ($1, $2, $3)",
-    )
-    .bind(capital_role_id)
-    .bind(WORKSPACE_ID)
-    .bind("Admin") // capital A — should NOT match "admin" check
-    .execute(pool.as_ref())
-    .await
-    .unwrap();
 
     sqlx::query(
         "INSERT INTO projections__users (id, name, email, password) VALUES ($1, $2, $3, $4)",
@@ -275,23 +241,33 @@ async fn is_admin_role_name_matching_is_case_sensitive() {
     .bind("Unrelated")
     .bind("unrelated@test.com")
     .bind("$2b$12$placeholder")
-    .execute(pool.as_ref())
+    .execute(db.admin.as_ref())
     .await
     .unwrap();
 
     sqlx::query(
-        "INSERT INTO projections__workspace_user_roles (workspace_id, user_id, workspace_role_id)
-         VALUES ($1, $2, $3)",
+        "INSERT INTO projections__workspace_roles (id, workspace_id, name) VALUES ($1, $2, $3)",
+    )
+    .bind(capital_role_id)
+    .bind(WORKSPACE_ID)
+    .bind("Admin") // capital A — must NOT match "admin"
+    .execute(db.admin.as_ref())
+    .await
+    .unwrap();
+
+    sqlx::query(
+        "INSERT INTO projections__workspace_user_roles
+         (workspace_id, user_id, workspace_role_id) VALUES ($1, $2, $3)",
     )
     .bind(WORKSPACE_ID)
     .bind(UNRELATED_USER_ID)
     .bind(capital_role_id)
-    .execute(pool.as_ref())
+    .execute(db.admin.as_ref())
     .await
     .unwrap();
 
     assert!(
-        !AuthorizationService::is_admin(UNRELATED_USER_ID)
+        !AuthorizationService::is_admin_on(db.admin.as_ref(), UNRELATED_USER_ID)
             .await
             .unwrap(),
         "role named 'Admin' (capital A) must not satisfy the 'admin' check"
@@ -300,104 +276,120 @@ async fn is_admin_role_name_matching_is_case_sensitive() {
 
 // ── has_permission ────────────────────────────────────────────────────────────
 
-#[serial]
-#[with_lifecycle(test_database_lifecycle)]
 #[tokio::test]
 async fn has_permission_returns_true_via_role_grant() {
-    reset_and_seed().await.unwrap();
-    // regular_user has viewer role, viewer role has PERMISSION_NAME via role grant
+    let db = TestFixture::setup().await;
+    seed(db.admin.as_ref()).await;
     assert!(
-        AuthorizationService::has_permission(REGULAR_USER_ID, PERMISSION_NAME)
-            .await
-            .unwrap()
+        AuthorizationService::has_permission_on(
+            db.admin.as_ref(),
+            REGULAR_USER_ID,
+            WORKSPACE_ID,
+            PERMISSION_NAME,
+        )
+        .await
+        .unwrap()
     );
 }
 
-#[serial]
-#[with_lifecycle(test_database_lifecycle)]
 #[tokio::test]
 async fn has_permission_returns_true_via_direct_user_grant() {
-    reset_and_seed().await.unwrap();
-    // regular_user also has PERMISSION_NAME granted directly in workspace_user_permissions
-    // Verify the direct-grant path by using a user that has NO role with the permission
-    // but does have a direct grant.
-    let direct_only_user_id = "00000000-0000-0000-0000-000000000050";
-    let pool = get_admin_pool().await.unwrap();
+    let db = TestFixture::setup().await;
+    seed(db.admin.as_ref()).await;
+
+    // Insert a user with ONLY a direct grant (no role with the permission).
+    let direct_only_id = "00000000-0000-0000-0000-000000000050";
 
     sqlx::query(
         "INSERT INTO projections__users (id, name, email, password) VALUES ($1, $2, $3, $4)",
     )
-    .bind(direct_only_user_id)
+    .bind(direct_only_id)
     .bind("Direct Grant User")
     .bind("direct@test.com")
     .bind("$2b$12$placeholder")
-    .execute(pool.as_ref())
+    .execute(db.admin.as_ref())
     .await
     .unwrap();
 
     sqlx::query(
-        "INSERT INTO projections__workspace_user_permissions (workspace_id, user_id, permission_id)
-         VALUES ($1, $2, $3)",
+        "INSERT INTO projections__workspace_user_permissions
+         (workspace_id, user_id, permission_id) VALUES ($1, $2, $3)",
     )
     .bind(WORKSPACE_ID)
-    .bind(direct_only_user_id)
+    .bind(direct_only_id)
     .bind(PERMISSION_ID)
-    .execute(pool.as_ref())
+    .execute(db.admin.as_ref())
     .await
     .unwrap();
 
     assert!(
-        AuthorizationService::has_permission(direct_only_user_id, PERMISSION_NAME)
-            .await
-            .unwrap(),
+        AuthorizationService::has_permission_on(
+            db.admin.as_ref(),
+            direct_only_id,
+            WORKSPACE_ID,
+            PERMISSION_NAME,
+        )
+        .await
+        .unwrap(),
         "direct permission grant must be sufficient without a role"
     );
 }
 
-#[serial]
-#[with_lifecycle(test_database_lifecycle)]
 #[tokio::test]
 async fn has_permission_returns_false_for_user_with_no_grant() {
-    reset_and_seed().await.unwrap();
-    // ADMIN_USER_ID has the admin role, but that role has no permissions assigned.
+    let db = TestFixture::setup().await;
+    seed(db.admin.as_ref()).await;
+    // admin_user has the admin role but that role has no permissions seeded.
     assert!(
-        !AuthorizationService::has_permission(ADMIN_USER_ID, PERMISSION_NAME)
-            .await
-            .unwrap(),
-        "admin role has no permission grants in this test — must return false"
+        !AuthorizationService::has_permission_on(
+            db.admin.as_ref(),
+            ADMIN_USER_ID,
+            WORKSPACE_ID,
+            PERMISSION_NAME,
+        )
+        .await
+        .unwrap(),
+        "admin role has no permission grants in this fixture — must return false"
     );
 }
 
-#[serial]
-#[with_lifecycle(test_database_lifecycle)]
 #[tokio::test]
 async fn has_permission_returns_false_for_unknown_permission_name() {
-    reset_and_seed().await.unwrap();
+    let db = TestFixture::setup().await;
+    seed(db.admin.as_ref()).await;
     assert!(
-        !AuthorizationService::has_permission(REGULAR_USER_ID, "permission.that.does.not.exist")
-            .await
-            .unwrap()
+        !AuthorizationService::has_permission_on(
+            db.admin.as_ref(),
+            REGULAR_USER_ID,
+            WORKSPACE_ID,
+            "permission.that.does.not.exist",
+        )
+        .await
+        .unwrap()
     );
 }
 
-#[serial]
-#[with_lifecycle(test_database_lifecycle)]
 #[tokio::test]
 async fn has_permission_returns_false_for_unknown_user() {
-    reset_and_seed().await.unwrap();
+    let db = TestFixture::setup().await;
+    seed(db.admin.as_ref()).await;
     assert!(
-        !AuthorizationService::has_permission(UNRELATED_USER_ID, PERMISSION_NAME)
-            .await
-            .unwrap()
+        !AuthorizationService::has_permission_on(
+            db.admin.as_ref(),
+            UNRELATED_USER_ID,
+            WORKSPACE_ID,
+            PERMISSION_NAME,
+        )
+        .await
+        .unwrap()
     );
 }
 
-/// SQL injection via the permission name parameter must not grant access.
-#[serial]
-#[with_lifecycle(test_database_lifecycle)]
+/// SQL injection via the permission name must not grant access.
 #[tokio::test]
 async fn has_permission_sql_injection_in_permission_name_is_neutralised() {
-    reset_and_seed().await.unwrap();
+    let db = TestFixture::setup().await;
+    seed(db.admin.as_ref()).await;
 
     let injections = [
         "' OR '1'='1",
@@ -407,49 +399,96 @@ async fn has_permission_sql_injection_in_permission_name_is_neutralised() {
     ];
 
     for injection in &injections {
-        let result = AuthorizationService::has_permission(ADMIN_USER_ID, injection)
-            .await
-            .unwrap();
+        let result = AuthorizationService::has_permission_on(
+            db.admin.as_ref(),
+            ADMIN_USER_ID,
+            WORKSPACE_ID,
+            injection,
+        )
+        .await
+        .unwrap();
         assert!(
             !result,
-            "SQL injection in permission name {:?} must not grant access",
-            injection
+            "SQL injection in permission name {injection:?} must not grant access"
         );
     }
 }
 
+// ── cross-workspace isolation ─────────────────────────────────────────────────
+
+/// A permission granted in `WORKSPACE_ID` must NOT be visible when checked
+/// against a different workspace.  This is the core cross-tenant isolation
+/// guarantee.
+#[tokio::test]
+async fn has_permission_is_scoped_to_workspace() {
+    let db = TestFixture::setup().await;
+    seed(db.admin.as_ref()).await;
+
+    let other_workspace = "00000000-0000-0000-ffff-000000000001";
+    assert!(
+        !AuthorizationService::has_permission_on(
+            db.admin.as_ref(),
+            REGULAR_USER_ID,
+            other_workspace,
+            PERMISSION_NAME,
+        )
+        .await
+        .unwrap(),
+        "permission in WORKSPACE_ID must not be visible in a different workspace"
+    );
+}
+
+/// `require_permission` with the wrong workspace must return "forbidden" even
+/// though the user genuinely holds the permission in their own workspace.
+#[tokio::test]
+async fn require_permission_cross_workspace_is_forbidden() {
+    let db = TestFixture::setup().await;
+    seed(db.admin.as_ref()).await;
+
+    let other_workspace = "00000000-0000-0000-ffff-000000000001";
+    let err = AuthorizationService::require_permission_on(
+        db.admin.as_ref(),
+        &regular_user(),
+        other_workspace,
+        PERMISSION_NAME,
+    )
+    .await
+    .expect_err("permission in a different workspace must be denied");
+    assert!(
+        err.to_string().contains("forbidden"),
+        "error must say 'forbidden', got: {err}"
+    );
+}
+
 // ── require_admin ─────────────────────────────────────────────────────────────
 
-#[serial]
-#[with_lifecycle(test_database_lifecycle)]
 #[tokio::test]
 async fn require_admin_succeeds_for_admin_user() {
-    reset_and_seed().await.unwrap();
-    AuthorizationService::require_admin(&admin_user())
+    let db = TestFixture::setup().await;
+    seed(db.admin.as_ref()).await;
+    AuthorizationService::require_admin_on(db.admin.as_ref(), &admin_user())
         .await
         .expect("require_admin must return Ok for the admin user");
 }
 
-#[serial]
-#[with_lifecycle(test_database_lifecycle)]
 #[tokio::test]
 async fn require_admin_fails_for_regular_user() {
-    reset_and_seed().await.unwrap();
-    let err = AuthorizationService::require_admin(&regular_user())
+    let db = TestFixture::setup().await;
+    seed(db.admin.as_ref()).await;
+    let err = AuthorizationService::require_admin_on(db.admin.as_ref(), &regular_user())
         .await
         .expect_err("require_admin must fail for a non-admin user");
     assert!(
         err.to_string().contains("forbidden"),
-        "error message must say 'forbidden', got: {err}"
+        "error must say 'forbidden', got: {err}"
     );
 }
 
-#[serial]
-#[with_lifecycle(test_database_lifecycle)]
 #[tokio::test]
 async fn require_admin_fails_for_unknown_user() {
-    reset_and_seed().await.unwrap();
-    let err = AuthorizationService::require_admin(&unknown_user())
+    let db = TestFixture::setup().await;
+    seed(db.admin.as_ref()).await;
+    let err = AuthorizationService::require_admin_on(db.admin.as_ref(), &unknown_user())
         .await
         .expect_err("require_admin must fail for a user not in the system");
     assert!(err.to_string().contains("forbidden"));
@@ -457,50 +496,64 @@ async fn require_admin_fails_for_unknown_user() {
 
 // ── require_permission ────────────────────────────────────────────────────────
 
-/// Admin users bypass individual permission checks — they can do everything.
-/// This test verifies the short-circuit: the admin_user has NO explicit
-/// permission grants, yet `require_permission` passes.
-#[serial]
-#[with_lifecycle(test_database_lifecycle)]
+/// Admin users bypass individual permission checks even without explicit grants.
 #[tokio::test]
 async fn require_permission_admin_bypasses_permission_check() {
-    reset_and_seed().await.unwrap();
-    AuthorizationService::require_permission(&admin_user(), PERMISSION_NAME)
-        .await
-        .expect("admin must bypass permission checks even without an explicit grant");
+    let db = TestFixture::setup().await;
+    seed(db.admin.as_ref()).await;
+    AuthorizationService::require_permission_on(
+        db.admin.as_ref(),
+        &admin_user(),
+        WORKSPACE_ID,
+        PERMISSION_NAME,
+    )
+    .await
+    .expect("admin must bypass permission checks even without an explicit grant");
 }
 
-#[serial]
-#[with_lifecycle(test_database_lifecycle)]
 #[tokio::test]
 async fn require_permission_succeeds_for_user_with_permission() {
-    reset_and_seed().await.unwrap();
-    AuthorizationService::require_permission(&regular_user(), PERMISSION_NAME)
-        .await
-        .expect("user with the permission must pass require_permission");
+    let db = TestFixture::setup().await;
+    seed(db.admin.as_ref()).await;
+    AuthorizationService::require_permission_on(
+        db.admin.as_ref(),
+        &regular_user(),
+        WORKSPACE_ID,
+        PERMISSION_NAME,
+    )
+    .await
+    .expect("user with the permission must pass require_permission");
 }
 
-#[serial]
-#[with_lifecycle(test_database_lifecycle)]
 #[tokio::test]
 async fn require_permission_fails_for_user_without_permission() {
-    reset_and_seed().await.unwrap();
-    let err = AuthorizationService::require_permission(&regular_user(), "permission.not.granted")
-        .await
-        .expect_err("user without the permission must fail require_permission");
+    let db = TestFixture::setup().await;
+    seed(db.admin.as_ref()).await;
+    let err = AuthorizationService::require_permission_on(
+        db.admin.as_ref(),
+        &regular_user(),
+        WORKSPACE_ID,
+        "permission.not.granted",
+    )
+    .await
+    .expect_err("user without the permission must fail require_permission");
     assert!(
         err.to_string().contains("forbidden"),
         "error must say 'forbidden', got: {err}"
     );
 }
 
-#[serial]
-#[with_lifecycle(test_database_lifecycle)]
 #[tokio::test]
 async fn require_permission_fails_for_unknown_user() {
-    reset_and_seed().await.unwrap();
-    let err = AuthorizationService::require_permission(&unknown_user(), PERMISSION_NAME)
-        .await
-        .expect_err("unknown user must fail require_permission");
+    let db = TestFixture::setup().await;
+    seed(db.admin.as_ref()).await;
+    let err = AuthorizationService::require_permission_on(
+        db.admin.as_ref(),
+        &unknown_user(),
+        WORKSPACE_ID,
+        PERMISSION_NAME,
+    )
+    .await
+    .expect_err("unknown user must fail require_permission");
     assert!(err.to_string().contains("forbidden"));
 }

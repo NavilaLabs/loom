@@ -15,6 +15,10 @@ features = [
   "runtime-tokio-rustls",  # `ASYNC_RUNTIME` feature
 ]
 
+[dev-dependencies]
+sqlx = { workspace = true, features = ["sqlite"] }
+tokio = { workspace = true, features = ["macros", "rt"] }
+
 [features]
 default = ["sqlite"]
 postgres = ["sea-orm-migration/sqlx-postgres"]
