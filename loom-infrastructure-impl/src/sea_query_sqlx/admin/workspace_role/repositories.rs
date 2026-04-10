@@ -29,7 +29,8 @@ impl Deref for WorkspaceRoleRepository {
 }
 
 impl WorkspaceRoleRepository {
-    pub fn new(
+    #[must_use] 
+    pub const fn new(
         database: ConnectedAdminPool,
         repository: Repository<WorkspaceRole, Json<WorkspaceRole>, Json<WorkspaceRoleEvent>>,
     ) -> Self {
@@ -39,6 +40,9 @@ impl WorkspaceRoleRepository {
         }
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the event store repository cannot be initialized.
     pub async fn from_pool(pool: ConnectedAdminPool) -> Result<Self, sqlx::migrate::MigrateError> {
         let repository =
             Repository::new(pool.as_ref().clone(), Json::default(), Json::default()).await?;
@@ -48,12 +52,14 @@ impl WorkspaceRoleRepository {
         })
     }
 
-    pub fn event_store(
+    #[must_use] 
+    pub const fn event_store(
         &self,
     ) -> &Repository<WorkspaceRole, Json<WorkspaceRole>, Json<WorkspaceRoleEvent>> {
         &self.repository
     }
 
+    #[allow(clippy::unused_self)]
     fn select(&self) -> SelectStatement {
         sea_query::Query::select()
             .expr(Expr::col(sea_query::Asterisk))
@@ -61,6 +67,7 @@ impl WorkspaceRoleRepository {
             .to_owned()
     }
 
+    #[allow(clippy::unused_self)]
     fn select_count(&self) -> SelectStatement {
         sea_query::Query::select()
             .expr(Func::count(Expr::col(sea_query::Asterisk)))
@@ -153,6 +160,7 @@ impl Query<AnyRow> for WorkspaceRoleRepository {
             .fetch_one(self.database.as_ref())
             .await?;
         let n: i64 = row.try_get(0)?;
+        #[allow(clippy::cast_sign_loss)]
         Ok(n as u64)
     }
 
@@ -162,6 +170,7 @@ impl Query<AnyRow> for WorkspaceRoleRepository {
             .fetch_one(self.database.as_ref())
             .await?;
         let n: i64 = row.try_get(0)?;
+        #[allow(clippy::cast_sign_loss)]
         Ok(n as u64)
     }
 }

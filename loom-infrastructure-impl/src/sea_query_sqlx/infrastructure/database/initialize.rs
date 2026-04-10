@@ -169,7 +169,7 @@ impl InitializationStrategy for PostgresInitializationStrategy {
         }
         let database_name = CONFIG.get_database().get_databases().get_admin().get_name();
         info!("Initializing admin database: {}", database_name);
-        let query = format!(r#"CREATE DATABASE "{}""#, database_name);
+        let query = format!(r#"CREATE DATABASE "{database_name}""#);
         sqlx::query(query.as_str()).execute(pool.as_ref()).await?;
 
         Ok(())
@@ -190,14 +190,14 @@ impl InitializationStrategy for PostgresInitializationStrategy {
                     database::Error::NoTenantTokenProvided,
                 ))
             },
-            |token| Ok(token),
+            Ok,
         )?;
         let mut database_name_builder = TenantDatabaseNameConcreteBuilder::new();
         TenantDatabaseNameDirector::construct(&mut database_name_builder, tenant_token);
         let database_name = database_name_builder.get_tenant_database_name();
 
         info!("Initializing tenant database: {}", database_name);
-        let query = format!(r#"CREATE DATABASE "{}""#, database_name);
+        let query = format!(r#"CREATE DATABASE "{database_name}""#);
         sqlx::query(query.as_str()).execute(pool.as_ref()).await?;
 
         Ok(())
@@ -216,7 +216,7 @@ impl InitializationStrategy for SqliteInitializationStrategy {
     ) -> Result<bool, Error> {
         let mut path = database_uri.path().to_string();
         if !path.ends_with(".sqlite") {
-            path = format!("{}.sqlite", path);
+            path = format!("{path}.sqlite");
         }
 
         Ok(std::fs::metadata(&path).is_ok())
@@ -254,7 +254,7 @@ impl InitializationStrategy for SqliteInitializationStrategy {
                     database::Error::NoTenantTokenProvided,
                 ))
             },
-            |token| Ok(token),
+            Ok,
         )?;
         let uri = database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Tenant)
             .get_uri(&DatabaseType::Sqlite.to_string(), Some(tenant_token))?;
@@ -271,10 +271,13 @@ pub struct Initializer<T> {
 }
 
 impl<T: InitializationStrategy + Send + Sync> Initializer<T> {
-    pub fn new(strategy: T) -> Self {
+    pub const fn new(strategy: T) -> Self {
         Self { strategy }
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the initialization check fails.
     pub async fn is_initialized(
         &self,
         pool: &Pool<ScopeDefault, StateConnected>,
@@ -283,6 +286,9 @@ impl<T: InitializationStrategy + Send + Sync> Initializer<T> {
         self.strategy.is_initialized(pool, tenant_token).await
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if admin initialization fails.
     pub async fn initialize_admin(
         &self,
         pool: &Pool<ScopeDefault, StateConnected>,
@@ -290,6 +296,9 @@ impl<T: InitializationStrategy + Send + Sync> Initializer<T> {
         self.strategy.initialize_admin(pool).await
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if tenant initialization fails.
     pub async fn initialize_tenant(
         &self,
         pool: &Pool<ScopeDefault, StateConnected>,

@@ -25,7 +25,7 @@ pub async fn create(
     let pool = super::tenant_pool(workspace_id).await?;
     let repo = ActivityRepository::from_pool(pool).await?;
     let id = ActivityId::new();
-    let pid: Option<ProjectId> = project_id.as_deref().map(|s| s.parse()).transpose()?;
+    let pid: Option<ProjectId> = project_id.as_deref().map(str::parse).transpose()?;
     let mut root = Root::<Activity>::record_new(
         ActivityEvent::Created {
             id: id.clone(),

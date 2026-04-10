@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::tenant::activity::ActivityId;
 use crate::tenant::project::ProjectId;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ActivityEvent {
     Created {
         id: ActivityId,
@@ -23,8 +23,8 @@ pub enum ActivityEvent {
 impl Message for ActivityEvent {
     fn name(&self) -> &'static str {
         match self {
-            ActivityEvent::Created { .. } => "ActivityCreated",
-            ActivityEvent::Updated { .. } => "ActivityUpdated",
+            Self::Created { .. } => "ActivityCreated",
+            Self::Updated { .. } => "ActivityUpdated",
         }
     }
 }

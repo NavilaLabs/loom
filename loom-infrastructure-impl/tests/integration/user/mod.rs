@@ -52,7 +52,7 @@ pub mod tests {
                 id: id.clone(),
                 name: "Alice".to_string(),
                 email: "alice@example.com".to_string(),
-                password: "".to_string(),
+                password: String::new(),
             }
             .into(),
         )
@@ -77,7 +77,7 @@ pub mod tests {
                 id: id.clone(),
                 name: "Alice".to_string(),
                 email: "alice@example.com".to_string(),
-                password: "".to_string(),
+                password: String::new(),
             },
         )
         .expect("first Created is valid");
@@ -88,7 +88,7 @@ pub mod tests {
                 id,
                 name: "Bob".to_string(),
                 email: "bob@example.com".to_string(),
-                password: "".to_string(),
+                password: String::new(),
             },
         );
         assert!(
@@ -109,7 +109,7 @@ pub mod tests {
             id: id.clone(),
             name: "Alice".to_string(),
             email: "alice@example.com".to_string(),
-            password: "".to_string(),
+            password: String::new(),
         };
         let payload_bytes = serde_json::to_vec(&event).expect("serialization must succeed");
 

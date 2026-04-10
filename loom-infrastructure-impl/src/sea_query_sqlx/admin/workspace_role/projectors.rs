@@ -17,7 +17,8 @@ impl WorkspaceRoleProjector {
     const TABLE: &'static str = "projections__workspace_roles";
     const PERMISSIONS_TABLE: &'static str = "projections__workspace_role_permissions";
 
-    pub fn new(pool: Pool<ScopeAdmin, StateConnected>) -> Self {
+    #[must_use] 
+    pub const fn new(pool: Pool<ScopeAdmin, StateConnected>) -> Self {
         Self { pool }
     }
 }

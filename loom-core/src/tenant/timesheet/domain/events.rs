@@ -6,10 +6,10 @@ use crate::tenant::activity::ActivityId;
 use crate::tenant::project::ProjectId;
 use crate::tenant::timesheet::TimesheetId;
 
-/// User ID references an admin-domain user — stored as a plain AggregateId.
+/// User ID references an admin-domain user — stored as a plain `AggregateId`.
 pub type UserId = AggregateId;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum TimesheetEvent {
     Started {
         id: TimesheetId,
@@ -58,12 +58,12 @@ pub enum TimesheetEvent {
 impl Message for TimesheetEvent {
     fn name(&self) -> &'static str {
         match self {
-            TimesheetEvent::Started { .. } => "TimesheetStarted",
-            TimesheetEvent::Stopped { .. } => "TimesheetStopped",
-            TimesheetEvent::Updated { .. } => "TimesheetUpdated",
-            TimesheetEvent::Reassigned { .. } => "TimesheetReassigned",
-            TimesheetEvent::TimeUpdated { .. } => "TimesheetTimeUpdated",
-            TimesheetEvent::Exported => "TimesheetExported",
+            Self::Started { .. } => "TimesheetStarted",
+            Self::Stopped { .. } => "TimesheetStopped",
+            Self::Updated { .. } => "TimesheetUpdated",
+            Self::Reassigned { .. } => "TimesheetReassigned",
+            Self::TimeUpdated { .. } => "TimesheetTimeUpdated",
+            Self::Exported => "TimesheetExported",
         }
     }
 }

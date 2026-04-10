@@ -12,6 +12,9 @@ use crate::tenant::customer::{
 pub struct CustomerCommand;
 
 impl CustomerCommand {
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     pub fn create(
         &self,
         id: CustomerId,
@@ -32,6 +35,9 @@ impl CustomerCommand {
         .into())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     pub fn update(
         &mut self,
         name: String,
@@ -55,6 +61,9 @@ impl CustomerCommand {
         .map_err(|e| customer::DomainError::AggregateError(e).into())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     pub fn set_budget(
         &mut self,
         time_budget: Option<i32>,

@@ -29,7 +29,8 @@ impl Deref for UserRepository {
 }
 
 impl UserRepository {
-    pub fn new(
+    #[must_use] 
+    pub const fn new(
         database: ConnectedAdminPool,
         repository: Repository<User, Json<User>, Json<UserEvent>>,
     ) -> Self {
@@ -39,6 +40,9 @@ impl UserRepository {
         }
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the event store repository cannot be initialized.
     pub async fn from_pool(pool: ConnectedAdminPool) -> Result<Self, sqlx::migrate::MigrateError> {
         let repository =
             Repository::new(pool.as_ref().clone(), Json::default(), Json::default()).await?;
@@ -48,12 +52,17 @@ impl UserRepository {
         })
     }
 
-    pub fn event_store(&self) -> &Repository<User, Json<User>, Json<UserEvent>> {
+    #[must_use] 
+    pub const fn event_store(&self) -> &Repository<User, Json<User>, Json<UserEvent>> {
         &self.repository
     }
 
     /// Returns `(user_id, email, password)` for the given email — intended
     /// only for authentication flows, not general display.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the database query fails.
     pub async fn find_credentials_by_email(
         &self,
         email: &str,
@@ -85,11 +94,18 @@ impl UserRepository {
         .transpose()
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the database count query fails.
     pub async fn has_at_least_one_user(&self) -> Result<bool, crate::Error> {
         Ok(self.count().await? > 0)
     }
 
-    /// Fetch a `UserView` by string ID, avoiding the AnyPool UUID-type panic.
+    /// Fetch a `UserView` by string ID, avoiding the `AnyPool` UUID-type panic.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the database query fails.
     pub async fn find_view_by_id(&self, id: &str) -> Result<Option<UserView>, crate::Error> {
         let statement = sea_query::Query::select()
             .expr(Expr::col(sea_query::Asterisk))
@@ -103,6 +119,7 @@ impl UserRepository {
         row.map(|r| self.row_to_view(r)).transpose()
     }
 
+    #[allow(clippy::unused_self)]
     fn select(&self) -> SelectStatement {
         sea_query::Query::select()
             .expr(Expr::col(sea_query::Asterisk))
@@ -110,6 +127,7 @@ impl UserRepository {
             .to_owned()
     }
 
+    #[allow(clippy::unused_self)]
     fn select_count(&self) -> SelectStatement {
         sea_query::Query::select()
             .expr(Func::count(Expr::col(sea_query::Asterisk)))
@@ -217,6 +235,7 @@ impl Query<AnyRow> for UserRepository {
             .await?;
 
         let n: i64 = row.try_get(0)?;
+        #[allow(clippy::cast_sign_loss)]
         Ok(n as u64)
     }
 
@@ -228,6 +247,7 @@ impl Query<AnyRow> for UserRepository {
             .await?;
 
         let n: i64 = row.try_get(0)?;
+        #[allow(clippy::cast_sign_loss)]
         Ok(n as u64)
     }
 }

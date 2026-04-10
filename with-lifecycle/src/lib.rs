@@ -9,13 +9,13 @@ struct ModuleArgs {
 impl Parse for ModuleArgs {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let module_path = input.parse()?;
-        Ok(ModuleArgs { module_path })
+        Ok(Self { module_path })
     }
 }
 
 /// A procedural macro to wrap a test function with setup/teardown logic provided by a module.
 ///
-/// Usage: #[with_lifecycle(my_test_setup_module)]
+/// Usage: `#[with_lifecycle(my_test_setup_module)]`
 ///
 /// The module must provide two public functions:
 /// - `pub fn before()`

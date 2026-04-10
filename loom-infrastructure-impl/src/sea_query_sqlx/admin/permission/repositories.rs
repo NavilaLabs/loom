@@ -26,7 +26,8 @@ impl Deref for PermissionRepository {
 }
 
 impl PermissionRepository {
-    pub fn new(
+    #[must_use] 
+    pub const fn new(
         database: ConnectedAdminPool,
         repository: Repository<Permission, Json<Permission>, Json<PermissionEvent>>,
     ) -> Self {
@@ -36,10 +37,12 @@ impl PermissionRepository {
         }
     }
 
-    pub fn event_store(&self) -> &Repository<Permission, Json<Permission>, Json<PermissionEvent>> {
+    #[must_use] 
+    pub const fn event_store(&self) -> &Repository<Permission, Json<Permission>, Json<PermissionEvent>> {
         &self.repository
     }
 
+    #[allow(clippy::unused_self)]
     fn select(&self) -> SelectStatement {
         sea_query::Query::select()
             .expr(Expr::col(sea_query::Asterisk))
@@ -47,6 +50,7 @@ impl PermissionRepository {
             .to_owned()
     }
 
+    #[allow(clippy::unused_self)]
     fn select_count(&self) -> SelectStatement {
         sea_query::Query::select()
             .expr(Func::count(Expr::col(sea_query::Asterisk)))
@@ -131,6 +135,7 @@ impl Query<AnyRow> for PermissionRepository {
             .fetch_one(self.database.as_ref())
             .await?;
         let n: i64 = row.try_get(0)?;
+        #[allow(clippy::cast_sign_loss)]
         Ok(n as u64)
     }
 
@@ -140,6 +145,7 @@ impl Query<AnyRow> for PermissionRepository {
             .fetch_one(self.database.as_ref())
             .await?;
         let n: i64 = row.try_get(0)?;
+        #[allow(clippy::cast_sign_loss)]
         Ok(n as u64)
     }
 }

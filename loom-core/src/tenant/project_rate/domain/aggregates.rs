@@ -8,7 +8,7 @@ use crate::tenant::project_rate::domain::events::UserId;
 
 pub type ProjectRateId = AggregateId;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ProjectRate {
     id: ProjectRateId,
     project_id: ProjectId,
@@ -18,19 +18,24 @@ pub struct ProjectRate {
 }
 
 impl ProjectRate {
-    pub fn id(&self) -> &ProjectRateId {
+    #[must_use] 
+    pub const fn id(&self) -> &ProjectRateId {
         &self.id
     }
-    pub fn project_id(&self) -> &ProjectId {
+    #[must_use] 
+    pub const fn project_id(&self) -> &ProjectId {
         &self.project_id
     }
-    pub fn user_id(&self) -> Option<&UserId> {
+    #[must_use] 
+    pub const fn user_id(&self) -> Option<&UserId> {
         self.user_id.as_ref()
     }
-    pub fn hourly_rate(&self) -> i64 {
+    #[must_use] 
+    pub const fn hourly_rate(&self) -> i64 {
         self.hourly_rate
     }
-    pub fn internal_rate(&self) -> Option<i64> {
+    #[must_use] 
+    pub const fn internal_rate(&self) -> Option<i64> {
         self.internal_rate
     }
 }

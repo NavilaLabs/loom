@@ -24,12 +24,18 @@ impl Deref for CustomerRepository {
 }
 
 impl CustomerRepository {
+    /// # Errors
+    ///
+    /// Returns an error if the event store repository cannot be initialized.
     pub async fn from_pool(pool: ConnectedTenantPool) -> Result<Self, sqlx::migrate::MigrateError> {
         let repository =
             Repository::new(pool.as_ref().clone(), Json::default(), Json::default()).await?;
         Ok(Self { pool, repository })
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the database query fails.
     pub async fn all(&self) -> Result<Vec<CustomerRow>, crate::Error> {
         let rows = sqlx::query(
             "SELECT id, name, comment, currency, timezone, country, visible, \
@@ -57,7 +63,7 @@ impl CustomerRepository {
     }
 }
 
-/// SQLite stores BOOLEAN as INTEGER; the `any` driver may decode it as i64.
+/// `SQLite` stores BOOLEAN as INTEGER; the `any` driver may decode it as i64.
 fn bool_col(row: &AnyRow, col: &str) -> bool {
     row.try_get::<bool, _>(col)
         .unwrap_or_else(|_| row.try_get::<i64, _>(col).map(|v| v != 0).unwrap_or(false))

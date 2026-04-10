@@ -14,7 +14,7 @@ pub mod tests {
     /// Verify that the expected tables are visible in the admin pool AFTER setup.
     ///
     /// Guards against a subtle failure mode: if migrations run on a different
-    /// connection/database than the pool (e.g. with named in-memory SQLite),
+    /// connection/database than the pool (e.g. with named in-memory `SQLite`),
     /// the pool's database would be empty even though migrations "succeeded".
     #[tokio::test]
     async fn test_tables_visible_in_admin_pool() {

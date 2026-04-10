@@ -13,6 +13,9 @@ use crate::tenant::activity_rate::{
 pub struct ActivityRateCommand;
 
 impl ActivityRateCommand {
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     pub fn set(
         &self,
         id: ActivityRateId,
@@ -35,6 +38,9 @@ impl ActivityRateCommand {
         .into())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     pub fn remove(&mut self) -> Result<(), crate::Error> {
         self.record_that(ActivityRateEvent::Removed.into())
             .map_err(|e| activity_rate::DomainError::AggregateError(e).into())

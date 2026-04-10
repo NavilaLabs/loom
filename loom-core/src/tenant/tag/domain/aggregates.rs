@@ -6,16 +6,18 @@ use crate::tenant::tag::TagEvent;
 
 pub type TagId = AggregateId;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Tag {
     id: TagId,
     name: String,
 }
 
 impl Tag {
-    pub fn id(&self) -> &TagId {
+    #[must_use] 
+    pub const fn id(&self) -> &TagId {
         &self.id
     }
+    #[must_use] 
     pub fn name(&self) -> &str {
         &self.name
     }

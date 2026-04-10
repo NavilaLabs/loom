@@ -3,6 +3,7 @@ use crate::admin::user::domain::interfaces::UserRepository;
 
 #[derive(Debug, Clone)]
 pub struct UserQuery<P> {
+    #[allow(dead_code)]
     pool: P,
 }
 
@@ -19,7 +20,7 @@ impl<P, A> LoginQuery<P, A>
 where
     A: AuthenticationStrategy,
 {
-    pub fn new(pool: P, authenticator: Authenticator<A>) -> Self {
+    pub const fn new(pool: P, authenticator: Authenticator<A>) -> Self {
         Self {
             pool,
             authenticator,
@@ -32,6 +33,11 @@ where
     P: UserRepository,
     A: AuthenticationStrategy,
 {
+    /// # Errors
+    ///
+    /// Returns an error if the user is not found, credentials cannot be fetched,
+    /// or authentication fails.
+    #[allow(clippy::future_not_send)]
     pub async fn login(&self, email: &str, password: &str) -> Result<String, super::Error> {
         let (user_id, stored_email, password_hash) = self
             .pool

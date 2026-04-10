@@ -12,10 +12,12 @@ pub struct Permission {
 }
 
 impl Permission {
-    pub fn id(&self) -> &PermissionId {
+    #[must_use] 
+    pub const fn id(&self) -> &PermissionId {
         &self.id
     }
 
+    #[must_use] 
     pub fn name(&self) -> &str {
         &self.name
     }

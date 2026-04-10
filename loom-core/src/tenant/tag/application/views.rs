@@ -7,13 +7,16 @@ pub struct TagView {
 }
 
 impl TagView {
-    pub fn new(id: TagId, name: String) -> Self {
+    #[must_use] 
+    pub const fn new(id: TagId, name: String) -> Self {
         Self { id, name }
     }
 
-    pub fn get_id(&self) -> &TagId {
+    #[must_use] 
+    pub const fn get_id(&self) -> &TagId {
         &self.id
     }
+    #[must_use] 
     pub fn get_name(&self) -> &str {
         &self.name
     }

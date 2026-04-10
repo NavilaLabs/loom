@@ -24,12 +24,18 @@ impl Deref for ActivityRepository {
 }
 
 impl ActivityRepository {
+    /// # Errors
+    ///
+    /// Returns an error if the event store repository cannot be initialized.
     pub async fn from_pool(pool: ConnectedTenantPool) -> Result<Self, sqlx::migrate::MigrateError> {
         let repository =
             Repository::new(pool.as_ref().clone(), Json::default(), Json::default()).await?;
         Ok(Self { pool, repository })
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the database query fails.
     pub async fn all(&self) -> Result<Vec<ActivityRow>, crate::Error> {
         let rows = sqlx::query(
             "SELECT id, project_id, name, comment, visible, billable \
@@ -40,6 +46,9 @@ impl ActivityRepository {
         rows.into_iter().map(|r| Self::map_row(&r)).collect()
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the database query fails.
     pub async fn by_project(&self, project_id: &str) -> Result<Vec<ActivityRow>, crate::Error> {
         let rows = sqlx::query(
             "SELECT id, project_id, name, comment, visible, billable \

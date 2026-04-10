@@ -16,7 +16,8 @@ pub struct CustomerView {
 
 impl CustomerView {
     #[allow(clippy::too_many_arguments)]
-    pub fn new(
+    #[must_use] 
+    pub const fn new(
         id: CustomerId,
         name: String,
         comment: Option<String>,
@@ -42,34 +43,44 @@ impl CustomerView {
         }
     }
 
-    pub fn get_id(&self) -> &CustomerId {
+    #[must_use] 
+    pub const fn get_id(&self) -> &CustomerId {
         &self.id
     }
+    #[must_use] 
     pub fn get_name(&self) -> &str {
         &self.name
     }
+    #[must_use] 
     pub fn get_comment(&self) -> Option<&str> {
         self.comment.as_deref()
     }
+    #[must_use] 
     pub fn get_currency(&self) -> &str {
         &self.currency
     }
+    #[must_use] 
     pub fn get_timezone(&self) -> &str {
         &self.timezone
     }
+    #[must_use] 
     pub fn get_country(&self) -> Option<&str> {
         self.country.as_deref()
     }
-    pub fn is_visible(&self) -> bool {
+    #[must_use] 
+    pub const fn is_visible(&self) -> bool {
         self.visible
     }
-    pub fn get_time_budget(&self) -> Option<i32> {
+    #[must_use] 
+    pub const fn get_time_budget(&self) -> Option<i32> {
         self.time_budget
     }
-    pub fn get_money_budget(&self) -> Option<i64> {
+    #[must_use] 
+    pub const fn get_money_budget(&self) -> Option<i64> {
         self.money_budget
     }
-    pub fn is_budget_monthly(&self) -> bool {
+    #[must_use] 
+    pub const fn is_budget_monthly(&self) -> bool {
         self.budget_is_monthly
     }
 }

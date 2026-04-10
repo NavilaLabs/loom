@@ -39,12 +39,12 @@ pub enum WorkspaceEvent {
 impl Message for WorkspaceEvent {
     fn name(&self) -> &'static str {
         match self {
-            WorkspaceEvent::Created { .. } => "WorkspaceCreated",
-            WorkspaceEvent::UserRoleAssigned { .. } => "WorkspaceUserRoleAssigned",
-            WorkspaceEvent::UserRoleRevoked { .. } => "WorkspaceUserRoleRevoked",
-            WorkspaceEvent::UserPermissionGranted { .. } => "WorkspaceUserPermissionGranted",
-            WorkspaceEvent::UserPermissionRevoked { .. } => "WorkspaceUserPermissionRevoked",
-            WorkspaceEvent::SettingsUpdated { .. } => "WorkspaceSettingsUpdated",
+            Self::Created { .. } => "WorkspaceCreated",
+            Self::UserRoleAssigned { .. } => "WorkspaceUserRoleAssigned",
+            Self::UserRoleRevoked { .. } => "WorkspaceUserRoleRevoked",
+            Self::UserPermissionGranted { .. } => "WorkspaceUserPermissionGranted",
+            Self::UserPermissionRevoked { .. } => "WorkspaceUserPermissionRevoked",
+            Self::SettingsUpdated { .. } => "WorkspaceSettingsUpdated",
         }
     }
 }

@@ -1,4 +1,5 @@
-use sea_orm_migration::{prelude::*, schema::*};
+#[allow(clippy::wildcard_imports)]
+use sea_orm_migration::{prelude::*, schema::{string, integer, binary, json_binary, timestamp}};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -120,7 +121,7 @@ mod tests {
     }
 
     /// Proves that attempting to insert two rows with the same `event_stream_id`
-    /// into an in-memory SQLite database is rejected by the PK uniqueness
+    /// into an in-memory `SQLite` database is rejected by the PK uniqueness
     /// constraint.  This is the runtime guard against stream ID collisions.
     #[tokio::test]
     async fn duplicate_event_stream_id_is_rejected_by_pk() {

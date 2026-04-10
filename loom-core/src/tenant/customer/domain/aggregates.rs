@@ -5,7 +5,7 @@ use crate::{shared::AggregateId, tenant::customer::CustomerEvent};
 
 pub type CustomerId = AggregateId;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Customer {
     id: CustomerId,
     name: String,
@@ -15,23 +15,28 @@ pub struct Customer {
 }
 
 impl Customer {
-    pub fn id(&self) -> &CustomerId {
+    #[must_use] 
+    pub const fn id(&self) -> &CustomerId {
         &self.id
     }
 
+    #[must_use] 
     pub fn name(&self) -> &str {
         &self.name
     }
 
+    #[must_use] 
     pub fn currency(&self) -> &str {
         &self.currency
     }
 
+    #[must_use] 
     pub fn timezone(&self) -> &str {
         &self.timezone
     }
 
-    pub fn visible(&self) -> bool {
+    #[must_use] 
+    pub const fn visible(&self) -> bool {
         self.visible
     }
 }

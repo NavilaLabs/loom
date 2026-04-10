@@ -12,6 +12,9 @@ pub struct Credentials<'a> {
 pub trait AuthenticationStrategy {
     type Error: Debug;
 
+    /// # Errors
+    ///
+    /// Returns an error if authentication fails.
     fn authenticate(&self, credentials: Credentials<'_>) -> Result<String, Self::Error>;
 }
 
@@ -21,10 +24,13 @@ pub struct Authenticator<T: AuthenticationStrategy> {
 }
 
 impl<T: AuthenticationStrategy> Authenticator<T> {
-    pub fn new(strategy: T) -> Self {
+    pub const fn new(strategy: T) -> Self {
         Self { strategy }
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the underlying strategy fails to authenticate.
     pub fn authenticate(&self, credentials: Credentials<'_>) -> Result<String, T::Error> {
         self.strategy.authenticate(credentials)
     }

@@ -23,9 +23,9 @@ pub enum WorkspaceRoleEvent {
 impl Message for WorkspaceRoleEvent {
     fn name(&self) -> &'static str {
         match self {
-            WorkspaceRoleEvent::Created { .. } => "WorkspaceRoleCreated",
-            WorkspaceRoleEvent::PermissionGranted { .. } => "WorkspaceRolePermissionGranted",
-            WorkspaceRoleEvent::PermissionRevoked { .. } => "WorkspaceRolePermissionRevoked",
+            Self::Created { .. } => "WorkspaceRoleCreated",
+            Self::PermissionGranted { .. } => "WorkspaceRolePermissionGranted",
+            Self::PermissionRevoked { .. } => "WorkspaceRolePermissionRevoked",
         }
     }
 }

@@ -11,7 +11,7 @@ pub enum PermissionEvent {
 impl Message for PermissionEvent {
     fn name(&self) -> &'static str {
         match self {
-            PermissionEvent::Created { .. } => "PermissionCreated",
+            Self::Created { .. } => "PermissionCreated",
         }
     }
 }

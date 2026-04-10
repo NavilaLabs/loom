@@ -13,6 +13,9 @@ use crate::tenant::project::{
 pub struct ProjectCommand;
 
 impl ProjectCommand {
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     pub fn create(
         &self,
         id: ProjectId,
@@ -31,6 +34,9 @@ impl ProjectCommand {
         .into())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     pub fn update(
         &mut self,
         name: String,
@@ -52,6 +58,9 @@ impl ProjectCommand {
         .map_err(|e| project::DomainError::AggregateError(e).into())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     pub fn set_budget(
         &mut self,
         time_budget: Option<i32>,

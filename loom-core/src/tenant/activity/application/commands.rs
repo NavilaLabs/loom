@@ -13,6 +13,9 @@ use crate::tenant::project::ProjectId;
 pub struct ActivityCommand;
 
 impl ActivityCommand {
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     pub fn create(
         &self,
         id: ActivityId,
@@ -31,6 +34,9 @@ impl ActivityCommand {
         .into())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     pub fn update(
         &mut self,
         name: String,

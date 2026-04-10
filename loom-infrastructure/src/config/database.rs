@@ -12,11 +12,11 @@ impl Database {
         &self.base_uri
     }
 
-    pub fn get_databases(&self) -> &Databases {
+    pub const fn get_databases(&self) -> &Databases {
         &self.databases
     }
 
-    pub fn get_pool(&self) -> &Pool {
+    pub const fn get_pool(&self) -> &Pool {
         &self.pool
     }
 }
@@ -28,11 +28,11 @@ pub struct Databases {
 }
 
 impl Databases {
-    pub fn get_admin(&self) -> &AdminDatabase {
+    pub const fn get_admin(&self) -> &AdminDatabase {
         &self.admin
     }
 
-    pub fn get_tenant(&self) -> &TenantDatabase {
+    pub const fn get_tenant(&self) -> &TenantDatabase {
         &self.tenant
     }
 }
@@ -67,15 +67,15 @@ pub struct Pool {
 }
 
 impl Pool {
-    pub fn get_max_size(&self) -> u32 {
+    pub const fn get_max_size(&self) -> u32 {
         self.max_size
     }
 
-    pub fn get_min_size(&self) -> u32 {
+    pub const fn get_min_size(&self) -> u32 {
         self.min_size
     }
 
-    pub fn get_timeout_seconds(&self) -> u64 {
+    pub const fn get_timeout_seconds(&self) -> u64 {
         self.timeout_seconds
     }
 }

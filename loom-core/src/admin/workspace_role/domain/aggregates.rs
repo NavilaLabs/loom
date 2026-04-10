@@ -16,14 +16,17 @@ pub struct WorkspaceRole {
 }
 
 impl WorkspaceRole {
-    pub fn id(&self) -> &WorkspaceRoleId {
+    #[must_use] 
+    pub const fn id(&self) -> &WorkspaceRoleId {
         &self.id
     }
 
-    pub fn workspace_id(&self) -> &WorkspaceId {
+    #[must_use] 
+    pub const fn workspace_id(&self) -> &WorkspaceId {
         &self.workspace_id
     }
 
+    #[must_use] 
     pub fn name(&self) -> Option<&str> {
         self.name.as_deref()
     }
@@ -66,8 +69,11 @@ impl Aggregate for WorkspaceRole {
             }),
             (Some(_), WorkspaceRoleEvent::Created { .. }) => Err(Error::AlreadyExists),
             (None, _) => Err(Error::NotFound),
-            (Some(role), WorkspaceRoleEvent::PermissionGranted { .. }) => Ok(role),
-            (Some(role), WorkspaceRoleEvent::PermissionRevoked { .. }) => Ok(role),
+            (
+                Some(role),
+                WorkspaceRoleEvent::PermissionGranted { .. }
+                | WorkspaceRoleEvent::PermissionRevoked { .. },
+            ) => Ok(role),
         }
     }
 }

@@ -26,42 +26,42 @@ pub enum Error {
 
 impl From<activity::DomainError> for crate::Error {
     fn from(value: activity::DomainError) -> Self {
-        crate::Error::TenantDatabaseError(Error::ActivityError(value.into()))
+        Self::TenantDatabaseError(Error::ActivityError(value.into()))
     }
 }
 
 impl From<activity_rate::DomainError> for crate::Error {
     fn from(value: activity_rate::DomainError) -> Self {
-        crate::Error::TenantDatabaseError(Error::ActivityRateError(value.into()))
+        Self::TenantDatabaseError(Error::ActivityRateError(value.into()))
     }
 }
 
 impl From<customer::DomainError> for crate::Error {
     fn from(value: customer::DomainError) -> Self {
-        crate::Error::TenantDatabaseError(Error::CustomerError(value.into()))
+        Self::TenantDatabaseError(Error::CustomerError(value.into()))
     }
 }
 
 impl From<project::DomainError> for crate::Error {
     fn from(value: project::DomainError) -> Self {
-        crate::Error::TenantDatabaseError(Error::ProjectError(value.into()))
+        Self::TenantDatabaseError(Error::ProjectError(value.into()))
     }
 }
 
 impl From<project_rate::DomainError> for crate::Error {
     fn from(value: project_rate::DomainError) -> Self {
-        crate::Error::TenantDatabaseError(Error::ProjectRateError(value.into()))
+        Self::TenantDatabaseError(Error::ProjectRateError(value.into()))
     }
 }
 
 impl From<tag::DomainError> for crate::Error {
     fn from(value: tag::DomainError) -> Self {
-        crate::Error::TenantDatabaseError(Error::TagError(value.into()))
+        Self::TenantDatabaseError(Error::TagError(value.into()))
     }
 }
 
 impl From<timesheet::DomainError> for crate::Error {
     fn from(value: timesheet::DomainError) -> Self {
-        crate::Error::TenantDatabaseError(Error::TimesheetError(value.into()))
+        Self::TenantDatabaseError(Error::TimesheetError(value.into()))
     }
 }

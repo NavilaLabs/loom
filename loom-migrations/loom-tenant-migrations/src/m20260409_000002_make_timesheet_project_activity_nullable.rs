@@ -1,11 +1,11 @@
-use sea_orm_migration::{prelude::*, schema::*};
+use sea_orm_migration::{prelude::*, schema::{pk_uuid, uuid, uuid_null, timestamp_with_time_zone, timestamp_with_time_zone_null, integer_null, string_null, string, integer, big_integer_null}};
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
 
 /// Makes `project_id` and `activity_id` nullable and removes their FK constraints
 /// so that timesheets can be started without a project/activity ("quick timer").
-/// Uses the rename-recreate-copy pattern required by SQLite.
+/// Uses the rename-recreate-copy pattern required by `SQLite`.
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {

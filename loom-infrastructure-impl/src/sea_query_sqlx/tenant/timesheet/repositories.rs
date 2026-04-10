@@ -24,6 +24,9 @@ impl Deref for TimesheetRepository {
 }
 
 impl TimesheetRepository {
+    /// # Errors
+    ///
+    /// Returns an error if the event store repository cannot be initialized.
     pub async fn from_pool(pool: ConnectedTenantPool) -> Result<Self, sqlx::migrate::MigrateError> {
         let repository =
             Repository::new(pool.as_ref().clone(), Json::default(), Json::default()).await?;
@@ -36,6 +39,10 @@ impl TimesheetRepository {
          FROM projections__timesheets";
 
     /// Most-recent 50 timesheets for a user, newest first.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the database query fails.
     pub async fn recent_for_user(&self, user_id: &str) -> Result<Vec<TimesheetRow>, crate::Error> {
         let sql = format!(
             "{} WHERE user_id = ? ORDER BY start_time DESC LIMIT 50",
@@ -48,7 +55,11 @@ impl TimesheetRepository {
         rows.into_iter().map(|r| Self::map_row(&r)).collect()
     }
 
-    /// Returns the running timesheet for a user (end_time IS NULL), if any.
+    /// Returns the running timesheet for a user (`end_time` IS NULL), if any.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the database query fails.
     pub async fn running_for_user(
         &self,
         user_id: &str,
@@ -105,7 +116,7 @@ pub struct TimesheetRow {
     pub exported: bool,
     /// Snapshot of the applicable hourly rate in cents at the time of stopping.
     pub hourly_rate: Option<i64>,
-    /// Fixed rate override in cents (mutually exclusive with hourly_rate).
+    /// Fixed rate override in cents (mutually exclusive with `hourly_rate`).
     pub fixed_rate: Option<i64>,
     /// Internal (cost) rate in cents for profitability calculations.
     pub internal_rate: Option<i64>,

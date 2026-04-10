@@ -5,10 +5,10 @@ use crate::shared::AggregateId;
 use crate::tenant::activity::ActivityId;
 use crate::tenant::activity_rate::ActivityRateId;
 
-/// User ID is an admin-domain user — stored as a plain AggregateId.
+/// User ID is an admin-domain user — stored as a plain `AggregateId`.
 pub type UserId = AggregateId;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ActivityRateEvent {
     Set {
         id: ActivityRateId,
@@ -24,8 +24,8 @@ pub enum ActivityRateEvent {
 impl Message for ActivityRateEvent {
     fn name(&self) -> &'static str {
         match self {
-            ActivityRateEvent::Set { .. } => "ActivityRateSet",
-            ActivityRateEvent::Removed => "ActivityRateRemoved",
+            Self::Set { .. } => "ActivityRateSet",
+            Self::Removed => "ActivityRateRemoved",
         }
     }
 }

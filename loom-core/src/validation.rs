@@ -7,11 +7,12 @@ pub use validator::{Validate, ValidationErrors};
 /// Collects only the human-readable `message` from each field error and
 /// joins them with "; ". Falls back to the full debug representation if
 /// a field error carries no message.
+#[must_use] 
 pub fn validation_summary(e: &ValidationErrors) -> String {
     let messages: Vec<String> = e
         .field_errors()
         .into_values()
-        .flat_map(|errs| errs.into_iter())
+        .flat_map(|errs| errs.iter())
         .filter_map(|fe| fe.message.as_deref().map(str::to_owned))
         .collect();
 

@@ -5,8 +5,8 @@ use sea_orm_migration::prelude::*;
 /// UUIDs are fixed and deterministic so the migration is fully idempotent.
 /// Each entry maps a UUID to its `<aggregate>.<action>` permission name.
 ///
-/// The operation is safe to re-run: SQLite uses `INSERT OR IGNORE`, and
-/// PostgreSQL uses `ON CONFLICT (id) DO NOTHING`.
+/// The operation is safe to re-run: `SQLite` uses `INSERT OR IGNORE`, and
+/// `PostgreSQL` uses `ON CONFLICT (id) DO NOTHING`.
 #[derive(DeriveMigrationName)]
 pub struct Migration;
 

@@ -14,6 +14,9 @@ use crate::tenant::timesheet::{
 pub struct TimesheetCommand;
 
 impl TimesheetCommand {
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     #[allow(clippy::too_many_arguments)]
     pub fn start(
         &self,
@@ -41,6 +44,9 @@ impl TimesheetCommand {
         .into())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     #[allow(clippy::too_many_arguments)]
     pub fn stop(
         &mut self,
@@ -65,6 +71,9 @@ impl TimesheetCommand {
         .map_err(|e| timesheet::DomainError::AggregateError(e).into())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     pub fn update(
         &mut self,
         description: Option<String>,
@@ -80,6 +89,9 @@ impl TimesheetCommand {
         .map_err(|e| timesheet::DomainError::AggregateError(e).into())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     pub fn reassign(
         &mut self,
         project_id: ProjectId,
@@ -95,6 +107,9 @@ impl TimesheetCommand {
         .map_err(|e| timesheet::DomainError::AggregateError(e).into())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     pub fn export(&mut self) -> Result<(), crate::Error> {
         self.record_that(TimesheetEvent::Exported.into())
             .map_err(|e| timesheet::DomainError::AggregateError(e).into())

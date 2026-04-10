@@ -8,10 +8,17 @@ use crate::{
 };
 
 pub trait DatabaseUri {
+    /// # Errors
+    ///
+    /// Returns an error if the URI cannot be constructed or parsed.
     fn get_uri(&self, database_type: &str, tenant_token: Option<&str>)
     -> Result<Url, crate::Error>;
 
-    /// Ensures that the database URI has a `.sqlite` extension for SQLite databases.
+    /// Ensures that the database URI has a `.sqlite` extension for `SQLite` databases.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the modified URI cannot be parsed.
     fn ensure_sqlite_extension(
         &self,
         database_type: &str,
@@ -43,7 +50,7 @@ impl DatabaseUri for AdminDatabaseUri {
     ) -> Result<Url, crate::Error> {
         let base_uri = CONFIG.get_database().get_base_uri();
         let admin_database_name = CONFIG.get_database().get_databases().get_admin().get_name();
-        let admin_uri = Url::parse(&format!("{}/{}", base_uri, admin_database_name))?;
+        let admin_uri = Url::parse(&format!("{base_uri}/{admin_database_name}"))?;
         let admin_uri = self.ensure_sqlite_extension(database_type, admin_uri)?;
 
         Ok(admin_uri)
@@ -61,12 +68,12 @@ impl DatabaseUri for TenantDatabaseUri {
         let base_uri = CONFIG.get_database().get_base_uri();
         let tenant_token = tenant_token.map_or_else(
             || Err(crate::database::Error::NoTenantTokenProvided),
-            |token| Ok(token),
+            Ok,
         )?;
         let mut database_name_builder = TenantDatabaseNameConcreteBuilder::new();
         TenantDatabaseNameDirector::construct(&mut database_name_builder, tenant_token);
         let database_name = database_name_builder.get_tenant_database_name();
-        let tenant_uri = Url::parse(&format!("{}/{}", base_uri, database_name))?;
+        let tenant_uri = Url::parse(&format!("{base_uri}/{database_name}"))?;
         let tenant_uri = self.ensure_sqlite_extension(database_type, tenant_uri)?;
 
         Ok(tenant_uri)
@@ -76,6 +83,7 @@ impl DatabaseUri for TenantDatabaseUri {
 pub struct Factory;
 
 impl Factory {
+    #[must_use] 
     pub fn new_database_uri(database_uri_type: &DatabaseUriType) -> Box<dyn DatabaseUri> {
         match database_uri_type {
             DatabaseUriType::Admin => Box::new(AdminDatabaseUri),

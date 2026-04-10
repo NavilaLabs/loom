@@ -1,9 +1,9 @@
-use sea_orm_migration::{prelude::*, schema::*};
+use sea_orm_migration::{prelude::*, schema::{pk_uuid, uuid, timestamp_with_time_zone, timestamp_with_time_zone_null, integer_null, string_null, string, integer, big_integer_null}};
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
 
-/// SQLite does not support `ALTER TABLE DROP CONSTRAINT`, so we have to recreate
+/// `SQLite` does not support `ALTER TABLE DROP CONSTRAINT`, so we have to recreate
 /// the table without the erroneous FK on `user_id` (users live in the admin DB,
 /// not in the tenant DB, so the FK can never be satisfied).
 #[async_trait::async_trait]

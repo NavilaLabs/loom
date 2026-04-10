@@ -8,7 +8,8 @@ pub struct WorkspaceRoleView {
 }
 
 impl WorkspaceRoleView {
-    pub fn new(id: WorkspaceRoleId, workspace_id: WorkspaceId, name: Option<String>) -> Self {
+    #[must_use] 
+    pub const fn new(id: WorkspaceRoleId, workspace_id: WorkspaceId, name: Option<String>) -> Self {
         Self {
             id,
             workspace_id,
@@ -16,14 +17,17 @@ impl WorkspaceRoleView {
         }
     }
 
-    pub fn get_id(&self) -> &WorkspaceRoleId {
+    #[must_use] 
+    pub const fn get_id(&self) -> &WorkspaceRoleId {
         &self.id
     }
 
-    pub fn get_workspace_id(&self) -> &WorkspaceId {
+    #[must_use] 
+    pub const fn get_workspace_id(&self) -> &WorkspaceId {
         &self.workspace_id
     }
 
+    #[must_use] 
     pub fn get_name(&self) -> Option<&str> {
         self.name.as_deref()
     }

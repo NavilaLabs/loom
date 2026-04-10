@@ -16,7 +16,7 @@ use loom_infrastructure_impl::{
     database::{Initializer, SqliteInitializationStrategy},
 };
 
-/// Ensures the admin SQLite file exists and all migrations are up to date.
+/// Ensures the admin `SQLite` file exists and all migrations are up to date.
 /// Call once at server startup before accepting requests.
 pub async fn init_admin_db() -> Result<()> {
     // Create the file if it doesn't exist.

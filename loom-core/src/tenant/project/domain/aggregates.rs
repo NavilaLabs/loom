@@ -7,7 +7,7 @@ use crate::tenant::project::ProjectEvent;
 
 pub type ProjectId = AggregateId;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Project {
     id: ProjectId,
     customer_id: CustomerId,
@@ -17,19 +17,24 @@ pub struct Project {
 }
 
 impl Project {
-    pub fn id(&self) -> &ProjectId {
+    #[must_use] 
+    pub const fn id(&self) -> &ProjectId {
         &self.id
     }
-    pub fn customer_id(&self) -> &CustomerId {
+    #[must_use] 
+    pub const fn customer_id(&self) -> &CustomerId {
         &self.customer_id
     }
+    #[must_use] 
     pub fn name(&self) -> &str {
         &self.name
     }
-    pub fn visible(&self) -> bool {
+    #[must_use] 
+    pub const fn visible(&self) -> bool {
         self.visible
     }
-    pub fn billable(&self) -> bool {
+    #[must_use] 
+    pub const fn billable(&self) -> bool {
         self.billable
     }
 }

@@ -7,7 +7,7 @@ use crate::tenant::project::ProjectId;
 
 pub type ActivityId = AggregateId;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Activity {
     id: ActivityId,
     project_id: Option<ProjectId>,
@@ -17,19 +17,24 @@ pub struct Activity {
 }
 
 impl Activity {
-    pub fn id(&self) -> &ActivityId {
+    #[must_use] 
+    pub const fn id(&self) -> &ActivityId {
         &self.id
     }
-    pub fn project_id(&self) -> Option<&ProjectId> {
+    #[must_use] 
+    pub const fn project_id(&self) -> Option<&ProjectId> {
         self.project_id.as_ref()
     }
+    #[must_use] 
     pub fn name(&self) -> &str {
         &self.name
     }
-    pub fn visible(&self) -> bool {
+    #[must_use] 
+    pub const fn visible(&self) -> bool {
         self.visible
     }
-    pub fn billable(&self) -> bool {
+    #[must_use] 
+    pub const fn billable(&self) -> bool {
         self.billable
     }
 }

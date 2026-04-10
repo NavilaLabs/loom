@@ -22,12 +22,18 @@ impl Deref for TagRepository {
 }
 
 impl TagRepository {
+    /// # Errors
+    ///
+    /// Returns an error if the event store repository cannot be initialized.
     pub async fn from_pool(pool: ConnectedTenantPool) -> Result<Self, sqlx::migrate::MigrateError> {
         let repository =
             Repository::new(pool.as_ref().clone(), Json::default(), Json::default()).await?;
         Ok(Self { pool, repository })
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the database query fails.
     pub async fn all(&self) -> Result<Vec<TagRow>, crate::Error> {
         let rows = sqlx::query("SELECT id, name FROM projections__tags ORDER BY name")
             .fetch_all(self.pool.as_ref())
@@ -35,6 +41,9 @@ impl TagRepository {
         rows.into_iter().map(|r| Self::map_row(&r)).collect()
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the database query fails.
     pub async fn for_timesheet(&self, timesheet_id: &str) -> Result<Vec<TagRow>, crate::Error> {
         let rows = sqlx::query(
             "SELECT t.id, t.name \

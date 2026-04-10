@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::tenant::customer::CustomerId;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CustomerEvent {
     Created {
         id: CustomerId,
@@ -29,9 +29,9 @@ pub enum CustomerEvent {
 impl Message for CustomerEvent {
     fn name(&self) -> &'static str {
         match self {
-            CustomerEvent::Created { .. } => "CustomerCreated",
-            CustomerEvent::Updated { .. } => "CustomerUpdated",
-            CustomerEvent::BudgetUpdated { .. } => "CustomerBudgetUpdated",
+            Self::Created { .. } => "CustomerCreated",
+            Self::Updated { .. } => "CustomerUpdated",
+            Self::BudgetUpdated { .. } => "CustomerBudgetUpdated",
         }
     }
 }

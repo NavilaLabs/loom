@@ -13,6 +13,9 @@ use crate::tenant::project_rate::{
 pub struct ProjectRateCommand;
 
 impl ProjectRateCommand {
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     pub fn set(
         &self,
         id: ProjectRateId,
@@ -35,6 +38,9 @@ impl ProjectRateCommand {
         .into())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     pub fn remove(&mut self) -> Result<(), crate::Error> {
         self.record_that(ProjectRateEvent::Removed.into())
             .map_err(|e| project_rate::DomainError::AggregateError(e).into())

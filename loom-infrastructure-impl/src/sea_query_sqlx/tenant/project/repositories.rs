@@ -24,12 +24,18 @@ impl Deref for ProjectRepository {
 }
 
 impl ProjectRepository {
+    /// # Errors
+    ///
+    /// Returns an error if the event store repository cannot be initialized.
     pub async fn from_pool(pool: ConnectedTenantPool) -> Result<Self, sqlx::migrate::MigrateError> {
         let repository =
             Repository::new(pool.as_ref().clone(), Json::default(), Json::default()).await?;
         Ok(Self { pool, repository })
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the database query fails.
     pub async fn all(&self) -> Result<Vec<ProjectRow>, crate::Error> {
         let rows = sqlx::query(
             "SELECT id, customer_id, name, comment, order_number, visible, billable, \
@@ -41,6 +47,9 @@ impl ProjectRepository {
         rows.into_iter().map(|r| Self::map_row(&r)).collect()
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the database query fails.
     pub async fn by_customer(&self, customer_id: &str) -> Result<Vec<ProjectRow>, crate::Error> {
         let rows = sqlx::query(
             "SELECT id, customer_id, name, comment, order_number, visible, billable, \

@@ -7,14 +7,17 @@ pub struct PermissionView {
 }
 
 impl PermissionView {
-    pub fn new(id: PermissionId, name: String) -> Self {
+    #[must_use] 
+    pub const fn new(id: PermissionId, name: String) -> Self {
         Self { id, name }
     }
 
-    pub fn get_id(&self) -> &PermissionId {
+    #[must_use] 
+    pub const fn get_id(&self) -> &PermissionId {
         &self.id
     }
 
+    #[must_use] 
     pub fn get_name(&self) -> &str {
         &self.name
     }

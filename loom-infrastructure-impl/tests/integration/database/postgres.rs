@@ -13,18 +13,18 @@ use url::Url;
 
 use super::{ConnectedDefaultPool, initialize_databases};
 
-/// Escapes a PostgreSQL quoted identifier by doubling any embedded double-quote
+/// Escapes a `PostgreSQL` quoted identifier by doubling any embedded double-quote
 /// characters.  The resulting string is safe to embed between `"..."` delimiters
 /// in a dynamically-built SQL statement.
 ///
-/// PostgreSQL does not support parameterised identifiers (only values can be
+/// `PostgreSQL` does not support parameterised identifiers (only values can be
 /// bound with `$N`), so this is the correct way to handle untrusted or
 /// config-sourced database names.
 fn escape_pg_identifier(name: &str) -> String {
     name.replace('"', "\"\"")
 }
 
-/// Escapes a string for use as the left-hand side of a PostgreSQL `LIKE` pattern
+/// Escapes a string for use as the left-hand side of a `PostgreSQL` `LIKE` pattern
 /// by prefixing `%`, `_`, and `\` with a backslash escape character.
 fn escape_pg_like_prefix(prefix: &str) -> String {
     prefix
@@ -42,7 +42,7 @@ async fn reset_entire_database(pool: &ConnectedDefaultPool) -> Result<(), Error>
     .await?;
 
     let admin_database_name = CONFIG.get_database().get_databases().get_admin().get_name();
-    let safe_admin_name = escape_pg_identifier(&admin_database_name);
+    let safe_admin_name = escape_pg_identifier(admin_database_name);
     sqlx::query(&format!("DROP DATABASE IF EXISTS \"{safe_admin_name}\""))
         .execute(pool.as_ref())
         .await?;
@@ -52,7 +52,7 @@ async fn reset_entire_database(pool: &ConnectedDefaultPool) -> Result<(), Error>
         .get_databases()
         .get_tenant()
         .get_name_prefix();
-    let safe_prefix = escape_pg_like_prefix(&tenant_database_name_prefix);
+    let safe_prefix = escape_pg_like_prefix(tenant_database_name_prefix);
     let tenants: Vec<(String,)> = sqlx::query_as(&format!(
         "SELECT datname::TEXT FROM pg_database WHERE datname LIKE '{safe_prefix}%' ESCAPE '\\'"
     ))
@@ -61,7 +61,7 @@ async fn reset_entire_database(pool: &ConnectedDefaultPool) -> Result<(), Error>
 
     for (tenant_name,) in tenants {
         let safe_tenant_name = escape_pg_identifier(&tenant_name);
-        let drop_query = format!("DROP DATABASE IF EXISTS \"{safe_tenant_name}\"");
+        let drop_query = format!("DROP DATABASE CASCADE IF EXISTS \"{safe_tenant_name}\"");
         sqlx::query(&drop_query).execute(pool.as_ref()).await?;
     }
 
@@ -75,10 +75,8 @@ async fn get_default_pool() -> Result<ConnectedDefaultPool, Error> {
 
 async fn get_admin_pool() -> Result<Pool<ScopeAdmin, StateConnected>, Error> {
     let admin_database_name = CONFIG.get_database().get_databases().get_admin().get_name();
-    let database_url = format!(
-        "postgres://postgres:postgres@postgres-test:5432/{}",
-        admin_database_name
-    );
+    let database_url =
+        format!("postgres://postgres:postgres@postgres-test:5432/{admin_database_name}");
     Pool::connect(&Url::parse(&database_url).unwrap()).await
 }
 
@@ -90,7 +88,7 @@ async fn get_tenant_pool(tenant_token: &str) -> Result<Pool<ScopeTenant, StateCo
     Pool::connect(&Url::parse(&database_url).unwrap()).await
 }
 
-pub(crate) async fn refresh_databases(
+pub async fn refresh_databases(
     pool: &ConnectedDefaultPool,
     tenant_token: &str,
 ) -> Result<(), Error> {
@@ -148,16 +146,13 @@ mod escape_tests {
 
     #[test]
     fn multiple_double_quotes_are_all_doubled() {
-        assert_eq!(
-            escape_pg_identifier("a\"b\"c"),
-            "a\"\"b\"\"c"
-        );
+        assert_eq!(escape_pg_identifier("a\"b\"c"), "a\"\"b\"\"c");
     }
 
     /// Injection attempt: `" DROP DATABASE real_db; --`
     ///
     /// After escaping the `"` becomes `""`.  When embedded as `"<escaped>"` the
-    /// PostgreSQL parser reads `""` as a single escaped double-quote character
+    /// `PostgreSQL` parser reads `""` as a single escaped double-quote character
     /// inside the identifier, not as a closing delimiter.  The rest of the
     /// injection string becomes part of the (weirdly named) identifier, not
     /// SQL that executes.

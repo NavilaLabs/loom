@@ -2,7 +2,7 @@ use sea_orm_migration::prelude::*;
 
 /// Adds workspace-level settings columns to `projections__workspaces`.
 ///
-/// SQLite swallows duplicate-column errors so the migration is idempotent.
+/// `SQLite` swallows duplicate-column errors so the migration is idempotent.
 #[derive(DeriveMigrationName)]
 pub struct Migration;
 

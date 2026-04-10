@@ -12,6 +12,9 @@ use crate::admin::user::{
 pub struct UserCommand;
 
 impl UserCommand {
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     pub fn create(
         &self,
         id: UserId,
@@ -28,7 +31,7 @@ impl UserCommand {
             }
             .into(),
         )
-        .map_err(|error| user::DomainError::from(error))?
+        .map_err(user::DomainError::from)?
         .into())
     }
 }
@@ -45,7 +48,7 @@ mod tests {
         let user = User::apply(
             None,
             UserEvent::Created {
-                id: id.clone(),
+                id,
                 name: "seed".to_string(),
                 email: "seed@example.com".to_string(),
                 password: "$2b$12$hash".to_string(),

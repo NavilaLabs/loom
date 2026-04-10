@@ -9,7 +9,7 @@ use crate::tenant::timesheet::domain::events::UserId;
 
 pub type TimesheetId = AggregateId;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Timesheet {
     id: TimesheetId,
     user_id: UserId,
@@ -25,37 +25,48 @@ pub struct Timesheet {
 }
 
 impl Timesheet {
-    pub fn id(&self) -> &TimesheetId {
+    #[must_use] 
+    pub const fn id(&self) -> &TimesheetId {
         &self.id
     }
-    pub fn user_id(&self) -> &UserId {
+    #[must_use] 
+    pub const fn user_id(&self) -> &UserId {
         &self.user_id
     }
-    pub fn project_id(&self) -> Option<&ProjectId> {
+    #[must_use] 
+    pub const fn project_id(&self) -> Option<&ProjectId> {
         self.project_id.as_ref()
     }
-    pub fn activity_id(&self) -> Option<&ActivityId> {
+    #[must_use] 
+    pub const fn activity_id(&self) -> Option<&ActivityId> {
         self.activity_id.as_ref()
     }
+    #[must_use] 
     pub fn start_time(&self) -> &str {
         &self.start_time
     }
+    #[must_use] 
     pub fn end_time(&self) -> Option<&str> {
         self.end_time.as_deref()
     }
-    pub fn duration(&self) -> Option<i32> {
+    #[must_use] 
+    pub const fn duration(&self) -> Option<i32> {
         self.duration
     }
+    #[must_use] 
     pub fn description(&self) -> Option<&str> {
         self.description.as_deref()
     }
+    #[must_use] 
     pub fn timezone(&self) -> &str {
         &self.timezone
     }
-    pub fn billable(&self) -> bool {
+    #[must_use] 
+    pub const fn billable(&self) -> bool {
         self.billable
     }
-    pub fn exported(&self) -> bool {
+    #[must_use] 
+    pub const fn exported(&self) -> bool {
         self.exported
     }
 }

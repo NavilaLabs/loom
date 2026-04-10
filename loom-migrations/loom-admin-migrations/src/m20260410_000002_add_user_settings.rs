@@ -3,7 +3,7 @@ use sea_orm_migration::prelude::*;
 /// Adds user-specific settings columns to `projections__users`.
 ///
 /// Defaults are provided so the migration is safe to apply to existing rows.
-/// SQLite ignores `IF NOT EXISTS` on `ALTER TABLE ADD COLUMN` — errors are
+/// `SQLite` ignores `IF NOT EXISTS` on `ALTER TABLE ADD COLUMN` — errors are
 /// intentionally swallowed so re-running the migration is idempotent.
 #[derive(DeriveMigrationName)]
 pub struct Migration;

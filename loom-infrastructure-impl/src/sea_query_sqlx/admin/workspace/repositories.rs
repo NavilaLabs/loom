@@ -30,7 +30,8 @@ impl Deref for WorkspaceRepository {
 }
 
 impl WorkspaceRepository {
-    pub fn new(
+    #[must_use] 
+    pub const fn new(
         database: ConnectedAdminPool,
         repository: Repository<Workspace, Json<Workspace>, Json<WorkspaceEvent>>,
     ) -> Self {
@@ -40,6 +41,9 @@ impl WorkspaceRepository {
         }
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the event store repository cannot be initialized.
     pub async fn from_pool(pool: ConnectedAdminPool) -> Result<Self, sqlx::migrate::MigrateError> {
         let repository =
             Repository::new(pool.as_ref().clone(), Json::default(), Json::default()).await?;
@@ -49,11 +53,16 @@ impl WorkspaceRepository {
         })
     }
 
-    pub fn event_store(&self) -> &Repository<Workspace, Json<Workspace>, Json<WorkspaceEvent>> {
+    #[must_use] 
+    pub const fn event_store(&self) -> &Repository<Workspace, Json<Workspace>, Json<WorkspaceEvent>> {
         &self.repository
     }
 
-    /// Returns all (workspace_id, workspace_name) pairs the given user belongs to.
+    /// Returns all (`workspace_id`, `workspace_name`) pairs the given user belongs to.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the database query fails.
     pub async fn find_workspaces_for_user(
         &self,
         user_id: &str,
@@ -79,6 +88,10 @@ impl WorkspaceRepository {
     }
 
     /// Returns the first workspace ID the given user belongs to, or `None`.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the database query fails.
     pub async fn find_workspace_for_user(
         &self,
         user_id: &str,
@@ -101,7 +114,11 @@ impl WorkspaceRepository {
             .transpose()
     }
 
-    /// Fetch a `WorkspaceView` by string ID, avoiding the AnyPool UUID-type panic.
+    /// Fetch a `WorkspaceView` by string ID, avoiding the `AnyPool` UUID-type panic.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the database query fails.
     pub async fn find_view_by_id(&self, id: &str) -> Result<Option<WorkspaceView>, crate::Error> {
         let statement = sea_query::Query::select()
             .expr(Expr::col(sea_query::Asterisk))
@@ -115,6 +132,7 @@ impl WorkspaceRepository {
         row.map(|r| self.row_to_view(r)).transpose()
     }
 
+    #[allow(clippy::unused_self)]
     fn select(&self) -> SelectStatement {
         sea_query::Query::select()
             .expr(Expr::col(sea_query::Asterisk))
@@ -122,6 +140,7 @@ impl WorkspaceRepository {
             .to_owned()
     }
 
+    #[allow(clippy::unused_self)]
     fn select_count(&self) -> SelectStatement {
         sea_query::Query::select()
             .expr(Func::count(Expr::col(sea_query::Asterisk)))
@@ -221,6 +240,7 @@ impl Query<AnyRow> for WorkspaceRepository {
             .fetch_one(self.database.as_ref())
             .await?;
         let n: i64 = row.try_get(0)?;
+        #[allow(clippy::cast_sign_loss)]
         Ok(n as u64)
     }
 
@@ -230,6 +250,7 @@ impl Query<AnyRow> for WorkspaceRepository {
             .fetch_one(self.database.as_ref())
             .await?;
         let n: i64 = row.try_get(0)?;
+        #[allow(clippy::cast_sign_loss)]
         Ok(n as u64)
     }
 }

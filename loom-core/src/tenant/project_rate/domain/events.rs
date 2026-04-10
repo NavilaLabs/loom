@@ -5,10 +5,10 @@ use crate::shared::AggregateId;
 use crate::tenant::project::ProjectId;
 use crate::tenant::project_rate::ProjectRateId;
 
-/// User ID is an admin-domain user — stored as a plain AggregateId.
+/// User ID is an admin-domain user — stored as a plain `AggregateId`.
 pub type UserId = AggregateId;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ProjectRateEvent {
     Set {
         id: ProjectRateId,
@@ -24,8 +24,8 @@ pub enum ProjectRateEvent {
 impl Message for ProjectRateEvent {
     fn name(&self) -> &'static str {
         match self {
-            ProjectRateEvent::Set { .. } => "ProjectRateSet",
-            ProjectRateEvent::Removed => "ProjectRateRemoved",
+            Self::Set { .. } => "ProjectRateSet",
+            Self::Removed => "ProjectRateRemoved",
         }
     }
 }

@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 
 /// Identity extracted from a validated JWT.  Carries no permissions —
 /// those are always checked live against the database.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CurrentUser {
     pub id: String,
     pub email: String,

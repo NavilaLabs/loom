@@ -1,3 +1,6 @@
+/// # Errors
+///
+/// Returns an error if bcrypt hashing fails.
 pub fn hash_password(password: &str) -> Result<String, bcrypt::BcryptError> {
     bcrypt::hash(password, bcrypt::DEFAULT_COST)
 }
@@ -42,6 +45,7 @@ pub mod jwt {
                 return Err(Error::InvalidCredentials);
             }
 
+            #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
             let now = Utc::now().timestamp() as usize;
             let claims = Claims {
                 sub: credentials.user_id.to_string(),
@@ -75,7 +79,7 @@ pub mod jwt {
     mod tests {
         use super::*;
 
-        /// JWT_LIFETIME_SECS must be exactly 1 hour (3600 seconds).
+        /// `JWT_LIFETIME_SECS` must be exactly 1 hour (3600 seconds).
         /// This test catches any attempt to extend the token lifetime at runtime
         /// in addition to the compile-time assertion above.
         #[test]

@@ -36,7 +36,7 @@ fn future_exp() -> usize {
 
 /// A clearly expired timestamp (Unix epoch).
 /// Must be well outside jsonwebtoken's default 60-second leeway.
-fn past_exp() -> usize {
+const fn past_exp() -> usize {
     0 // 1970-01-01 — never valid
 }
 
@@ -181,7 +181,7 @@ async fn alg_none_unsigned_token_is_rejected() {
     let payload =
         "eyJzdWIiOiJhdHRhY2tlciIsImVtYWlsIjoiZXZpbEBleGFtcGxlLmNvbSIsImV4cCI6OTk5OTk5OTk5OX0";
     // alg:none tokens have an empty signature
-    let unsigned_token = format!("{}.{}.", header, payload);
+    let unsigned_token = format!("{header}.{payload}.");
 
     assert!(
         validate_token(&unsigned_token).is_err(),

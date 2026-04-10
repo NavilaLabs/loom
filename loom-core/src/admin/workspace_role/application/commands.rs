@@ -16,6 +16,9 @@ use crate::admin::{
 pub struct WorkspaceRoleCommand;
 
 impl WorkspaceRoleCommand {
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     pub fn create(
         &self,
         id: WorkspaceRoleId,
@@ -34,11 +37,17 @@ impl WorkspaceRoleCommand {
         .into())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     pub fn grant_permission(&mut self, permission_id: PermissionId) -> Result<(), crate::Error> {
         self.record_that(WorkspaceRoleEvent::PermissionGranted { permission_id }.into())
             .map_err(|e| workspace_role::DomainError::AggregateError(e).into())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     pub fn revoke_permission(&mut self, permission_id: PermissionId) -> Result<(), crate::Error> {
         self.record_that(WorkspaceRoleEvent::PermissionRevoked { permission_id }.into())
             .map_err(|e| workspace_role::DomainError::AggregateError(e).into())
@@ -55,7 +64,7 @@ mod tests {
         let role = WorkspaceRole::apply(
             None,
             WorkspaceRoleEvent::Created {
-                id: id.clone(),
+                id,
                 workspace_id,
                 name: Some("seed".to_string()),
             },

@@ -54,8 +54,8 @@ pub async fn start(
 
     let id = TimesheetId::new();
     let uid: AggregateId = user_id.parse()?;
-    let pid: Option<ProjectId> = project_id.as_deref().map(|s| s.parse()).transpose()?;
-    let aid: Option<ActivityId> = activity_id.as_deref().map(|s| s.parse()).transpose()?;
+    let pid: Option<ProjectId> = project_id.as_deref().map(str::parse).transpose()?;
+    let aid: Option<ActivityId> = activity_id.as_deref().map(str::parse).transpose()?;
     let start_time = Utc::now().to_rfc3339();
     let timezone = "UTC".to_string();
 
@@ -101,6 +101,9 @@ pub async fn start(
     })
 }
 
+/// # Errors
+///
+/// Returns an error if the timesheet cannot be found or saved.
 pub async fn reassign(
     workspace_id: &str,
     timesheet_id: &str,
@@ -124,6 +127,9 @@ pub async fn reassign(
     Ok(())
 }
 
+/// # Errors
+///
+/// Returns an error if the timesheet cannot be found or saved.
 pub async fn update(
     workspace_id: &str,
     timesheet_id: &str,
@@ -145,6 +151,9 @@ pub async fn update(
     Ok(())
 }
 
+/// # Errors
+///
+/// Returns an error if the timesheet cannot be found or saved.
 pub async fn stop(workspace_id: &str, timesheet_id: &str) -> Result<()> {
     let pool = super::tenant_pool(workspace_id).await?;
     let ts_repo = TimesheetRepository::from_pool(pool.clone()).await?;
@@ -156,17 +165,20 @@ pub async fn stop(workspace_id: &str, timesheet_id: &str) -> Result<()> {
     let end_rfc = end_time.to_rfc3339();
     let duration = chrono::DateTime::parse_from_rfc3339(root.start_time())
         .ok()
-        .map(|start| (end_time - start.with_timezone(&Utc)).num_seconds() as i32)
-        .unwrap_or(0);
+        .map_or(0, |start| {
+            #[allow(clippy::cast_possible_truncation)]
+            let secs = (end_time - start.with_timezone(&Utc)).num_seconds() as i32;
+            secs
+        });
 
     // Look up the applicable rate (only possible when project/activity are assigned)
-    let project_id = root.project_id().map(|p| p.to_string());
-    let activity_id = root.activity_id().map(|a| a.to_string());
+    let project_id = root.project_id().map(std::string::ToString::to_string);
+    let activity_id = root.activity_id().map(std::string::ToString::to_string);
     let (hourly_rate, internal_rate) = match (&project_id, &activity_id) {
         (Some(pid), Some(aid)) => resolve_rate(&pool, pid, aid).await,
         _ => (None, None),
     };
-    let rate = hourly_rate.map(|hr| hr * duration as i64 / 3600);
+    let rate = hourly_rate.map(|hr| hr * i64::from(duration) / 3600);
 
     root.record_that(
         TimesheetEvent::Stopped {
@@ -183,6 +195,9 @@ pub async fn stop(workspace_id: &str, timesheet_id: &str) -> Result<()> {
     Ok(())
 }
 
+/// # Errors
+///
+/// Returns an error if the timesheet cannot be found or saved.
 pub async fn export(workspace_id: &str, timesheet_id: &str) -> Result<()> {
     let pool = super::tenant_pool(workspace_id).await?;
     let repo = TimesheetRepository::from_pool(pool).await?;
@@ -198,6 +213,11 @@ pub async fn export(workspace_id: &str, timesheet_id: &str) -> Result<()> {
 /// Used for manual ("after the fact") time entry.  Times are accepted as either
 /// RFC-3339 strings or HTML `datetime-local` values (`YYYY-MM-DDTHH:MM`), both
 /// interpreted as UTC.
+///
+/// # Errors
+///
+/// Returns an error if the times are invalid, out of order, or the timesheet cannot be saved.
+#[allow(clippy::too_many_arguments)]
 pub async fn create_manual(
     workspace_id: &str,
     user_id: &str,
@@ -211,10 +231,9 @@ pub async fn create_manual(
     let start_dt = parse_datetime_utc(&start_time)?;
     let end_dt = parse_datetime_utc(&end_time)?;
     if end_dt <= start_dt {
-        return Err(
-            crate::error::ValidationError::new("End time must be after start time").into(),
-        );
+        return Err(crate::error::ValidationError::new("End time must be after start time").into());
     }
+    #[allow(clippy::cast_possible_truncation)]
     let duration = (end_dt - start_dt).num_seconds() as i32;
     let start_rfc = start_dt.to_rfc3339();
     let end_rfc = end_dt.to_rfc3339();
@@ -224,8 +243,8 @@ pub async fn create_manual(
 
     let id = TimesheetId::new();
     let uid: AggregateId = user_id.parse()?;
-    let pid: Option<ProjectId> = project_id.as_deref().map(|s| s.parse()).transpose()?;
-    let aid: Option<ActivityId> = activity_id.as_deref().map(|s| s.parse()).transpose()?;
+    let pid: Option<ProjectId> = project_id.as_deref().map(str::parse).transpose()?;
+    let aid: Option<ActivityId> = activity_id.as_deref().map(str::parse).transpose()?;
     let pid_str = pid.as_ref().map(ToString::to_string);
     let aid_str = aid.as_ref().map(ToString::to_string);
 
@@ -233,7 +252,7 @@ pub async fn create_manual(
         (Some(p), Some(a)) => resolve_rate(&pool, p, a).await,
         _ => (None, None),
     };
-    let rate = hourly_rate.map(|hr| hr * duration as i64 / 3600);
+    let rate = hourly_rate.map(|hr| hr * i64::from(duration) / 3600);
 
     let mut root = Root::<Timesheet>::record_new(
         TimesheetEvent::Started {
@@ -258,16 +277,16 @@ pub async fn create_manual(
         }
         .into(),
     )?;
-    if let Some(ref desc) = description {
-        if !desc.is_empty() {
-            root.record_that(
-                TimesheetEvent::Updated {
-                    description: Some(desc.clone()),
-                    billable,
-                }
-                .into(),
-            )?;
-        }
+    if let Some(ref desc) = description
+        && !desc.is_empty()
+    {
+        root.record_that(
+            TimesheetEvent::Updated {
+                description: Some(desc.clone()),
+                billable,
+            }
+            .into(),
+        )?;
     }
     repo.save(&mut root).await?;
 
@@ -295,6 +314,10 @@ pub async fn create_manual(
 /// For a stopped timesheet both `start_time` and `end_time` must be supplied.
 /// For a running timer supply only `start_time`; `end_time` must be `None`.
 /// Times are accepted as RFC-3339 or `datetime-local` (`YYYY-MM-DDTHH:MM`) UTC.
+///
+/// # Errors
+///
+/// Returns an error if the times are invalid, out of order, or the timesheet cannot be saved.
 pub async fn update_time(
     workspace_id: &str,
     timesheet_id: &str,
@@ -309,6 +332,7 @@ pub async fn update_time(
                 crate::error::ValidationError::new("End time must be after start time").into(),
             );
         }
+        #[allow(clippy::cast_possible_truncation)]
         let dur = (end_dt - start_dt).num_seconds() as i32;
         (Some(end_dt.to_rfc3339()), Some(dur))
     } else {
@@ -340,7 +364,7 @@ fn parse_datetime_utc(s: &str) -> Result<DateTime<Utc>> {
     // HTML datetime-local: "YYYY-MM-DDTHH:MM" (16) or "YYYY-MM-DDTHH:MM:SS" (19) — treat as UTC.
     let with_z = match s.len() {
         16 => format!("{s}:00Z"),
-        19 => format!("{s}Z"),
+        // 19 => format!("{s}Z"),
         _ => format!("{s}Z"),
     };
     DateTime::parse_from_rfc3339(&with_z)
@@ -355,15 +379,15 @@ async fn resolve_rate(
     project_id: &str,
     activity_id: &str,
 ) -> (Option<i64>, Option<i64>) {
-    if let Ok(repo) = ProjectRateRepository::from_pool(pool.clone()).await {
-        if let Ok(Some(row)) = repo.default_for_project(project_id).await {
-            return (Some(row.hourly_rate), row.internal_rate);
-        }
+    if let Ok(repo) = ProjectRateRepository::from_pool(pool.clone()).await
+        && let Ok(Some(row)) = repo.default_for_project(project_id).await
+    {
+        return (Some(row.hourly_rate), row.internal_rate);
     }
-    if let Ok(repo) = ActivityRateRepository::from_pool(pool.clone()).await {
-        if let Ok(Some(row)) = repo.default_for_activity(activity_id).await {
-            return (Some(row.hourly_rate), row.internal_rate);
-        }
+    if let Ok(repo) = ActivityRateRepository::from_pool(pool.clone()).await
+        && let Ok(Some(row)) = repo.default_for_activity(activity_id).await
+    {
+        return (Some(row.hourly_rate), row.internal_rate);
     }
     (None, None)
 }

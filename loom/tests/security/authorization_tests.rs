@@ -1,7 +1,7 @@
 /// Integration tests for `AuthorizationService`.
 ///
 /// Each test creates its own [`TestFixture`] — a pair of freshly-migrated
-/// isolated in-memory SQLite databases — seeds it with a known permission
+/// isolated in-memory `SQLite` databases — seeds it with a known permission
 /// matrix, and exercises the service.  Because every fixture is completely
 /// independent, all tests run **concurrently** without `#[serial]`.
 ///
@@ -9,8 +9,8 @@
 ///   - Admin flag correctly detected via role name                ✓
 ///   - Non-admin roles do NOT grant admin                         ✓
 ///   - Unknown users are never treated as admin                   ✓
-///   - Empty / zero-length user_id is safe                        ✓
-///   - SQL injection in user_id returns false (parameterised)     ✓
+///   - Empty / zero-length `user_id` is safe                        ✓
+///   - SQL injection in `user_id` returns false (parameterised)     ✓
 ///   - SQL injection in permission name returns false             ✓
 ///   - Permission via role grant                                  ✓
 ///   - Permission via direct user grant                           ✓

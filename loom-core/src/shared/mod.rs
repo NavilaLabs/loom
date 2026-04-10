@@ -7,6 +7,7 @@ use uuid::Uuid;
 pub struct AggregateId(pub Uuid);
 
 impl AggregateId {
+    #[must_use] 
     pub fn new() -> Self {
         Self(Uuid::now_v7())
     }

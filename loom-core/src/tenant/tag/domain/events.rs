@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::tenant::tag::TagId;
 use crate::tenant::timesheet::TimesheetId;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum TagEvent {
     Created { id: TagId, name: String },
     Renamed { name: String },
@@ -15,10 +15,10 @@ pub enum TagEvent {
 impl Message for TagEvent {
     fn name(&self) -> &'static str {
         match self {
-            TagEvent::Created { .. } => "TagCreated",
-            TagEvent::Renamed { .. } => "TagRenamed",
-            TagEvent::TimesheetTagged { .. } => "TagTimesheetTagged",
-            TagEvent::TimesheetUntagged { .. } => "TagTimesheetUntagged",
+            Self::Created { .. } => "TagCreated",
+            Self::Renamed { .. } => "TagRenamed",
+            Self::TimesheetTagged { .. } => "TagTimesheetTagged",
+            Self::TimesheetUntagged { .. } => "TagTimesheetUntagged",
         }
     }
 }

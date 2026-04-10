@@ -13,7 +13,8 @@ pub struct UserProjector {
 impl UserProjector {
     const TABLE: &'static str = "projections__users";
 
-    pub fn new(pool: Pool<ScopeAdmin, StateConnected>) -> Self {
+    #[must_use] 
+    pub const fn new(pool: Pool<ScopeAdmin, StateConnected>) -> Self {
         Self { pool }
     }
 }
@@ -64,6 +65,8 @@ impl Projector for UserProjector {
                 Ok(())
             }
             "UserSettingsUpdated" => {
+                use sea_query::{Condition, Expr, ExprTrait, Query as SQ};
+
                 let UserEvent::SettingsUpdated {
                     timezone,
                     date_format,
@@ -72,8 +75,6 @@ impl Projector for UserProjector {
                 else {
                     return Ok(());
                 };
-
-                use sea_query::{Condition, Expr, ExprTrait, Query as SQ};
                 let query = SQ::update()
                     .table(TableRef::from(Self::TABLE))
                     .values([

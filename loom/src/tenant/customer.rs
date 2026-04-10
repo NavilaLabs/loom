@@ -53,6 +53,7 @@ pub async fn create(
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn update(
     workspace_id: &str,
     id: &str,

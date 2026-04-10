@@ -6,8 +6,8 @@ use crate::config::CONFIG;
 pub struct TenantDatabaseName(String);
 
 impl TenantDatabaseName {
-    pub fn new() -> Self {
-        TenantDatabaseName(String::new())
+    pub const fn new() -> Self {
+        Self(String::new())
     }
 }
 
@@ -25,9 +25,16 @@ pub trait Builder {
 
 pub struct ConcreteBuilder(TenantDatabaseName);
 
+impl Default for ConcreteBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ConcreteBuilder {
-    pub fn new() -> Self {
-        ConcreteBuilder(TenantDatabaseName::new())
+    #[must_use] 
+    pub const fn new() -> Self {
+        Self(TenantDatabaseName::new())
     }
 }
 

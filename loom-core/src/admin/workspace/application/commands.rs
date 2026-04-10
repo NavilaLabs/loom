@@ -17,6 +17,9 @@ use crate::admin::{
 pub struct WorkspaceCommand;
 
 impl WorkspaceCommand {
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     pub fn create(&self, id: WorkspaceId, name: Option<String>) -> Result<Self, crate::Error> {
         Ok(
             aggregate::Root::<Workspace>::record_new(WorkspaceEvent::Created { id, name }.into())
@@ -25,6 +28,9 @@ impl WorkspaceCommand {
         )
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     pub fn assign_user_role(
         &mut self,
         user_id: UserId,
@@ -40,6 +46,9 @@ impl WorkspaceCommand {
         .map_err(|e| workspace::DomainError::AggregateError(e).into())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     pub fn revoke_user_role(
         &mut self,
         user_id: UserId,
@@ -55,6 +64,9 @@ impl WorkspaceCommand {
         .map_err(|e| workspace::DomainError::AggregateError(e).into())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     pub fn grant_user_permission(
         &mut self,
         user_id: UserId,
@@ -70,6 +82,9 @@ impl WorkspaceCommand {
         .map_err(|e| workspace::DomainError::AggregateError(e).into())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     pub fn revoke_user_permission(
         &mut self,
         user_id: UserId,
@@ -96,7 +111,7 @@ mod tests {
         let workspace = Workspace::apply(
             None,
             WorkspaceEvent::Created {
-                id: id.clone(),
+                id,
                 name: Some("seed".to_string()),
             },
         )

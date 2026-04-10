@@ -122,11 +122,19 @@ impl AuthorizationService {
 
     /// Require that the requesting user is an admin, returning a generic
     /// "forbidden" error if they are not.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the admin pool cannot be obtained or the query fails.
     pub async fn require_admin(user: &CurrentUser) -> Result<()> {
         Self::require_admin_on(&Self::admin_pool().await?, user).await
     }
 
     /// Pool-injected version of [`require_admin`] — use this in tests.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the query fails or the user is not an admin.
     pub async fn require_admin_on(pool: &AnyPool, user: &CurrentUser) -> Result<()> {
         if Self::is_admin_on(pool, &user.id).await? {
             Ok(())
@@ -140,6 +148,10 @@ impl AuthorizationService {
     /// Require that the requesting user has the named permission in the given
     /// workspace (or is a global admin), returning a generic "forbidden" error
     /// otherwise.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the admin pool cannot be obtained, the query fails, or the user lacks permission.
     pub async fn require_permission(
         user: &CurrentUser,
         workspace_id: &str,
@@ -150,6 +162,10 @@ impl AuthorizationService {
     }
 
     /// Pool-injected version of [`require_permission`] — use this in tests.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the query fails or the user lacks the required permission.
     pub async fn require_permission_on(
         pool: &AnyPool,
         user: &CurrentUser,

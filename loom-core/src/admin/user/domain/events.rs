@@ -21,8 +21,8 @@ pub enum UserEvent {
 impl Message for UserEvent {
     fn name(&self) -> &'static str {
         match self {
-            UserEvent::Created { .. } => "UserCreated",
-            UserEvent::SettingsUpdated { .. } => "UserSettingsUpdated",
+            Self::Created { .. } => "UserCreated",
+            Self::SettingsUpdated { .. } => "UserSettingsUpdated",
         }
     }
 }

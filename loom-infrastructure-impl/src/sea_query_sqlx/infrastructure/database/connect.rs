@@ -14,6 +14,9 @@ use crate::{
 };
 
 impl<Scope> Pool<Scope, StateDisconnected> {
+    /// # Errors
+    ///
+    /// Returns an error if the pool cannot connect to the database at `uri`.
     pub async fn connect(uri: &Url) -> Result<Pool<Scope, StateConnected>, Error> {
         sqlx::any::install_default_drivers();
 
@@ -51,6 +54,9 @@ impl<Scope> Pool<Scope, StateDisconnected> {
 }
 
 impl Pool<ScopeTenant, StateDisconnected> {
+    /// # Errors
+    ///
+    /// Returns an error if the tenant URI cannot be built or the pool cannot connect.
     pub async fn connect_tenant(
         tenant_token: &str,
     ) -> Result<Pool<ScopeTenant, StateConnected>, Error> {
@@ -62,6 +68,9 @@ impl Pool<ScopeTenant, StateDisconnected> {
 }
 
 impl Pool<ScopeAdmin, StateDisconnected> {
+    /// # Errors
+    ///
+    /// Returns an error if the admin URI cannot be built or the pool cannot connect.
     pub async fn connect_admin() -> Result<Pool<ScopeAdmin, StateConnected>, Error> {
         let uri = database_uri_factory::Factory::new_database_uri(&DatabaseUriType::Admin)
             .get_uri(&DatabaseType::Sqlite.to_string(), None)?;
@@ -71,6 +80,13 @@ impl Pool<ScopeAdmin, StateDisconnected> {
 }
 
 impl Pool<ScopeDefault, StateDisconnected> {
+    /// # Errors
+    ///
+    /// Returns an error if the pool cannot connect to the default in-memory database.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the hardcoded default URI fails to parse (should never happen).
     pub async fn connect_default() -> Result<Pool<ScopeDefault, StateConnected>, Error> {
         Self::connect(&Url::from_str("sqlite:///file:loom?mode=memory&cache=shared").unwrap()).await
     }

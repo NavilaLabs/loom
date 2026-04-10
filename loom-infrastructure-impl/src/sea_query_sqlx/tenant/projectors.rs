@@ -30,6 +30,7 @@ pub struct TenantProjector {
 }
 
 impl TenantProjector {
+    #[must_use] 
     pub fn new(pool: ConnectedTenantPool) -> Self {
         Self {
             customer: CustomerProjector::new(pool.clone()),

@@ -7,6 +7,9 @@ pub trait RowToView<R> {
     type View;
     type Error: Debug;
 
+    /// # Errors
+    ///
+    /// Returns an error if the row cannot be converted to the view type.
     fn row_to_view(&self, row: R) -> Result<Self::View, Self::Error>;
 }
 

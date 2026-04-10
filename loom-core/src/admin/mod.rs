@@ -18,30 +18,30 @@ pub enum Error {
 
 impl From<user::ApplicationError> for crate::Error {
     fn from(value: user::ApplicationError) -> Self {
-        crate::Error::AdminDatabaseError(Error::UserError(value.into()))
+        Self::AdminDatabaseError(Error::UserError(value.into()))
     }
 }
 
 impl From<user::DomainError> for crate::Error {
     fn from(value: user::DomainError) -> Self {
-        crate::Error::AdminDatabaseError(Error::UserError(value.into()))
+        Self::AdminDatabaseError(Error::UserError(value.into()))
     }
 }
 
 impl From<permission::DomainError> for crate::Error {
     fn from(value: permission::DomainError) -> Self {
-        crate::Error::AdminDatabaseError(Error::PermissionError(value.into()))
+        Self::AdminDatabaseError(Error::PermissionError(value.into()))
     }
 }
 
 impl From<workspace::DomainError> for crate::Error {
     fn from(value: workspace::DomainError) -> Self {
-        crate::Error::AdminDatabaseError(Error::WorkspaceError(value.into()))
+        Self::AdminDatabaseError(Error::WorkspaceError(value.into()))
     }
 }
 
 impl From<workspace_role::DomainError> for crate::Error {
     fn from(value: workspace_role::DomainError) -> Self {
-        crate::Error::AdminDatabaseError(Error::WorkspaceRoleError(value.into()))
+        Self::AdminDatabaseError(Error::WorkspaceRoleError(value.into()))
     }
 }

@@ -27,6 +27,7 @@ pub struct AdminProjector {
 }
 
 impl AdminProjector {
+    #[must_use] 
     pub fn new(pool: Pool<ScopeAdmin, StateConnected>) -> Self {
         Self {
             user: UserProjector::new(pool.clone()),

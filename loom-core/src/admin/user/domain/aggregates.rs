@@ -17,14 +17,17 @@ pub struct User {
 }
 
 impl User {
-    pub fn id(&self) -> &UserId {
+    #[must_use] 
+    pub const fn id(&self) -> &UserId {
         &self.id
     }
 
+    #[must_use] 
     pub fn name(&self) -> &str {
         &self.name
     }
 
+    #[must_use] 
     pub fn email(&self) -> &str {
         &self.email
     }
@@ -68,7 +71,9 @@ impl Aggregate for User {
                 date_format: "%Y-%m-%d".to_string(),
                 language: "en".to_string(),
             }),
-            (Some(_), UserEvent::Created { .. }) => Err(Error::AlreadyExists),
+            (Some(_), UserEvent::Created { .. }) | (None, UserEvent::SettingsUpdated { .. }) => {
+                Err(Error::AlreadyExists)
+            }
             (
                 Some(mut user),
                 UserEvent::SettingsUpdated {
@@ -82,7 +87,6 @@ impl Aggregate for User {
                 user.language = language;
                 Ok(user)
             }
-            (None, UserEvent::SettingsUpdated { .. }) => Err(Error::AlreadyExists),
         }
     }
 }

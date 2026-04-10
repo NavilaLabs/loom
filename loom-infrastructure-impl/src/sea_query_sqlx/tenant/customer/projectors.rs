@@ -13,7 +13,8 @@ pub struct CustomerProjector {
 impl CustomerProjector {
     const TABLE: &'static str = "projections__customers";
 
-    pub fn new(pool: ConnectedTenantPool) -> Self {
+    #[must_use] 
+    pub const fn new(pool: ConnectedTenantPool) -> Self {
         Self { pool }
     }
 }
@@ -22,6 +23,7 @@ impl CustomerProjector {
 impl Projector for CustomerProjector {
     type Error = crate::Error;
 
+    #[allow(clippy::too_many_lines)]
     async fn handle(&mut self, event: RawEvent) -> Result<(), Self::Error> {
         match event.event_type.as_str() {
             "CustomerCreated" => {

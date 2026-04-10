@@ -23,16 +23,20 @@ pub struct Config {
 
 impl Config {
     #[must_use]
-    pub fn get_application(&self) -> &application::Application {
+    pub const fn get_application(&self) -> &application::Application {
         &self.application
     }
 
     #[must_use]
-    pub fn get_database(&self) -> &database::Database {
+    pub const fn get_database(&self) -> &database::Database {
         &self.database
     }
 }
 
+/// # Errors
+///
+/// Returns an error if required environment variables are missing, config files cannot be read,
+/// or the YAML content cannot be deserialized.
 pub fn load_config() -> Result<Config, crate::Error> {
     let project_root = var("APP_PROJECT_ROOT")?;
     let environment = var("ENVIRONMENT")?;

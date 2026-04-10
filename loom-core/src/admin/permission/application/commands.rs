@@ -12,6 +12,9 @@ use crate::admin::permission::{
 pub struct PermissionCommand;
 
 impl PermissionCommand {
+    /// # Errors
+    ///
+    /// Returns an error if the domain event cannot be applied to the aggregate.
     pub fn create(&self, id: PermissionId, name: String) -> Result<Self, crate::Error> {
         Ok(
             aggregate::Root::<Permission>::record_new(PermissionEvent::Created { id, name }.into())
@@ -31,7 +34,7 @@ mod tests {
         let permission = Permission::apply(
             None,
             PermissionEvent::Created {
-                id: id.clone(),
+                id,
                 name: "seed".to_string(),
             },
         )

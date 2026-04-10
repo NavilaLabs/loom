@@ -18,7 +18,8 @@ impl WorkspaceProjector {
     const USER_ROLES_TABLE: &'static str = "projections__workspace_user_roles";
     const USER_PERMISSIONS_TABLE: &'static str = "projections__workspace_user_permissions";
 
-    pub fn new(pool: Pool<ScopeAdmin, StateConnected>) -> Self {
+    #[must_use] 
+    pub const fn new(pool: Pool<ScopeAdmin, StateConnected>) -> Self {
         Self { pool }
     }
 }
@@ -27,6 +28,7 @@ impl WorkspaceProjector {
 impl Projector for WorkspaceProjector {
     type Error = crate::Error;
 
+    #[allow(clippy::too_many_lines)]
     async fn handle(&mut self, event: RawEvent) -> Result<(), Self::Error> {
         match event.event_type.as_str() {
             "WorkspaceCreated" => {

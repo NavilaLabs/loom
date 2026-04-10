@@ -3,21 +3,21 @@
 //! # The modern way: `TestFixture`
 //!
 //! [`TestFixture`] gives every test a pair of fully-migrated, isolated
-//! **file-based SQLite databases** in a **temporary directory**.  Because each
+//! **file-based `SQLite` databases** in a **temporary directory**.  Because each
 //! fixture gets a unique temp directory:
 //!
 //! * tests run **fully in parallel** — no `#[serial]` required
 //! * databases are **automatically cleaned up** when the fixture is dropped
 //! * every test starts from a **known-empty state**
 //!
-//! ## Why not named in-memory SQLite?
+//! ## Why not named in-memory `SQLite`?
 //!
 //! `sqlite:///file:name?mode=memory&cache=shared` does not work as expected
 //! with sqlx's `AnyPool`: each connection acquires its own private anonymous
-//! in-memory database instead of sharing the named one.  The SeaORM migrator
+//! in-memory database instead of sharing the named one.  The `SeaORM` migrator
 //! always opens a second connection, so its changes are invisible to the
-//! pool's connection.  Temp-directory SQLite avoids this entirely: the
-//! SeaORM migrator and the pool both connect to the same on-disk file.
+//! pool's connection.  Temp-directory `SQLite` avoids this entirely: the
+//! `SeaORM` migrator and the pool both connect to the same on-disk file.
 //!
 //! ```rust,ignore
 //! use loom_tests::TestFixture;
@@ -53,10 +53,10 @@ fn next_fixture_id() -> u64 {
 
 // ── TestFixture ───────────────────────────────────────────────────────────────
 
-/// A pair of fully-migrated, isolated SQLite databases in a temp directory.
+/// A pair of fully-migrated, isolated `SQLite` databases in a temp directory.
 ///
 /// Each call to [`TestFixture::setup`] creates a fresh temporary directory and
-/// opens two SQLite files inside it (`admin.db` and `tenant.db`), running all
+/// opens two `SQLite` files inside it (`admin.db` and `tenant.db`), running all
 /// migrations on each.  Because each fixture has its own directory, tests can
 /// run concurrently without any shared state.
 ///
@@ -74,8 +74,8 @@ impl TestFixture {
     /// Creates a fresh, isolated `TestFixture`.
     ///
     /// Loads `.env.test` (safe to call from multiple parallel tests — all
-    /// tests load the same values), installs SQLx any-DB drivers, creates
-    /// a temporary directory with two SQLite databases, and runs all
+    /// tests load the same values), installs `SQLx` any-DB drivers, creates
+    /// a temporary directory with two `SQLite` databases, and runs all
     /// migrations on them.
     ///
     /// # Panics
@@ -138,6 +138,9 @@ impl TestFixture {
 ///
 /// Database tests should use [`TestFixture`] instead.
 pub mod test_lifecycle {
+    /// # Panics
+    ///
+    /// Panics if `.env.test` cannot be loaded.
     pub fn before() {
         dotenvy::from_filename_override(".env.test").expect("Failed to load .env.test.");
     }
@@ -147,7 +150,7 @@ pub mod test_lifecycle {
     }
 }
 
-/// Like [`test_lifecycle`] but also installs the SQLx any-DB drivers.
+/// Like [`test_lifecycle`] but also installs the `SQLx` any-DB drivers.
 ///
 /// Needed by tests that use the global `Pool::connect_*()` methods (driven by
 /// `CONFIG`) rather than [`TestFixture`] — for example, the Postgres
