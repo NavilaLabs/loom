@@ -41,11 +41,15 @@ async fn _list_workspaces() -> Result<Vec<WorkspaceDto>, ServerFnError> {
     use tower_sessions::Session;
 
     let session: Session = extract().await?;
-    let user: Option<UserInfo> = session.get("user").await.map_err(|e| ServerFnError::ServerError {
-        message: e.to_string(),
-        code: 500,
-        details: None,
-    })?;
+    let user: Option<UserInfo> =
+        session
+            .get("user")
+            .await
+            .map_err(|e| ServerFnError::ServerError {
+                message: e.to_string(),
+                code: 500,
+                details: None,
+            })?;
     let user = user.ok_or_else(|| ServerFnError::ServerError {
         message: "not authenticated".into(),
         code: 401,
@@ -62,7 +66,10 @@ async fn _list_workspaces() -> Result<Vec<WorkspaceDto>, ServerFnError> {
 
     Ok(workspaces
         .into_iter()
-        .map(|w| WorkspaceDto { id: w.id, name: w.name })
+        .map(|w| WorkspaceDto {
+            id: w.id,
+            name: w.name,
+        })
         .collect())
 }
 
@@ -73,11 +80,15 @@ async fn _select_workspace(workspace_id: String) -> Result<(), ServerFnError> {
     use tower_sessions::Session;
 
     let session: Session = extract().await?;
-    let user: Option<UserInfo> = session.get("user").await.map_err(|e| ServerFnError::ServerError {
-        message: e.to_string(),
-        code: 500,
-        details: None,
-    })?;
+    let user: Option<UserInfo> =
+        session
+            .get("user")
+            .await
+            .map_err(|e| ServerFnError::ServerError {
+                message: e.to_string(),
+                code: 500,
+                details: None,
+            })?;
     let mut user = user.ok_or_else(|| ServerFnError::ServerError {
         message: "not authenticated".into(),
         code: 401,

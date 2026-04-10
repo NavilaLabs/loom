@@ -80,7 +80,12 @@ fn make_hs512_token(secret: &[u8], sub: &str, email: &str, exp: usize) -> String
 #[with_lifecycle(test_lifecycle)]
 #[tokio::test]
 async fn valid_token_decodes_to_correct_user() {
-    let token = make_hs256_token(TEST_SECRET, "user-abc-123", "alice@example.com", future_exp());
+    let token = make_hs256_token(
+        TEST_SECRET,
+        "user-abc-123",
+        "alice@example.com",
+        future_exp(),
+    );
     let user: CurrentUser = validate_token(&token).expect("valid token must decode");
     assert_eq!(user.id, "user-abc-123");
     assert_eq!(user.email, "alice@example.com");
@@ -94,7 +99,12 @@ async fn valid_token_decodes_to_correct_user() {
 #[with_lifecycle(test_lifecycle)]
 #[tokio::test]
 async fn token_with_wrong_secret_is_rejected() {
-    let token = make_hs256_token(b"wrong-secret", "user-abc", "alice@example.com", future_exp());
+    let token = make_hs256_token(
+        b"wrong-secret",
+        "user-abc",
+        "alice@example.com",
+        future_exp(),
+    );
     assert!(
         validate_token(&token).is_err(),
         "token signed with wrong secret must be rejected"

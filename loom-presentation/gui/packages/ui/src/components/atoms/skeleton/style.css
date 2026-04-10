@@ -1,0 +1,38 @@
+/* ─── Shimmer keyframe ───────────────────────────────────────── */
+@keyframes skeleton-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ─── Base shimmer block ─────────────────────────────────────── */
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--color-border) 30%, var(--color-surface-raised)) 25%,
+        color-mix(in srgb, var(--color-border) 55%, var(--color-surface-raised)) 50%,
+        color-mix(in srgb, var(--color-border) 30%, var(--color-surface-raised)) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+    border-radius: var(--radius-md, 6px);
+}
+
+/* ─── Line size variants ─────────────────────────────────────── */
+/* Used inside SkeletonListItem */
+.skeleton-line-title { height: 0.875rem; width: 42%; }
+.skeleton-line-sub   { height: 0.75rem;  width: 28%; }
+.skeleton-line-meta  { height: 0.65rem;  width: 58%; }
+
+/* ─── List-item card shell ───────────────────────────────────── */
+/* Mirrors the visual shape of a real item card so the layout
+   doesn't shift when data arrives. */
+.skeleton-list-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
+    border-radius: var(--radius-lg, 12px);
+    background-color: var(--color-surface-raised);
+    box-shadow: var(--shadow-card);
+}

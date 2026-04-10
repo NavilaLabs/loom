@@ -9,6 +9,7 @@ pub mod developer;
 pub mod login;
 pub mod project;
 pub mod project_rate;
+pub mod session;
 pub mod setup;
 pub mod tag;
 pub mod timesheet;

@@ -1,6 +1,14 @@
 use anyhow::Result;
-use eventually::aggregate::{Root, repository::{Getter, Saver}};
-use loom_core::tenant::customer::{Customer, CustomerEvent, CustomerId};
+use eventually::aggregate::{
+    Root,
+    repository::{Getter, Saver},
+};
+use loom_core::{
+    tenant::customer::{
+        CreateCustomerInput, Customer, CustomerEvent, CustomerId, UpdateCustomerInput,
+    },
+    validation::{Validate, validation_summary},
+};
 use loom_infrastructure_impl::{
     Pool, ScopeTenant, StateDisconnected,
     tenant::customer::repositories::{CustomerRepository, CustomerRow},
@@ -22,6 +30,14 @@ pub async fn create(
     currency: String,
     timezone: String,
 ) -> Result<CustomerRow> {
+    CreateCustomerInput {
+        name: name.clone(),
+        currency: currency.clone(),
+        timezone: timezone.clone(),
+    }
+    .validate()
+    .map_err(|e| crate::error::ValidationError::new(validation_summary(&e)))?;
+
     let pool = tenant_pool(workspace_id).await?;
     let repo = CustomerRepository::from_pool(pool).await?;
     let id = CustomerId::new();
@@ -59,12 +75,28 @@ pub async fn update(
     country: Option<String>,
     visible: bool,
 ) -> Result<()> {
+    UpdateCustomerInput {
+        name: name.clone(),
+        currency: currency.clone(),
+        timezone: timezone.clone(),
+    }
+    .validate()
+    .map_err(|e| crate::error::ValidationError::new(validation_summary(&e)))?;
+
     let pool = tenant_pool(workspace_id).await?;
     let repo = CustomerRepository::from_pool(pool).await?;
     let agg_id: CustomerId = id.parse()?;
     let mut root = repo.get(&agg_id).await?;
     root.record_that(
-        CustomerEvent::Updated { name, comment, currency, timezone, country, visible }.into(),
+        CustomerEvent::Updated {
+            name,
+            comment,
+            currency,
+            timezone,
+            country,
+            visible,
+        }
+        .into(),
     )?;
     repo.save(&mut root).await?;
     Ok(())
@@ -82,7 +114,12 @@ pub async fn set_budget(
     let agg_id: CustomerId = id.parse()?;
     let mut root = repo.get(&agg_id).await?;
     root.record_that(
-        CustomerEvent::BudgetUpdated { time_budget, money_budget, budget_is_monthly }.into(),
+        CustomerEvent::BudgetUpdated {
+            time_budget,
+            money_budget,
+            budget_is_monthly,
+        }
+        .into(),
     )?;
     repo.save(&mut root).await?;
     Ok(())

@@ -25,22 +25,20 @@ impl TimesheetCommand {
         timezone: String,
         billable: bool,
     ) -> Result<Self, crate::Error> {
-        Ok(
-            aggregate::Root::<Timesheet>::record_new(
-                TimesheetEvent::Started {
-                    id,
-                    user_id,
-                    project_id,
-                    activity_id,
-                    start_time,
-                    timezone,
-                    billable,
-                }
-                .into(),
-            )
-            .map_err(timesheet::DomainError::from)?
+        Ok(aggregate::Root::<Timesheet>::record_new(
+            TimesheetEvent::Started {
+                id,
+                user_id,
+                project_id,
+                activity_id,
+                start_time,
+                timezone,
+                billable,
+            }
             .into(),
         )
+        .map_err(timesheet::DomainError::from)?
+        .into())
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -54,8 +52,15 @@ impl TimesheetCommand {
         rate: Option<i64>,
     ) -> Result<(), crate::Error> {
         self.record_that(
-            TimesheetEvent::Stopped { end_time, duration, hourly_rate, fixed_rate, internal_rate, rate }
-                .into(),
+            TimesheetEvent::Stopped {
+                end_time,
+                duration,
+                hourly_rate,
+                fixed_rate,
+                internal_rate,
+                rate,
+            }
+            .into(),
         )
         .map_err(|e| timesheet::DomainError::AggregateError(e).into())
     }
@@ -65,8 +70,14 @@ impl TimesheetCommand {
         description: Option<String>,
         billable: bool,
     ) -> Result<(), crate::Error> {
-        self.record_that(TimesheetEvent::Updated { description, billable }.into())
-            .map_err(|e| timesheet::DomainError::AggregateError(e).into())
+        self.record_that(
+            TimesheetEvent::Updated {
+                description,
+                billable,
+            }
+            .into(),
+        )
+        .map_err(|e| timesheet::DomainError::AggregateError(e).into())
     }
 
     pub fn reassign(
@@ -74,8 +85,14 @@ impl TimesheetCommand {
         project_id: ProjectId,
         activity_id: ActivityId,
     ) -> Result<(), crate::Error> {
-        self.record_that(TimesheetEvent::Reassigned { project_id, activity_id }.into())
-            .map_err(|e| timesheet::DomainError::AggregateError(e).into())
+        self.record_that(
+            TimesheetEvent::Reassigned {
+                project_id,
+                activity_id,
+            }
+            .into(),
+        )
+        .map_err(|e| timesheet::DomainError::AggregateError(e).into())
     }
 
     pub fn export(&mut self) -> Result<(), crate::Error> {

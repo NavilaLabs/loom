@@ -4,8 +4,7 @@ use loom_infrastructure::config::CONFIG;
 use loom_infrastructure_impl::{
     Pool,
     admin::{
-        authentication::jwt::JwtAuthentication,
-        user::repositories::UserRepository,
+        authentication::jwt::JwtAuthentication, user::repositories::UserRepository,
         workspace::repositories::WorkspaceRepository,
     },
 };

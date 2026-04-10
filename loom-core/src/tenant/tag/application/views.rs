@@ -11,6 +11,10 @@ impl TagView {
         Self { id, name }
     }
 
-    pub fn get_id(&self) -> &TagId { &self.id }
-    pub fn get_name(&self) -> &str { &self.name }
+    pub fn get_id(&self) -> &TagId {
+        &self.id
+    }
+    pub fn get_name(&self) -> &str {
+        &self.name
+    }
 }

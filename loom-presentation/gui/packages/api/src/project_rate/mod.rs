@@ -13,9 +13,7 @@ pub struct ProjectRateDto {
 
 /// List all rates for a project.
 #[get("/api/project-rates")]
-pub async fn list_project_rates(
-    project_id: String,
-) -> Result<Vec<ProjectRateDto>, ServerFnError> {
+pub async fn list_project_rates(project_id: String) -> Result<Vec<ProjectRateDto>, ServerFnError> {
     #[cfg(feature = "server")]
     {
         _list_project_rates(project_id).await
@@ -64,28 +62,6 @@ pub async fn remove_project_rate(project_id: String) -> Result<(), ServerFnError
 }
 
 #[cfg(feature = "server")]
-async fn workspace_id_from_session() -> Result<String, ServerFnError> {
-    use crate::auth::UserInfo;
-    use dioxus::fullstack::extract;
-    use tower_sessions::Session;
-    let session: Session = extract().await?;
-    let user: Option<UserInfo> = session
-        .get("user")
-        .await
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })?;
-    user.and_then(|u| u.workspace_id)
-        .ok_or_else(|| ServerFnError::ServerError {
-            message: "not authenticated or no workspace".into(),
-            code: 401,
-            details: None,
-        })
-}
-
-#[cfg(feature = "server")]
 fn row_to_dto(
     r: loom::infrastructure::tenant::project_rate::repositories::ProjectRateRow,
 ) -> ProjectRateDto {
@@ -99,18 +75,14 @@ fn row_to_dto(
 }
 
 #[cfg(feature = "server")]
-async fn _list_project_rates(
-    project_id: String,
-) -> Result<Vec<ProjectRateDto>, ServerFnError> {
-    let workspace_id = workspace_id_from_session().await?;
+async fn _list_project_rates(project_id: String) -> Result<Vec<ProjectRateDto>, ServerFnError> {
+    use crate::session;
+
+    let (_, workspace_id) = session::session_workspace().await?;
     loom::tenant::project_rate::list_for_project(&workspace_id, &project_id)
         .await
         .map(|rows| rows.into_iter().map(row_to_dto).collect())
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })
+        .map_err(session::internal)
 }
 
 #[cfg(feature = "server")]
@@ -119,25 +91,27 @@ async fn _set_project_rate(
     hourly_rate: i64,
     internal_rate: Option<i64>,
 ) -> Result<ProjectRateDto, ServerFnError> {
-    let workspace_id = workspace_id_from_session().await?;
+    use crate::session;
+    use loom::core::permissions;
+
+    let (user, workspace_id) = session::session_workspace().await?;
+    session::require_permission(&user, permissions::RATE_MANAGE).await?;
+
     loom::tenant::project_rate::set_default(&workspace_id, project_id, hourly_rate, internal_rate)
         .await
         .map(row_to_dto)
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })
+        .map_err(session::internal)
 }
 
 #[cfg(feature = "server")]
 async fn _remove_project_rate(project_id: String) -> Result<(), ServerFnError> {
-    let workspace_id = workspace_id_from_session().await?;
+    use crate::session;
+    use loom::core::permissions;
+
+    let (user, workspace_id) = session::session_workspace().await?;
+    session::require_permission(&user, permissions::RATE_MANAGE).await?;
+
     loom::tenant::project_rate::remove_default(&workspace_id, &project_id)
         .await
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })
+        .map_err(session::internal)
 }

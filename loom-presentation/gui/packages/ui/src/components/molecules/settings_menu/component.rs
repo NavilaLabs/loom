@@ -29,11 +29,7 @@ fn apply_theme(theme: Theme) {
 pub fn SettingsMenu() -> Element {
     let mut current_theme = use_signal(|| Theme::System);
     let auth: AuthState = use_context();
-    let is_admin = auth
-        .cloned()
-        .flatten()
-        .map(|u| u.is_admin)
-        .unwrap_or(false);
+    let is_admin = auth.cloned().flatten().map(|u| u.is_admin).unwrap_or(false);
 
     use_effect(move || {
         spawn(async move {

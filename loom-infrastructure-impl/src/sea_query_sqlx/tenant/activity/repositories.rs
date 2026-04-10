@@ -4,7 +4,9 @@ use async_trait::async_trait;
 use eventually::aggregate::repository::{GetError, Getter, SaveError, Saver};
 use eventually::serde::Json;
 use eventually_any::snapshot::Repository;
-use loom_core::tenant::activity::{Activity, ActivityEvent, ActivityId, ActivityRepository as ActivityRepositoryTrait};
+use loom_core::tenant::activity::{
+    Activity, ActivityEvent, ActivityId, ActivityRepository as ActivityRepositoryTrait,
+};
 use sqlx::{Row, any::AnyRow};
 
 use crate::ConnectedTenantPool;
@@ -16,7 +18,9 @@ pub struct ActivityRepository {
 
 impl Deref for ActivityRepository {
     type Target = Repository<Activity, Json<Activity>, Json<ActivityEvent>>;
-    fn deref(&self) -> &Self::Target { &self.repository }
+    fn deref(&self) -> &Self::Target {
+        &self.repository
+    }
 }
 
 impl ActivityRepository {
@@ -36,10 +40,7 @@ impl ActivityRepository {
         rows.into_iter().map(|r| Self::map_row(&r)).collect()
     }
 
-    pub async fn by_project(
-        &self,
-        project_id: &str,
-    ) -> Result<Vec<ActivityRow>, crate::Error> {
+    pub async fn by_project(&self, project_id: &str) -> Result<Vec<ActivityRow>, crate::Error> {
         let rows = sqlx::query(
             "SELECT id, project_id, name, comment, visible, billable \
              FROM projections__activities WHERE project_id = ? OR project_id IS NULL ORDER BY name",

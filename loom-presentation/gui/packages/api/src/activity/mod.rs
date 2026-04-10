@@ -35,7 +35,11 @@ pub async fn create_activity(
     #[cfg(not(feature = "server"))]
     {
         let _ = (project_id, name);
-        Err(ServerFnError::ServerError { message: "server only".into(), code: 500, details: None })
+        Err(ServerFnError::ServerError {
+            message: "server only".into(),
+            code: 500,
+            details: None,
+        })
     }
 }
 
@@ -59,35 +63,13 @@ pub async fn update_activity(
 }
 
 #[cfg(feature = "server")]
-async fn workspace_id_from_session() -> Result<String, ServerFnError> {
-    use crate::auth::UserInfo;
-    use dioxus::fullstack::extract;
-    use tower_sessions::Session;
-
-    let session: Session = extract().await?;
-    let user: Option<UserInfo> = session.get("user").await.map_err(|e| ServerFnError::ServerError {
-        message: e.to_string(),
-        code: 500,
-        details: None,
-    })?;
-    user.and_then(|u| u.workspace_id)
-        .ok_or_else(|| ServerFnError::ServerError {
-            message: "not authenticated or no workspace".into(),
-            code: 401,
-            details: None,
-        })
-}
-
-#[cfg(feature = "server")]
 async fn _list_activities() -> Result<Vec<ActivityDto>, ServerFnError> {
-    let workspace_id = workspace_id_from_session().await?;
+    use crate::session;
+
+    let (_, workspace_id) = session::session_workspace().await?;
     let rows = loom::tenant::activity::list(&workspace_id)
         .await
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })?;
+        .map_err(session::internal)?;
     Ok(rows
         .into_iter()
         .map(|r| ActivityDto {
@@ -106,14 +88,15 @@ async fn _create_activity(
     project_id: Option<String>,
     name: String,
 ) -> Result<ActivityDto, ServerFnError> {
-    let workspace_id = workspace_id_from_session().await?;
+    use crate::session;
+    use loom::core::permissions;
+
+    let (user, workspace_id) = session::session_workspace().await?;
+    session::require_permission(&user, permissions::ACTIVITY_CREATE).await?;
+
     let r = loom::tenant::activity::create(&workspace_id, project_id, name)
         .await
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })?;
+        .map_err(session::internal)?;
     Ok(ActivityDto {
         id: r.id,
         project_id: r.project_id,
@@ -132,12 +115,13 @@ async fn _update_activity(
     visible: bool,
     billable: bool,
 ) -> Result<(), ServerFnError> {
-    let workspace_id = workspace_id_from_session().await?;
+    use crate::session;
+    use loom::core::permissions;
+
+    let (user, workspace_id) = session::session_workspace().await?;
+    session::require_permission(&user, permissions::ACTIVITY_UPDATE).await?;
+
     loom::tenant::activity::update(&workspace_id, &id, name, comment, visible, billable)
         .await
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })
+        .map_err(session::internal)
 }

@@ -93,7 +93,9 @@ pub fn TabList(props: TabListProps) -> Element {
 
 #[component]
 pub fn TabTrigger(props: TabTriggerProps) -> Element {
-    let base = attributes!(button { class: "tabs-trigger" });
+    let base = attributes!(button {
+        class: "tabs-trigger"
+    });
     let user_class = props
         .class
         .as_deref()
@@ -117,7 +119,9 @@ pub fn TabTrigger(props: TabTriggerProps) -> Element {
 
 #[component]
 pub fn TabContent(props: TabContentProps) -> Element {
-    let base = attributes!(div { class: "tabs-content tabs-content-themed" });
+    let base = attributes!(div {
+        class: "tabs-content tabs-content-themed"
+    });
     let user_class = props
         .class
         .as_deref()

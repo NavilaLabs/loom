@@ -19,13 +19,17 @@ impl CustomerCommand {
         currency: String,
         timezone: String,
     ) -> Result<Self, crate::Error> {
-        Ok(
-            aggregate::Root::<Customer>::record_new(
-                CustomerEvent::Created { id, name, currency, timezone }.into(),
-            )
-            .map_err(customer::DomainError::from)?
+        Ok(aggregate::Root::<Customer>::record_new(
+            CustomerEvent::Created {
+                id,
+                name,
+                currency,
+                timezone,
+            }
             .into(),
         )
+        .map_err(customer::DomainError::from)?
+        .into())
     }
 
     pub fn update(
@@ -38,7 +42,15 @@ impl CustomerCommand {
         visible: bool,
     ) -> Result<(), crate::Error> {
         self.record_that(
-            CustomerEvent::Updated { name, comment, currency, timezone, country, visible }.into(),
+            CustomerEvent::Updated {
+                name,
+                comment,
+                currency,
+                timezone,
+                country,
+                visible,
+            }
+            .into(),
         )
         .map_err(|e| customer::DomainError::AggregateError(e).into())
     }
@@ -50,7 +62,12 @@ impl CustomerCommand {
         budget_is_monthly: bool,
     ) -> Result<(), crate::Error> {
         self.record_that(
-            CustomerEvent::BudgetUpdated { time_budget, money_budget, budget_is_monthly }.into(),
+            CustomerEvent::BudgetUpdated {
+                time_budget,
+                money_budget,
+                budget_is_monthly,
+            }
+            .into(),
         )
         .map_err(|e| customer::DomainError::AggregateError(e).into())
     }

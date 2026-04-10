@@ -1,5 +1,5 @@
 use crate::components::atoms::card::{Card, CardContent, CardFooter, CardHeader, CardTitle};
-use crate::components::atoms::{Button, Input, ToastMessage, Toasts};
+use crate::components::atoms::{Button, Input, SkeletonListItem, ToastMessage, Toasts};
 use crate::layouts::DefaultLayout;
 use api::tag::TagDto;
 use dioxus::prelude::*;
@@ -9,6 +9,7 @@ use dioxus_free_icons::Icon;
 #[component]
 pub fn Tags() -> Element {
     let mut tags = use_signal(Vec::<TagDto>::new);
+    let mut loading = use_signal(|| true);
     let mut toasts: Toasts = use_context();
 
     let mut new_name = use_signal(String::new);
@@ -21,6 +22,7 @@ pub fn Tags() -> Element {
             Ok(list) => tags.set(list),
             Err(e) => toasts.write().push(ToastMessage::error(e.to_string())),
         }
+        loading.set(false);
     });
 
     let on_create = move |_| async move {
@@ -94,6 +96,11 @@ pub fn Tags() -> Element {
 
                 // ── Tag list ─────────────────────────────────────────────────
                 div { class: "flex flex-col gap-3",
+                    if *loading.read() {
+                        for _ in 0..4 {
+                            SkeletonListItem {}
+                        }
+                    }
                     for tag in tags.read().clone() {
                         {
                             let t = tag.clone();

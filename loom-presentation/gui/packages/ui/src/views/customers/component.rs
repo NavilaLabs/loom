@@ -1,17 +1,26 @@
 use crate::components::atoms::card::{Card, CardContent, CardFooter, CardHeader, CardTitle};
-use crate::components::atoms::{Button, Input, ToastMessage, Toasts};
+use crate::components::atoms::{Button, Input, SkeletonListItem, ToastMessage, Toasts};
+use crate::form_machine::{new_form, FormAction, State};
 use crate::layouts::DefaultLayout;
 use api::customer::CustomerDto;
 use dioxus::prelude::*;
 use dioxus_free_icons::icons::hi_solid_icons::{
-    HiOfficeBuilding, HiPencil, HiPlus, HiSave, HiX,
+    HiOfficeBuilding, HiPencil, HiPlus, HiRefresh, HiSave, HiX,
 };
 use dioxus_free_icons::Icon;
+use loom_core::{
+    tenant::customer::{CreateCustomerInput, UpdateCustomerInput},
+    validation::{validation_summary, Validate},
+};
 
 #[component]
 pub fn Customers() -> Element {
     let mut customers = use_signal(Vec::<CustomerDto>::new);
+    let mut loading = use_signal(|| true);
     let mut toasts: Toasts = use_context();
+
+    // State machine drives the create-form lifecycle.
+    let mut create_form = use_signal(new_form);
 
     // Create form fields
     let mut new_name = use_signal(String::new);
@@ -22,6 +31,7 @@ pub fn Customers() -> Element {
 
     // Inline edit state
     let mut editing_id = use_signal(|| Option::<String>::None);
+    let mut edit_form = use_signal(new_form);
     let mut edit_name = use_signal(String::new);
     let mut edit_comment = use_signal(String::new);
     let mut edit_currency = use_signal(String::new);
@@ -37,24 +47,43 @@ pub fn Customers() -> Element {
             Ok(list) => customers.set(list),
             Err(e) => toasts.write().push(ToastMessage::error(e.to_string())),
         }
+        loading.set(false);
     });
 
     let on_create = move |_| async move {
         let name = new_name.peek().clone();
-        if name.is_empty() {
-            return;
-        }
         let currency = new_currency.peek().clone();
         let timezone = new_timezone.peek().clone();
+
+        create_form.write().handle(&FormAction::Submit);
+        let input = CreateCustomerInput {
+            name: name.clone(),
+            currency: currency.clone(),
+            timezone: timezone.clone(),
+        };
+        if let Err(e) = input.validate() {
+            create_form
+                .write()
+                .handle(&FormAction::Fail(validation_summary(&e)));
+            return;
+        }
         match api::customer::create_customer(name, currency, timezone).await {
             Ok(dto) => {
                 customers.write().push(dto);
                 new_name.set(String::new());
                 new_comment.set(String::new());
                 new_country.set(String::new());
-                toasts.write().push(ToastMessage::success("Customer created"));
+                create_form
+                    .write()
+                    .handle(&FormAction::Succeed("Customer created".into()));
+                toasts
+                    .write()
+                    .push(ToastMessage::success("Customer created"));
             }
-            Err(e) => toasts.write().push(ToastMessage::error(e.to_string())),
+            Err(e) => {
+                create_form.write().handle(&FormAction::Fail(e.to_string()));
+                toasts.write().push(ToastMessage::error(e.to_string()));
+            }
         }
     };
 
@@ -66,35 +95,75 @@ pub fn Customers() -> Element {
         let name = edit_name.peek().clone();
         let comment = {
             let s = edit_comment.peek().clone();
-            if s.is_empty() { None } else { Some(s) }
+            if s.is_empty() {
+                None
+            } else {
+                Some(s)
+            }
         };
         let currency = edit_currency.peek().clone();
         let timezone = edit_timezone.peek().clone();
         let country = {
             let s = edit_country.peek().clone();
-            if s.is_empty() { None } else { Some(s) }
+            if s.is_empty() {
+                None
+            } else {
+                Some(s)
+            }
         };
         let visible = *edit_visible.peek();
 
+        edit_form.write().handle(&FormAction::Submit);
+        let input = UpdateCustomerInput {
+            name: name.clone(),
+            currency: currency.clone(),
+            timezone: timezone.clone(),
+        };
+        if let Err(e) = input.validate() {
+            edit_form
+                .write()
+                .handle(&FormAction::Fail(validation_summary(&e)));
+            return;
+        }
+
         // Update basic info
         if let Err(e) = api::customer::update_customer(
-            id.clone(), name.clone(), comment.clone(), currency.clone(),
-            timezone.clone(), country.clone(), visible,
-        ).await {
+            id.clone(),
+            name.clone(),
+            comment.clone(),
+            currency.clone(),
+            timezone.clone(),
+            country.clone(),
+            visible,
+        )
+        .await
+        {
+            edit_form.write().handle(&FormAction::Fail(e.to_string()));
             toasts.write().push(ToastMessage::error(e.to_string()));
             return;
         }
 
-        // Update budget
-        // time_budget stored in seconds; GUI shows hours
-        let time_budget: Option<i32> = edit_time_budget.peek().parse::<f64>().ok()
+        // Update budget — time_budget stored in seconds; GUI shows hours
+        let time_budget: Option<i32> = edit_time_budget
+            .peek()
+            .parse::<f64>()
+            .ok()
             .map(|h| (h * 3600.0) as i32);
-        let money_budget: Option<i64> = edit_money_budget.peek().parse::<f64>().ok()
+        let money_budget: Option<i64> = edit_money_budget
+            .peek()
+            .parse::<f64>()
+            .ok()
             .map(|v| (v * 100.0) as i64);
         let budget_monthly = *edit_budget_monthly.peek();
         if let Err(e) = api::customer::set_customer_budget(
-            id.clone(), time_budget, money_budget, budget_monthly,
-        ).await {
+            id.clone(),
+            time_budget,
+            money_budget,
+            budget_monthly,
+        )
+        .await
+        {
+            edit_form.write().handle(&FormAction::Fail(e.to_string()));
             toasts.write().push(ToastMessage::error(e.to_string()));
             return;
         }
@@ -115,9 +184,14 @@ pub fn Customers() -> Element {
         if let Some(item) = customers.write().iter_mut().find(|x| x.id == id) {
             *item = updated;
         }
+        edit_form
+            .write()
+            .handle(&FormAction::Succeed("Customer saved".into()));
         editing_id.set(None);
         toasts.write().push(ToastMessage::success("Customer saved"));
     };
+
+    let create_submitting = matches!(create_form.read().state(), State::Submitting {});
 
     rsx! {
         DefaultLayout {
@@ -181,22 +255,40 @@ pub fn Customers() -> Element {
                                 }
                             }
                         }
+                        if matches!(create_form.read().state(), State::Error {}) {
+                            p { class: "text-red-500 text-sm mt-2",
+                                "{create_form.read().message}"
+                            }
+                        }
                     }
                     CardFooter {
-                        Button { onclick: on_create,
-                            Icon { icon: HiPlus, width: 16, height: 16 }
-                            "Create"
+                        Button {
+                            onclick: on_create,
+                            disabled: create_submitting,
+                            if create_submitting {
+                                Icon { icon: HiRefresh, width: 16, height: 16 }
+                                "Creating…"
+                            } else {
+                                Icon { icon: HiPlus, width: 16, height: 16 }
+                                "Create"
+                            }
                         }
                     }
                 }
 
                 // ── Customer list ────────────────────────────────────────────
                 div { class: "flex flex-col gap-3",
+                    if *loading.read() {
+                        for _ in 0..4 {
+                            SkeletonListItem {}
+                        }
+                    }
                     for customer in customers.read().clone() {
                         {
                             let c = customer.clone();
                             let is_editing = editing_id.read().as_deref() == Some(c.id.as_str());
                             let cid = c.id.clone();
+                            let edit_submitting = matches!(edit_form.read().state(), State::Submitting {});
 
                             if is_editing {
                                 rsx! {
@@ -206,9 +298,16 @@ pub fn Customers() -> Element {
                                                 div { class: "flex items-center justify-between",
                                                     span { "{c.name}" }
                                                     div { class: "flex gap-2",
-                                                        Button { onclick: on_save,
-                                                            Icon { icon: HiSave, width: 15, height: 15 }
-                                                            "Save"
+                                                        Button {
+                                                            onclick: on_save,
+                                                            disabled: edit_submitting,
+                                                            if edit_submitting {
+                                                                Icon { icon: HiRefresh, width: 15, height: 15 }
+                                                                "Saving…"
+                                                            } else {
+                                                                Icon { icon: HiSave, width: 15, height: 15 }
+                                                                "Save"
+                                                            }
                                                         }
                                                         Button {
                                                             onclick: move |_| editing_id.set(None),
@@ -300,6 +399,11 @@ pub fn Customers() -> Element {
                                                     }
                                                 }
                                             }
+                                            if matches!(edit_form.read().state(), State::Error {}) {
+                                                p { class: "text-red-500 text-sm mt-2",
+                                                    "{edit_form.read().message}"
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -345,6 +449,8 @@ pub fn Customers() -> Element {
                                                             edit_time_budget.set(cu.time_budget.map(|v| format!("{:.1}", v as f64 / 3600.0)).unwrap_or_default());
                                                             edit_money_budget.set(cu.money_budget.map(|v| format!("{:.2}", v as f64 / 100.0)).unwrap_or_default());
                                                             edit_budget_monthly.set(cu.budget_is_monthly);
+                                                            // Reset the edit form machine when opening a new edit
+                                                            edit_form.write().handle(&FormAction::Reset);
                                                             editing_id.set(Some(cu.id));
                                                         }
                                                     },

@@ -9,7 +9,9 @@ pub fn Form(
     attributes: Vec<Attribute>,
     children: Element,
 ) -> Element {
-    let base = attributes!(form { class: "form w-full" });
+    let base = attributes!(form {
+        class: "form w-full"
+    });
     let merged = merge_attributes(vec![base, attributes]);
 
     rsx! {
@@ -22,7 +24,9 @@ pub fn FormField(
     #[props(extends=GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
 ) -> Element {
-    let base = attributes!(div { class: "form-field w-full my-2" });
+    let base = attributes!(div {
+        class: "form-field w-full my-2"
+    });
     let merged = merge_attributes(vec![base, attributes]);
 
     rsx! {

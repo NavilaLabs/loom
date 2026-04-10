@@ -5,7 +5,8 @@ use eventually::aggregate::repository::{GetError, Getter, SaveError, Saver};
 use eventually::serde::Json;
 use eventually_any::snapshot::Repository;
 use loom_core::tenant::project_rate::{
-    ProjectRate, ProjectRateEvent, ProjectRateId, ProjectRateRepository as ProjectRateRepositoryTrait,
+    ProjectRate, ProjectRateEvent, ProjectRateId,
+    ProjectRateRepository as ProjectRateRepositoryTrait,
 };
 use sqlx::{Row, any::AnyRow};
 
@@ -18,7 +19,9 @@ pub struct ProjectRateRepository {
 
 impl Deref for ProjectRateRepository {
     type Target = Repository<ProjectRate, Json<ProjectRate>, Json<ProjectRateEvent>>;
-    fn deref(&self) -> &Self::Target { &self.repository }
+    fn deref(&self) -> &Self::Target {
+        &self.repository
+    }
 }
 
 impl ProjectRateRepository {

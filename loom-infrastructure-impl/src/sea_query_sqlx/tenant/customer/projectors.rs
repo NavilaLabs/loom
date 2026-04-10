@@ -1,9 +1,7 @@
 use async_trait::async_trait;
 use eventually_projection::{Projector, RawEvent};
 use loom_core::tenant::customer::CustomerEvent;
-use sea_query::{
-    Condition, DynIden, Expr, ExprTrait, OnConflict, Query, TableRef,
-};
+use sea_query::{Condition, DynIden, Expr, ExprTrait, OnConflict, Query, TableRef};
 use sea_query_sqlx::SqlxBinder;
 
 use crate::{ConnectedTenantPool, DatabaseType};
@@ -27,8 +25,12 @@ impl Projector for CustomerProjector {
     async fn handle(&mut self, event: RawEvent) -> Result<(), Self::Error> {
         match event.event_type.as_str() {
             "CustomerCreated" => {
-                let CustomerEvent::Created { id, name, currency, timezone } =
-                    serde_json::from_slice(&event.payload_bytes)?
+                let CustomerEvent::Created {
+                    id,
+                    name,
+                    currency,
+                    timezone,
+                } = serde_json::from_slice(&event.payload_bytes)?
                 else {
                     return Ok(());
                 };
@@ -51,11 +53,19 @@ impl Projector for CustomerProjector {
                     .to_owned();
 
                 let (sql, values) = self.pool.build_query(&query);
-                sqlx::query_with(&sql, values).execute(self.pool.as_ref()).await?;
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
             }
             "CustomerUpdated" => {
-                let CustomerEvent::Updated { name, comment, currency, timezone, country, visible } =
-                    serde_json::from_slice(&event.payload_bytes)?
+                let CustomerEvent::Updated {
+                    name,
+                    comment,
+                    currency,
+                    timezone,
+                    country,
+                    visible,
+                } = serde_json::from_slice(&event.payload_bytes)?
                 else {
                     return Ok(());
                 };
@@ -86,11 +96,16 @@ impl Projector for CustomerProjector {
                         query.build_sqlx(PostgresQueryBuilder)
                     }
                 };
-                sqlx::query_with(&sql, values).execute(self.pool.as_ref()).await?;
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
             }
             "CustomerBudgetUpdated" => {
-                let CustomerEvent::BudgetUpdated { time_budget, money_budget, budget_is_monthly } =
-                    serde_json::from_slice(&event.payload_bytes)?
+                let CustomerEvent::BudgetUpdated {
+                    time_budget,
+                    money_budget,
+                    budget_is_monthly,
+                } = serde_json::from_slice(&event.payload_bytes)?
                 else {
                     return Ok(());
                 };
@@ -118,7 +133,9 @@ impl Projector for CustomerProjector {
                         query.build_sqlx(PostgresQueryBuilder)
                     }
                 };
-                sqlx::query_with(&sql, values).execute(self.pool.as_ref()).await?;
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
             }
             _ => {}
         }

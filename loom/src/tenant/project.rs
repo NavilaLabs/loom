@@ -1,6 +1,15 @@
 use anyhow::Result;
-use eventually::aggregate::{Root, repository::{Getter, Saver}};
-use loom_core::tenant::{customer::CustomerId, project::{Project, ProjectEvent, ProjectId}};
+use eventually::aggregate::{
+    Root,
+    repository::{Getter, Saver},
+};
+use loom_core::{
+    tenant::{
+        customer::CustomerId,
+        project::{CreateProjectInput, Project, ProjectEvent, ProjectId, UpdateProjectInput},
+    },
+    validation::{Validate, validation_summary},
+};
 use loom_infrastructure_impl::{
     Pool, ScopeTenant, StateDisconnected,
     tenant::project::repositories::{ProjectRepository, ProjectRow},
@@ -16,18 +25,22 @@ pub async fn list(workspace_id: &str) -> Result<Vec<ProjectRow>> {
     Ok(repo.all().await?)
 }
 
-pub async fn create(
-    workspace_id: &str,
-    customer_id: String,
-    name: String,
-) -> Result<ProjectRow> {
+pub async fn create(workspace_id: &str, customer_id: String, name: String) -> Result<ProjectRow> {
+    CreateProjectInput { name: name.clone() }
+        .validate()
+        .map_err(|e| crate::error::ValidationError::new(validation_summary(&e)))?;
+
     let pool = tenant_pool(workspace_id).await?;
     let repo = ProjectRepository::from_pool(pool).await?;
     let id = ProjectId::new();
     let cid: CustomerId = customer_id.parse()?;
     let mut root = Root::<Project>::record_new(
-        ProjectEvent::Created { id: id.clone(), customer_id: cid.clone(), name: name.clone() }
-            .into(),
+        ProjectEvent::Created {
+            id: id.clone(),
+            customer_id: cid.clone(),
+            name: name.clone(),
+        }
+        .into(),
     )?;
     repo.save(&mut root).await?;
     Ok(ProjectRow {
@@ -53,12 +66,23 @@ pub async fn update(
     visible: bool,
     billable: bool,
 ) -> Result<()> {
+    UpdateProjectInput { name: name.clone() }
+        .validate()
+        .map_err(|e| crate::error::ValidationError::new(validation_summary(&e)))?;
+
     let pool = tenant_pool(workspace_id).await?;
     let repo = ProjectRepository::from_pool(pool).await?;
     let agg_id: ProjectId = id.parse()?;
     let mut root = repo.get(&agg_id).await?;
     root.record_that(
-        ProjectEvent::Updated { name, comment, order_number, visible, billable }.into(),
+        ProjectEvent::Updated {
+            name,
+            comment,
+            order_number,
+            visible,
+            billable,
+        }
+        .into(),
     )?;
     repo.save(&mut root).await?;
     Ok(())
@@ -76,7 +100,12 @@ pub async fn set_budget(
     let agg_id: ProjectId = id.parse()?;
     let mut root = repo.get(&agg_id).await?;
     root.record_that(
-        ProjectEvent::BudgetUpdated { time_budget, money_budget, budget_is_monthly }.into(),
+        ProjectEvent::BudgetUpdated {
+            time_budget,
+            money_budget,
+            budget_is_monthly,
+        }
+        .into(),
     )?;
     repo.save(&mut root).await?;
     Ok(())

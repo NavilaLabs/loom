@@ -62,19 +62,49 @@ impl TimesheetView {
         }
     }
 
-    pub fn get_id(&self) -> &TimesheetId { &self.id }
-    pub fn get_user_id(&self) -> &UserId { &self.user_id }
-    pub fn get_project_id(&self) -> &ProjectId { &self.project_id }
-    pub fn get_activity_id(&self) -> &ActivityId { &self.activity_id }
-    pub fn get_start_time(&self) -> &str { &self.start_time }
-    pub fn get_end_time(&self) -> Option<&str> { self.end_time.as_deref() }
-    pub fn get_duration(&self) -> Option<i32> { self.duration }
-    pub fn get_description(&self) -> Option<&str> { self.description.as_deref() }
-    pub fn get_timezone(&self) -> &str { &self.timezone }
-    pub fn is_billable(&self) -> bool { self.billable }
-    pub fn get_hourly_rate(&self) -> Option<i64> { self.hourly_rate }
-    pub fn get_fixed_rate(&self) -> Option<i64> { self.fixed_rate }
-    pub fn get_internal_rate(&self) -> Option<i64> { self.internal_rate }
-    pub fn get_rate(&self) -> Option<i64> { self.rate }
-    pub fn is_exported(&self) -> bool { self.exported }
+    pub fn get_id(&self) -> &TimesheetId {
+        &self.id
+    }
+    pub fn get_user_id(&self) -> &UserId {
+        &self.user_id
+    }
+    pub fn get_project_id(&self) -> &ProjectId {
+        &self.project_id
+    }
+    pub fn get_activity_id(&self) -> &ActivityId {
+        &self.activity_id
+    }
+    pub fn get_start_time(&self) -> &str {
+        &self.start_time
+    }
+    pub fn get_end_time(&self) -> Option<&str> {
+        self.end_time.as_deref()
+    }
+    pub fn get_duration(&self) -> Option<i32> {
+        self.duration
+    }
+    pub fn get_description(&self) -> Option<&str> {
+        self.description.as_deref()
+    }
+    pub fn get_timezone(&self) -> &str {
+        &self.timezone
+    }
+    pub fn is_billable(&self) -> bool {
+        self.billable
+    }
+    pub fn get_hourly_rate(&self) -> Option<i64> {
+        self.hourly_rate
+    }
+    pub fn get_fixed_rate(&self) -> Option<i64> {
+        self.fixed_rate
+    }
+    pub fn get_internal_rate(&self) -> Option<i64> {
+        self.internal_rate
+    }
+    pub fn get_rate(&self) -> Option<i64> {
+        self.rate
+    }
+    pub fn is_exported(&self) -> bool {
+        self.exported
+    }
 }

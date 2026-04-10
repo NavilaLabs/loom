@@ -16,7 +16,9 @@ pub struct TagRepository {
 
 impl Deref for TagRepository {
     type Target = Repository<Tag, Json<Tag>, Json<TagEvent>>;
-    fn deref(&self) -> &Self::Target { &self.repository }
+    fn deref(&self) -> &Self::Target {
+        &self.repository
+    }
 }
 
 impl TagRepository {
@@ -27,11 +29,9 @@ impl TagRepository {
     }
 
     pub async fn all(&self) -> Result<Vec<TagRow>, crate::Error> {
-        let rows = sqlx::query(
-            "SELECT id, name FROM projections__tags ORDER BY name",
-        )
-        .fetch_all(self.pool.as_ref())
-        .await?;
+        let rows = sqlx::query("SELECT id, name FROM projections__tags ORDER BY name")
+            .fetch_all(self.pool.as_ref())
+            .await?;
         rows.into_iter().map(|r| Self::map_row(&r)).collect()
     }
 
@@ -72,10 +72,7 @@ impl Getter<Tag> for TagRepository {
 
 #[async_trait]
 impl Saver<Tag> for TagRepository {
-    async fn save(
-        &self,
-        root: &mut eventually::aggregate::Root<Tag>,
-    ) -> Result<(), SaveError> {
+    async fn save(&self, root: &mut eventually::aggregate::Root<Tag>) -> Result<(), SaveError> {
         self.repository.save(root).await
     }
 }

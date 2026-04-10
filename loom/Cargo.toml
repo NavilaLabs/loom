@@ -24,6 +24,7 @@ eventually = { version = "0.5", git = "https://github.com/get-eventually/eventua
 jsonwebtoken = { version = "10.3.0", features = ["rust_crypto"] }
 serde = { workspace = true }
 sqlx = { workspace = true }
+thiserror = { workspace = true }
 tokio = { workspace = true }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }

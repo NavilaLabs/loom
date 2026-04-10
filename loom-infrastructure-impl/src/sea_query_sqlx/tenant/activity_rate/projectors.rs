@@ -56,7 +56,9 @@ impl Projector for ActivityRateProjector {
                     .to_owned();
 
                 let (sql, values) = self.pool.build_query(&query);
-                sqlx::query_with(&sql, values).execute(self.pool.as_ref()).await?;
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
             }
             "ActivityRateRemoved" => {
                 let query = Query::delete()
@@ -71,7 +73,9 @@ impl Projector for ActivityRateProjector {
                     DatabaseType::Sqlite => query.build_sqlx(sea_query::SqliteQueryBuilder),
                     DatabaseType::Postgres => query.build_sqlx(sea_query::PostgresQueryBuilder),
                 };
-                sqlx::query_with(&sql, values).execute(self.pool.as_ref()).await?;
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
             }
             _ => {}
         }

@@ -4,7 +4,9 @@ use async_trait::async_trait;
 use eventually::aggregate::repository::{GetError, Getter, SaveError, Saver};
 use eventually::serde::Json;
 use eventually_any::snapshot::Repository;
-use loom_core::tenant::customer::{Customer, CustomerEvent, CustomerId, CustomerRepository as CustomerRepositoryTrait};
+use loom_core::tenant::customer::{
+    Customer, CustomerEvent, CustomerId, CustomerRepository as CustomerRepositoryTrait,
+};
 use sqlx::{Row, any::AnyRow};
 
 use crate::ConnectedTenantPool;
@@ -16,7 +18,9 @@ pub struct CustomerRepository {
 
 impl Deref for CustomerRepository {
     type Target = Repository<Customer, Json<Customer>, Json<CustomerEvent>>;
-    fn deref(&self) -> &Self::Target { &self.repository }
+    fn deref(&self) -> &Self::Target {
+        &self.repository
+    }
 }
 
 impl CustomerRepository {

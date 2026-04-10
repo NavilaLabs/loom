@@ -1,4 +1,6 @@
-use crate::components::atoms::{Button, Card, CardContent, CardFooter, Form, FormField, Input, Label};
+use crate::components::atoms::{
+    Button, Card, CardContent, CardFooter, Form, FormField, Input, Label,
+};
 use crate::layouts::DefaultLayout;
 use dioxus::prelude::*;
 use dioxus_free_icons::icons::hi_solid_icons::{HiLogin, HiRefresh};

@@ -39,15 +39,9 @@ impl WorkspaceRoleRepository {
         }
     }
 
-    pub async fn from_pool(
-        pool: ConnectedAdminPool,
-    ) -> Result<Self, sqlx::migrate::MigrateError> {
-        let repository = Repository::new(
-            pool.as_ref().clone(),
-            Json::default(),
-            Json::default(),
-        )
-        .await?;
+    pub async fn from_pool(pool: ConnectedAdminPool) -> Result<Self, sqlx::migrate::MigrateError> {
+        let repository =
+            Repository::new(pool.as_ref().clone(), Json::default(), Json::default()).await?;
         Ok(Self {
             database: pool,
             repository,
@@ -61,7 +55,10 @@ impl WorkspaceRoleRepository {
     }
 
     fn select(&self) -> SelectStatement {
-        sea_query::Query::select().expr(Expr::col(sea_query::Asterisk)).from(TABLE).to_owned()
+        sea_query::Query::select()
+            .expr(Expr::col(sea_query::Asterisk))
+            .from(TABLE)
+            .to_owned()
     }
 
     fn select_count(&self) -> SelectStatement {

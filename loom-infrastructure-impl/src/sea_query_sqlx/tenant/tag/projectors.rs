@@ -26,8 +26,7 @@ impl Projector for TagProjector {
     async fn handle(&mut self, event: RawEvent) -> Result<(), Self::Error> {
         match event.event_type.as_str() {
             "TagCreated" => {
-                let TagEvent::Created { id, name } =
-                    serde_json::from_slice(&event.payload_bytes)?
+                let TagEvent::Created { id, name } = serde_json::from_slice(&event.payload_bytes)?
                 else {
                     return Ok(());
                 };
@@ -40,11 +39,12 @@ impl Projector for TagProjector {
                     .to_owned();
 
                 let (sql, values) = self.pool.build_query(&query);
-                sqlx::query_with(&sql, values).execute(self.pool.as_ref()).await?;
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
             }
             "TagRenamed" => {
-                let TagEvent::Renamed { name } =
-                    serde_json::from_slice(&event.payload_bytes)?
+                let TagEvent::Renamed { name } = serde_json::from_slice(&event.payload_bytes)?
                 else {
                     return Ok(());
                 };
@@ -62,7 +62,9 @@ impl Projector for TagProjector {
                     DatabaseType::Sqlite => query.build_sqlx(sea_query::SqliteQueryBuilder),
                     DatabaseType::Postgres => query.build_sqlx(sea_query::PostgresQueryBuilder),
                 };
-                sqlx::query_with(&sql, values).execute(self.pool.as_ref()).await?;
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
             }
             "TagTimesheetTagged" => {
                 let TagEvent::TimesheetTagged { timesheet_id } =
@@ -82,7 +84,9 @@ impl Projector for TagProjector {
                     .to_owned();
 
                 let (sql, values) = self.pool.build_query(&query);
-                sqlx::query_with(&sql, values).execute(self.pool.as_ref()).await?;
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
             }
             "TagTimesheetUntagged" => {
                 let TagEvent::TimesheetUntagged { timesheet_id } =
@@ -95,10 +99,7 @@ impl Projector for TagProjector {
                     .from_table(TableRef::from(Self::TIMESHEET_TAGS_TABLE))
                     .cond_where(
                         Condition::all()
-                            .add(
-                                Expr::col("timesheet_id")
-                                    .eq(Expr::val(timesheet_id.to_string())),
-                            )
+                            .add(Expr::col("timesheet_id").eq(Expr::val(timesheet_id.to_string())))
                             .add(Expr::col("tag_id").eq(Expr::val(event.stream_id.clone()))),
                     )
                     .to_owned();
@@ -107,7 +108,9 @@ impl Projector for TagProjector {
                     DatabaseType::Sqlite => query.build_sqlx(sea_query::SqliteQueryBuilder),
                     DatabaseType::Postgres => query.build_sqlx(sea_query::PostgresQueryBuilder),
                 };
-                sqlx::query_with(&sql, values).execute(self.pool.as_ref()).await?;
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
             }
             _ => {}
         }

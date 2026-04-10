@@ -4,7 +4,9 @@ use async_trait::async_trait;
 use eventually::aggregate::repository::{GetError, Getter, SaveError, Saver};
 use eventually::serde::Json;
 use eventually_any::snapshot::Repository;
-use loom_core::tenant::project::{Project, ProjectEvent, ProjectId, ProjectRepository as ProjectRepositoryTrait};
+use loom_core::tenant::project::{
+    Project, ProjectEvent, ProjectId, ProjectRepository as ProjectRepositoryTrait,
+};
 use sqlx::{Row, any::AnyRow};
 
 use crate::ConnectedTenantPool;
@@ -16,7 +18,9 @@ pub struct ProjectRepository {
 
 impl Deref for ProjectRepository {
     type Target = Repository<Project, Json<Project>, Json<ProjectEvent>>;
-    fn deref(&self) -> &Self::Target { &self.repository }
+    fn deref(&self) -> &Self::Target {
+        &self.repository
+    }
 }
 
 impl ProjectRepository {
@@ -86,20 +90,14 @@ pub struct ProjectRow {
 
 #[async_trait]
 impl Getter<Project> for ProjectRepository {
-    async fn get(
-        &self,
-        id: &ProjectId,
-    ) -> Result<eventually::aggregate::Root<Project>, GetError> {
+    async fn get(&self, id: &ProjectId) -> Result<eventually::aggregate::Root<Project>, GetError> {
         self.repository.get(id).await
     }
 }
 
 #[async_trait]
 impl Saver<Project> for ProjectRepository {
-    async fn save(
-        &self,
-        root: &mut eventually::aggregate::Root<Project>,
-    ) -> Result<(), SaveError> {
+    async fn save(&self, root: &mut eventually::aggregate::Root<Project>) -> Result<(), SaveError> {
         self.repository.save(root).await
     }
 }

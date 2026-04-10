@@ -17,11 +17,21 @@ pub struct Project {
 }
 
 impl Project {
-    pub fn id(&self) -> &ProjectId { &self.id }
-    pub fn customer_id(&self) -> &CustomerId { &self.customer_id }
-    pub fn name(&self) -> &str { &self.name }
-    pub fn visible(&self) -> bool { self.visible }
-    pub fn billable(&self) -> bool { self.billable }
+    pub fn id(&self) -> &ProjectId {
+        &self.id
+    }
+    pub fn customer_id(&self) -> &CustomerId {
+        &self.customer_id
+    }
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+    pub fn visible(&self) -> bool {
+        self.visible
+    }
+    pub fn billable(&self) -> bool {
+        self.billable
+    }
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -37,13 +47,24 @@ impl Aggregate for Project {
     type Event = ProjectEvent;
     type Error = Error;
 
-    fn type_name() -> &'static str { "project" }
+    fn type_name() -> &'static str {
+        "project"
+    }
 
-    fn aggregate_id(&self) -> &Self::Id { &self.id }
+    fn aggregate_id(&self) -> &Self::Id {
+        &self.id
+    }
 
     fn apply(state: Option<Self>, event: Self::Event) -> Result<Self, Self::Error> {
         match (state, event) {
-            (None, ProjectEvent::Created { id, customer_id, name }) => Ok(Self {
+            (
+                None,
+                ProjectEvent::Created {
+                    id,
+                    customer_id,
+                    name,
+                },
+            ) => Ok(Self {
                 id,
                 customer_id,
                 name,
@@ -52,7 +73,15 @@ impl Aggregate for Project {
             }),
             (Some(_), ProjectEvent::Created { .. }) => Err(Error::AlreadyExists),
             (None, _) => Err(Error::NotFound),
-            (Some(mut p), ProjectEvent::Updated { name, visible, billable, .. }) => {
+            (
+                Some(mut p),
+                ProjectEvent::Updated {
+                    name,
+                    visible,
+                    billable,
+                    ..
+                },
+            ) => {
                 p.name = name;
                 p.visible = visible;
                 p.billable = billable;

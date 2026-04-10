@@ -36,19 +36,35 @@ pub struct ToastMessage {
 
 impl ToastMessage {
     pub fn success(message: impl Into<String>) -> Self {
-        Self { id: next_id(), message: message.into(), variant: ToastVariant::Success }
+        Self {
+            id: next_id(),
+            message: message.into(),
+            variant: ToastVariant::Success,
+        }
     }
 
     pub fn error(message: impl Into<String>) -> Self {
-        Self { id: next_id(), message: message.into(), variant: ToastVariant::Error }
+        Self {
+            id: next_id(),
+            message: message.into(),
+            variant: ToastVariant::Error,
+        }
     }
 
     pub fn info(message: impl Into<String>) -> Self {
-        Self { id: next_id(), message: message.into(), variant: ToastVariant::Info }
+        Self {
+            id: next_id(),
+            message: message.into(),
+            variant: ToastVariant::Info,
+        }
     }
 
     pub fn warning(message: impl Into<String>) -> Self {
-        Self { id: next_id(), message: message.into(), variant: ToastVariant::Warning }
+        Self {
+            id: next_id(),
+            message: message.into(),
+            variant: ToastVariant::Warning,
+        }
     }
 }
 

@@ -59,7 +59,15 @@ impl Aggregate for Customer {
 
     fn apply(state: Option<Self>, event: Self::Event) -> Result<Self, Self::Error> {
         match (state, event) {
-            (None, CustomerEvent::Created { id, name, currency, timezone }) => Ok(Self {
+            (
+                None,
+                CustomerEvent::Created {
+                    id,
+                    name,
+                    currency,
+                    timezone,
+                },
+            ) => Ok(Self {
                 id,
                 name,
                 currency,
@@ -68,7 +76,16 @@ impl Aggregate for Customer {
             }),
             (Some(_), CustomerEvent::Created { .. }) => Err(Error::AlreadyExists),
             (None, _) => Err(Error::NotFound),
-            (Some(mut customer), CustomerEvent::Updated { name, currency, timezone, visible, .. }) => {
+            (
+                Some(mut customer),
+                CustomerEvent::Updated {
+                    name,
+                    currency,
+                    timezone,
+                    visible,
+                    ..
+                },
+            ) => {
                 customer.name = name;
                 customer.currency = currency;
                 customer.timezone = timezone;
@@ -85,18 +102,23 @@ mod tests {
     use super::*;
 
     fn test_id() -> CustomerId {
-        "019d0ce8-facb-7c90-b9d7-287ae4f17c91".parse().expect("valid UUID")
+        "019d0ce8-facb-7c90-b9d7-287ae4f17c91"
+            .parse()
+            .expect("valid UUID")
     }
 
     #[test]
     fn apply_created_event_builds_customer() {
         let id = test_id();
-        let result = Customer::apply(None, CustomerEvent::Created {
-            id: id.clone(),
-            name: "Acme".to_string(),
-            currency: "EUR".to_string(),
-            timezone: "Europe/Berlin".to_string(),
-        });
+        let result = Customer::apply(
+            None,
+            CustomerEvent::Created {
+                id: id.clone(),
+                name: "Acme".to_string(),
+                currency: "EUR".to_string(),
+                timezone: "Europe/Berlin".to_string(),
+            },
+        );
         assert!(result.is_ok());
         let c = result.unwrap();
         assert_eq!(c.id(), &id);
@@ -107,14 +129,25 @@ mod tests {
     #[test]
     fn apply_created_on_existing_returns_already_exists() {
         let id = test_id();
-        let existing = Customer::apply(None, CustomerEvent::Created {
-            id: id.clone(), name: "Acme".to_string(),
-            currency: "EUR".to_string(), timezone: "Europe/Berlin".to_string(),
-        }).unwrap();
-        let result = Customer::apply(Some(existing), CustomerEvent::Created {
-            id, name: "Dup".to_string(),
-            currency: "USD".to_string(), timezone: "UTC".to_string(),
-        });
+        let existing = Customer::apply(
+            None,
+            CustomerEvent::Created {
+                id: id.clone(),
+                name: "Acme".to_string(),
+                currency: "EUR".to_string(),
+                timezone: "Europe/Berlin".to_string(),
+            },
+        )
+        .unwrap();
+        let result = Customer::apply(
+            Some(existing),
+            CustomerEvent::Created {
+                id,
+                name: "Dup".to_string(),
+                currency: "USD".to_string(),
+                timezone: "UTC".to_string(),
+            },
+        );
         assert!(matches!(result, Err(Error::AlreadyExists)));
     }
 }

@@ -25,8 +25,13 @@ impl Projector for ProjectRateProjector {
     async fn handle(&mut self, event: RawEvent) -> Result<(), Self::Error> {
         match event.event_type.as_str() {
             "ProjectRateSet" => {
-                let ProjectRateEvent::Set { id, project_id, user_id, hourly_rate, internal_rate } =
-                    serde_json::from_slice(&event.payload_bytes)?
+                let ProjectRateEvent::Set {
+                    id,
+                    project_id,
+                    user_id,
+                    hourly_rate,
+                    internal_rate,
+                } = serde_json::from_slice(&event.payload_bytes)?
                 else {
                     return Ok(());
                 };
@@ -51,7 +56,9 @@ impl Projector for ProjectRateProjector {
                     .to_owned();
 
                 let (sql, values) = self.pool.build_query(&query);
-                sqlx::query_with(&sql, values).execute(self.pool.as_ref()).await?;
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
             }
             "ProjectRateRemoved" => {
                 let query = Query::delete()
@@ -66,7 +73,9 @@ impl Projector for ProjectRateProjector {
                     DatabaseType::Sqlite => query.build_sqlx(sea_query::SqliteQueryBuilder),
                     DatabaseType::Postgres => query.build_sqlx(sea_query::PostgresQueryBuilder),
                 };
-                sqlx::query_with(&sql, values).execute(self.pool.as_ref()).await?;
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
             }
             _ => {}
         }

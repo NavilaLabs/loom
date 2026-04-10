@@ -19,7 +19,9 @@ pub struct ActivityRateRepository {
 
 impl Deref for ActivityRateRepository {
     type Target = Repository<ActivityRate, Json<ActivityRate>, Json<ActivityRateEvent>>;
-    fn deref(&self) -> &Self::Target { &self.repository }
+    fn deref(&self) -> &Self::Target {
+        &self.repository
+    }
 }
 
 impl ActivityRateRepository {

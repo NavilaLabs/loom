@@ -32,14 +32,15 @@ async fn _get_current_user() -> Result<Option<UserInfo>, ServerFnError> {
     use tower_sessions::Session;
 
     let session: Session = extract().await?;
-    let user: Option<UserInfo> = session
-        .get("user")
-        .await
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })?;
+    let user: Option<UserInfo> =
+        session
+            .get("user")
+            .await
+            .map_err(|e| ServerFnError::ServerError {
+                message: e.to_string(),
+                code: 500,
+                details: None,
+            })?;
     Ok(user)
 }
 

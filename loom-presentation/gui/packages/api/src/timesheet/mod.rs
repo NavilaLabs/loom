@@ -60,7 +60,11 @@ pub async fn start_timesheet(
     #[cfg(not(feature = "server"))]
     {
         let _ = (project_id, activity_id, description, billable);
-        Err(ServerFnError::ServerError { message: "server only".into(), code: 500, details: None })
+        Err(ServerFnError::ServerError {
+            message: "server only".into(),
+            code: 500,
+            details: None,
+        })
     }
 }
 
@@ -125,26 +129,9 @@ pub async fn export_timesheet(timesheet_id: String) -> Result<(), ServerFnError>
 }
 
 #[cfg(feature = "server")]
-async fn session_user() -> Result<crate::auth::UserInfo, ServerFnError> {
-    use crate::auth::UserInfo;
-    use dioxus::fullstack::extract;
-    use tower_sessions::Session;
-
-    let session: Session = extract().await?;
-    let user: Option<UserInfo> = session.get("user").await.map_err(|e| ServerFnError::ServerError {
-        message: e.to_string(),
-        code: 500,
-        details: None,
-    })?;
-    user.ok_or_else(|| ServerFnError::ServerError {
-        message: "not authenticated".into(),
-        code: 401,
-        details: None,
-    })
-}
-
-#[cfg(feature = "server")]
-fn row_to_dto(r: loom::infrastructure::tenant::timesheet::repositories::TimesheetRow) -> TimesheetDto {
+fn row_to_dto(
+    r: loom::infrastructure::tenant::timesheet::repositories::TimesheetRow,
+) -> TimesheetDto {
     TimesheetDto {
         id: r.id,
         user_id: r.user_id,
@@ -165,37 +152,23 @@ fn row_to_dto(r: loom::infrastructure::tenant::timesheet::repositories::Timeshee
 
 #[cfg(feature = "server")]
 async fn _list_timesheets() -> Result<Vec<TimesheetDto>, ServerFnError> {
-    let user = session_user().await?;
-    let workspace_id = user.workspace_id.ok_or_else(|| ServerFnError::ServerError {
-        message: "no workspace".into(),
-        code: 401,
-        details: None,
-    })?;
+    use crate::session;
+
+    let (user, workspace_id) = session::session_workspace().await?;
     let rows = loom::tenant::timesheet::recent(&workspace_id, &user.id)
         .await
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })?;
+        .map_err(session::internal)?;
     Ok(rows.into_iter().map(row_to_dto).collect())
 }
 
 #[cfg(feature = "server")]
 async fn _running_timesheet() -> Result<Option<TimesheetDto>, ServerFnError> {
-    let user = session_user().await?;
-    let workspace_id = user.workspace_id.ok_or_else(|| ServerFnError::ServerError {
-        message: "no workspace".into(),
-        code: 401,
-        details: None,
-    })?;
+    use crate::session;
+
+    let (user, workspace_id) = session::session_workspace().await?;
     let row = loom::tenant::timesheet::running(&workspace_id, &user.id)
         .await
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })?;
+        .map_err(session::internal)?;
     Ok(row.map(row_to_dto))
 }
 
@@ -206,27 +179,12 @@ async fn _start_timesheet(
     description: Option<String>,
     billable: bool,
 ) -> Result<TimesheetDto, ServerFnError> {
-    let user = session_user().await?;
-    let workspace_id = user.workspace_id.ok_or_else(|| ServerFnError::ServerError {
-        message: "no workspace".into(),
-        code: 401,
-        details: None,
-    })?;
-    // Reject if a timer is already running
-    let existing = loom::tenant::timesheet::running(&workspace_id, &user.id)
-        .await
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })?;
-    if existing.is_some() {
-        return Err(ServerFnError::ServerError {
-            message: "A timer is already running. Stop it before starting a new one.".into(),
-            code: 409,
-            details: None,
-        });
-    }
+    use crate::session;
+    use loom::core::permissions;
+
+    let (user, workspace_id) = session::session_workspace().await?;
+    session::require_permission(&user, permissions::TIMESHEET_CREATE).await?;
+
     let r = loom::tenant::timesheet::start(
         &workspace_id,
         &user.id,
@@ -236,11 +194,7 @@ async fn _start_timesheet(
         billable,
     )
     .await
-    .map_err(|e| ServerFnError::ServerError {
-        message: e.to_string(),
-        code: 500,
-        details: None,
-    })?;
+    .map_err(session::internal)?;
     Ok(row_to_dto(r))
 }
 
@@ -250,19 +204,15 @@ async fn _reassign_timesheet(
     project_id: String,
     activity_id: String,
 ) -> Result<(), ServerFnError> {
-    let user = session_user().await?;
-    let workspace_id = user.workspace_id.ok_or_else(|| ServerFnError::ServerError {
-        message: "no workspace".into(),
-        code: 401,
-        details: None,
-    })?;
+    use crate::session;
+    use loom::core::permissions;
+
+    let (user, workspace_id) = session::session_workspace().await?;
+    session::require_permission(&user, permissions::TIMESHEET_UPDATE).await?;
+
     loom::tenant::timesheet::reassign(&workspace_id, &timesheet_id, project_id, activity_id)
         .await
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })
+        .map_err(session::internal)
 }
 
 #[cfg(feature = "server")]
@@ -271,51 +221,40 @@ async fn _update_timesheet(
     description: Option<String>,
     billable: bool,
 ) -> Result<(), ServerFnError> {
-    let user = session_user().await?;
-    let workspace_id = user.workspace_id.ok_or_else(|| ServerFnError::ServerError {
-        message: "no workspace".into(),
-        code: 401,
-        details: None,
-    })?;
+    use crate::session;
+    use loom::core::permissions;
+
+    let (user, workspace_id) = session::session_workspace().await?;
+    session::require_permission(&user, permissions::TIMESHEET_UPDATE).await?;
+
     loom::tenant::timesheet::update(&workspace_id, &timesheet_id, description, billable)
         .await
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })
+        .map_err(session::internal)
 }
 
 #[cfg(feature = "server")]
 async fn _stop_timesheet(timesheet_id: String) -> Result<(), ServerFnError> {
-    let user = session_user().await?;
-    let workspace_id = user.workspace_id.ok_or_else(|| ServerFnError::ServerError {
-        message: "no workspace".into(),
-        code: 401,
-        details: None,
-    })?;
+    use crate::session;
+    use loom::core::permissions;
+
+    // Stopping is treated as a timesheet write operation.
+    let (user, workspace_id) = session::session_workspace().await?;
+    session::require_permission(&user, permissions::TIMESHEET_UPDATE).await?;
+
     loom::tenant::timesheet::stop(&workspace_id, &timesheet_id)
         .await
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })
+        .map_err(session::internal)
 }
 
 #[cfg(feature = "server")]
 async fn _export_timesheet(timesheet_id: String) -> Result<(), ServerFnError> {
-    let user = session_user().await?;
-    let workspace_id = user.workspace_id.ok_or_else(|| ServerFnError::ServerError {
-        message: "no workspace".into(),
-        code: 401,
-        details: None,
-    })?;
+    use crate::session;
+    use loom::core::permissions;
+
+    let (user, workspace_id) = session::session_workspace().await?;
+    session::require_permission(&user, permissions::TIMESHEET_EXPORT).await?;
+
     loom::tenant::timesheet::export(&workspace_id, &timesheet_id)
         .await
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })
+        .map_err(session::internal)
 }

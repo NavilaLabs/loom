@@ -40,7 +40,11 @@ pub async fn create_customer(
     #[cfg(not(feature = "server"))]
     {
         let _ = (name, currency, timezone);
-        Err(ServerFnError::ServerError { message: "server only".into(), code: 500, details: None })
+        Err(ServerFnError::ServerError {
+            message: "server only".into(),
+            code: 500,
+            details: None,
+        })
     }
 }
 
@@ -84,35 +88,13 @@ pub async fn update_customer(
 }
 
 #[cfg(feature = "server")]
-async fn workspace_id_from_session() -> Result<String, ServerFnError> {
-    use crate::auth::UserInfo;
-    use dioxus::fullstack::extract;
-    use tower_sessions::Session;
-
-    let session: Session = extract().await?;
-    let user: Option<UserInfo> = session.get("user").await.map_err(|e| ServerFnError::ServerError {
-        message: e.to_string(),
-        code: 500,
-        details: None,
-    })?;
-    user.and_then(|u| u.workspace_id)
-        .ok_or_else(|| ServerFnError::ServerError {
-            message: "not authenticated or no workspace".into(),
-            code: 401,
-            details: None,
-        })
-}
-
-#[cfg(feature = "server")]
 async fn _list_customers() -> Result<Vec<CustomerDto>, ServerFnError> {
-    let workspace_id = workspace_id_from_session().await?;
+    use crate::session;
+
+    let (_, workspace_id) = session::session_workspace().await?;
     let rows = loom::tenant::customer::list(&workspace_id)
         .await
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })?;
+        .map_err(session::internal)?;
     Ok(rows
         .into_iter()
         .map(|r| CustomerDto {
@@ -136,14 +118,15 @@ async fn _create_customer(
     currency: String,
     timezone: String,
 ) -> Result<CustomerDto, ServerFnError> {
-    let workspace_id = workspace_id_from_session().await?;
+    use crate::session;
+    use loom::core::permissions;
+
+    let (user, workspace_id) = session::session_workspace().await?;
+    session::require_permission(&user, permissions::CUSTOMER_CREATE).await?;
+
     let r = loom::tenant::customer::create(&workspace_id, name, currency, timezone)
         .await
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })?;
+        .map_err(session::internal)?;
     Ok(CustomerDto {
         id: r.id,
         name: r.name,
@@ -168,14 +151,24 @@ async fn _update_customer(
     country: Option<String>,
     visible: bool,
 ) -> Result<(), ServerFnError> {
-    let workspace_id = workspace_id_from_session().await?;
-    loom::tenant::customer::update(&workspace_id, &id, name, comment, currency, timezone, country, visible)
-        .await
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })
+    use crate::session;
+    use loom::core::permissions;
+
+    let (user, workspace_id) = session::session_workspace().await?;
+    session::require_permission(&user, permissions::CUSTOMER_UPDATE).await?;
+
+    loom::tenant::customer::update(
+        &workspace_id,
+        &id,
+        name,
+        comment,
+        currency,
+        timezone,
+        country,
+        visible,
+    )
+    .await
+    .map_err(session::internal)
 }
 
 #[cfg(feature = "server")]
@@ -185,12 +178,19 @@ async fn _set_customer_budget(
     money_budget: Option<i64>,
     budget_is_monthly: bool,
 ) -> Result<(), ServerFnError> {
-    let workspace_id = workspace_id_from_session().await?;
-    loom::tenant::customer::set_budget(&workspace_id, &id, time_budget, money_budget, budget_is_monthly)
-        .await
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })
+    use crate::session;
+    use loom::core::permissions;
+
+    let (user, workspace_id) = session::session_workspace().await?;
+    session::require_permission(&user, permissions::CUSTOMER_UPDATE).await?;
+
+    loom::tenant::customer::set_budget(
+        &workspace_id,
+        &id,
+        time_budget,
+        money_budget,
+        budget_is_monthly,
+    )
+    .await
+    .map_err(session::internal)
 }

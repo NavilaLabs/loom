@@ -8,13 +8,12 @@ use loom_core::admin::{
 use loom_infrastructure::database::Migrate;
 use loom_infrastructure_impl::{
     Pool, ScopeDefault, ScopeTenant, StateDisconnected,
-    database::{Initializer, SqliteInitializationStrategy},
     admin::{
-        authentication::hash_password,
-        user::repositories::UserRepository,
+        authentication::hash_password, user::repositories::UserRepository,
         workspace::repositories::WorkspaceRepository,
         workspace_role::repositories::WorkspaceRoleRepository,
     },
+    database::{Initializer, SqliteInitializationStrategy},
 };
 
 /// Ensures the admin SQLite file exists and all migrations are up to date.

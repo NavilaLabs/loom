@@ -19,13 +19,16 @@ impl ActivityCommand {
         project_id: Option<ProjectId>,
         name: String,
     ) -> Result<Self, crate::Error> {
-        Ok(
-            aggregate::Root::<Activity>::record_new(
-                ActivityEvent::Created { id, project_id, name }.into(),
-            )
-            .map_err(activity::DomainError::from)?
+        Ok(aggregate::Root::<Activity>::record_new(
+            ActivityEvent::Created {
+                id,
+                project_id,
+                name,
+            }
             .into(),
         )
+        .map_err(activity::DomainError::from)?
+        .into())
     }
 
     pub fn update(
@@ -36,7 +39,13 @@ impl ActivityCommand {
         billable: bool,
     ) -> Result<(), crate::Error> {
         self.record_that(
-            ActivityEvent::Updated { name, comment, visible, billable }.into(),
+            ActivityEvent::Updated {
+                name,
+                comment,
+                visible,
+                billable,
+            }
+            .into(),
         )
         .map_err(|e| activity::DomainError::AggregateError(e).into())
     }

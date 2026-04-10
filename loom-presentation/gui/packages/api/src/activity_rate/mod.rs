@@ -61,28 +61,6 @@ pub async fn remove_activity_rate(activity_id: String) -> Result<(), ServerFnErr
 }
 
 #[cfg(feature = "server")]
-async fn workspace_id_from_session() -> Result<String, ServerFnError> {
-    use crate::auth::UserInfo;
-    use dioxus::fullstack::extract;
-    use tower_sessions::Session;
-    let session: Session = extract().await?;
-    let user: Option<UserInfo> = session
-        .get("user")
-        .await
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })?;
-    user.and_then(|u| u.workspace_id)
-        .ok_or_else(|| ServerFnError::ServerError {
-            message: "not authenticated or no workspace".into(),
-            code: 401,
-            details: None,
-        })
-}
-
-#[cfg(feature = "server")]
 fn row_to_dto(
     r: loom::infrastructure::tenant::activity_rate::repositories::ActivityRateRow,
 ) -> ActivityRateDto {
@@ -96,18 +74,14 @@ fn row_to_dto(
 }
 
 #[cfg(feature = "server")]
-async fn _list_activity_rates(
-    activity_id: String,
-) -> Result<Vec<ActivityRateDto>, ServerFnError> {
-    let workspace_id = workspace_id_from_session().await?;
+async fn _list_activity_rates(activity_id: String) -> Result<Vec<ActivityRateDto>, ServerFnError> {
+    use crate::session;
+
+    let (_, workspace_id) = session::session_workspace().await?;
     loom::tenant::activity_rate::list_for_activity(&workspace_id, &activity_id)
         .await
         .map(|rows| rows.into_iter().map(row_to_dto).collect())
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })
+        .map_err(session::internal)
 }
 
 #[cfg(feature = "server")]
@@ -116,30 +90,27 @@ async fn _set_activity_rate(
     hourly_rate: i64,
     internal_rate: Option<i64>,
 ) -> Result<ActivityRateDto, ServerFnError> {
-    let workspace_id = workspace_id_from_session().await?;
-    loom::tenant::activity_rate::set_default(
-        &workspace_id,
-        activity_id,
-        hourly_rate,
-        internal_rate,
-    )
-    .await
-    .map(row_to_dto)
-    .map_err(|e| ServerFnError::ServerError {
-        message: e.to_string(),
-        code: 500,
-        details: None,
-    })
+    use crate::session;
+    use loom::core::permissions;
+
+    let (user, workspace_id) = session::session_workspace().await?;
+    session::require_permission(&user, permissions::RATE_MANAGE).await?;
+
+    loom::tenant::activity_rate::set_default(&workspace_id, activity_id, hourly_rate, internal_rate)
+        .await
+        .map(row_to_dto)
+        .map_err(session::internal)
 }
 
 #[cfg(feature = "server")]
 async fn _remove_activity_rate(activity_id: String) -> Result<(), ServerFnError> {
-    let workspace_id = workspace_id_from_session().await?;
+    use crate::session;
+    use loom::core::permissions;
+
+    let (user, workspace_id) = session::session_workspace().await?;
+    session::require_permission(&user, permissions::RATE_MANAGE).await?;
+
     loom::tenant::activity_rate::remove_default(&workspace_id, &activity_id)
         .await
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })
+        .map_err(session::internal)
 }

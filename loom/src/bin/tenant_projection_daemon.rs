@@ -65,8 +65,7 @@ async fn main() -> Result<()> {
             .await?;
 
         let checkpoint_name = format!("tenant_projection_{tenant_token}");
-        let checkpoint =
-            SqlCheckpoint::new(pool.clone().into_pool(), &checkpoint_name).await?;
+        let checkpoint = SqlCheckpoint::new(pool.clone().into_pool(), &checkpoint_name).await?;
 
         daemon.register_with_config(
             ProjectionRunner::new(pool.clone().into_pool(), ProjectionSource::AllStreams),

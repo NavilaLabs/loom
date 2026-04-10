@@ -3,6 +3,7 @@
 use dioxus::prelude::*;
 
 pub mod components;
+pub mod form_machine;
 pub mod layouts;
 pub mod views;
 

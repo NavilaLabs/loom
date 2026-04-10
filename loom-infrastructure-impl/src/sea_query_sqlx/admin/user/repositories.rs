@@ -90,7 +90,10 @@ impl UserRepository {
     }
 
     fn select(&self) -> SelectStatement {
-        sea_query::Query::select().expr(Expr::col(sea_query::Asterisk)).from(TABLE).to_owned()
+        sea_query::Query::select()
+            .expr(Expr::col(sea_query::Asterisk))
+            .from(TABLE)
+            .to_owned()
     }
 
     fn select_count(&self) -> SelectStatement {

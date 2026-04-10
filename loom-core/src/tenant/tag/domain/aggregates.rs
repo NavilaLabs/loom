@@ -13,8 +13,12 @@ pub struct Tag {
 }
 
 impl Tag {
-    pub fn id(&self) -> &TagId { &self.id }
-    pub fn name(&self) -> &str { &self.name }
+    pub fn id(&self) -> &TagId {
+        &self.id
+    }
+    pub fn name(&self) -> &str {
+        &self.name
+    }
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -30,9 +34,13 @@ impl Aggregate for Tag {
     type Event = TagEvent;
     type Error = Error;
 
-    fn type_name() -> &'static str { "tag" }
+    fn type_name() -> &'static str {
+        "tag"
+    }
 
-    fn aggregate_id(&self) -> &Self::Id { &self.id }
+    fn aggregate_id(&self) -> &Self::Id {
+        &self.id
+    }
 
     fn apply(state: Option<Self>, event: Self::Event) -> Result<Self, Self::Error> {
         match (state, event) {

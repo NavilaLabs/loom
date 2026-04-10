@@ -1,5 +1,6 @@
 use eventually::aggregate;
 
+use crate::tenant::customer::CustomerId;
 use crate::tenant::project::{
     self,
     domain::{
@@ -7,7 +8,6 @@ use crate::tenant::project::{
         events::ProjectEvent,
     },
 };
-use crate::tenant::customer::CustomerId;
 
 #[eventually_macros::aggregate_root(Project)]
 pub struct ProjectCommand;
@@ -19,13 +19,16 @@ impl ProjectCommand {
         customer_id: CustomerId,
         name: String,
     ) -> Result<Self, crate::Error> {
-        Ok(
-            aggregate::Root::<Project>::record_new(
-                ProjectEvent::Created { id, customer_id, name }.into(),
-            )
-            .map_err(project::DomainError::from)?
+        Ok(aggregate::Root::<Project>::record_new(
+            ProjectEvent::Created {
+                id,
+                customer_id,
+                name,
+            }
             .into(),
         )
+        .map_err(project::DomainError::from)?
+        .into())
     }
 
     pub fn update(
@@ -37,7 +40,14 @@ impl ProjectCommand {
         billable: bool,
     ) -> Result<(), crate::Error> {
         self.record_that(
-            ProjectEvent::Updated { name, comment, order_number, visible, billable }.into(),
+            ProjectEvent::Updated {
+                name,
+                comment,
+                order_number,
+                visible,
+                billable,
+            }
+            .into(),
         )
         .map_err(|e| project::DomainError::AggregateError(e).into())
     }
@@ -49,7 +59,12 @@ impl ProjectCommand {
         budget_is_monthly: bool,
     ) -> Result<(), crate::Error> {
         self.record_that(
-            ProjectEvent::BudgetUpdated { time_budget, money_budget, budget_is_monthly }.into(),
+            ProjectEvent::BudgetUpdated {
+                time_budget,
+                money_budget,
+                budget_is_monthly,
+            }
+            .into(),
         )
         .map_err(|e| project::DomainError::AggregateError(e).into())
     }

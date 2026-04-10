@@ -1,7 +1,11 @@
 pub(crate) mod application;
 pub(crate) mod domain;
 
-pub use application::{commands::CustomerCommand, views::CustomerView};
+pub use application::{
+    commands::CustomerCommand,
+    inputs::{CreateCustomerInput, UpdateCustomerInput},
+    views::CustomerView,
+};
 pub use domain::{
     Error as DomainError,
     aggregates::{Customer, CustomerId},

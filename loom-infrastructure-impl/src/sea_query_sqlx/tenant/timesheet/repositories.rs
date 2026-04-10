@@ -4,7 +4,9 @@ use async_trait::async_trait;
 use eventually::aggregate::repository::{GetError, Getter, SaveError, Saver};
 use eventually::serde::Json;
 use eventually_any::snapshot::Repository;
-use loom_core::tenant::timesheet::{Timesheet, TimesheetEvent, TimesheetId, TimesheetRepository as TimesheetRepositoryTrait};
+use loom_core::tenant::timesheet::{
+    Timesheet, TimesheetEvent, TimesheetId, TimesheetRepository as TimesheetRepositoryTrait,
+};
 use sqlx::{Row, any::AnyRow};
 
 use crate::ConnectedTenantPool;
@@ -16,7 +18,9 @@ pub struct TimesheetRepository {
 
 impl Deref for TimesheetRepository {
     type Target = Repository<Timesheet, Json<Timesheet>, Json<TimesheetEvent>>;
-    fn deref(&self) -> &Self::Target { &self.repository }
+    fn deref(&self) -> &Self::Target {
+        &self.repository
+    }
 }
 
 impl TimesheetRepository {
@@ -26,17 +30,13 @@ impl TimesheetRepository {
         Ok(Self { pool, repository })
     }
 
-    const SELECT: &'static str =
-        "SELECT id, user_id, project_id, activity_id, start_time, end_time, \
+    const SELECT: &'static str = "SELECT id, user_id, project_id, activity_id, start_time, end_time, \
          duration, description, timezone, billable, exported, \
          hourly_rate, fixed_rate, internal_rate, rate \
          FROM projections__timesheets";
 
     /// Most-recent 50 timesheets for a user, newest first.
-    pub async fn recent_for_user(
-        &self,
-        user_id: &str,
-    ) -> Result<Vec<TimesheetRow>, crate::Error> {
+    pub async fn recent_for_user(&self, user_id: &str) -> Result<Vec<TimesheetRow>, crate::Error> {
         let sql = format!(
             "{} WHERE user_id = ? ORDER BY start_time DESC LIMIT 50",
             Self::SELECT

@@ -1,6 +1,9 @@
 use anyhow::Result;
 use chrono::Utc;
-use eventually::aggregate::{Root, repository::{Getter, Saver}};
+use eventually::aggregate::{
+    Root,
+    repository::{Getter, Saver},
+};
 use loom_core::{
     shared::AggregateId,
     tenant::{
@@ -45,6 +48,14 @@ pub async fn start(
     let pool = tenant_pool(workspace_id).await?;
     let repo = TimesheetRepository::from_pool(pool).await?;
 
+    // Enforce: only one running timer per user at a time.
+    if repo.running_for_user(user_id).await?.is_some() {
+        return Err(crate::error::ValidationError::new(
+            "A timer is already running — stop it before starting a new one",
+        )
+        .into());
+    }
+
     let id = TimesheetId::new();
     let uid: AggregateId = user_id.parse()?;
     let pid: Option<ProjectId> = project_id.as_deref().map(|s| s.parse()).transpose()?;
@@ -66,7 +77,11 @@ pub async fn start(
     )?;
     if description.is_some() {
         root.record_that(
-            TimesheetEvent::Updated { description: description.clone(), billable }.into(),
+            TimesheetEvent::Updated {
+                description: description.clone(),
+                billable,
+            }
+            .into(),
         )?;
     }
     repo.save(&mut root).await?;
@@ -102,7 +117,13 @@ pub async fn reassign(
     let mut root = repo.get(&agg_id).await?;
     let pid: ProjectId = project_id.parse()?;
     let aid: ActivityId = activity_id.parse()?;
-    root.record_that(TimesheetEvent::Reassigned { project_id: pid, activity_id: aid }.into())?;
+    root.record_that(
+        TimesheetEvent::Reassigned {
+            project_id: pid,
+            activity_id: aid,
+        }
+        .into(),
+    )?;
     repo.save(&mut root).await?;
     Ok(())
 }
@@ -117,7 +138,13 @@ pub async fn update(
     let repo = TimesheetRepository::from_pool(pool).await?;
     let agg_id: TimesheetId = timesheet_id.parse()?;
     let mut root = repo.get(&agg_id).await?;
-    root.record_that(TimesheetEvent::Updated { description, billable }.into())?;
+    root.record_that(
+        TimesheetEvent::Updated {
+            description,
+            billable,
+        }
+        .into(),
+    )?;
     repo.save(&mut root).await?;
     Ok(())
 }

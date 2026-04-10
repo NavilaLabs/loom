@@ -17,11 +17,21 @@ pub struct Activity {
 }
 
 impl Activity {
-    pub fn id(&self) -> &ActivityId { &self.id }
-    pub fn project_id(&self) -> Option<&ProjectId> { self.project_id.as_ref() }
-    pub fn name(&self) -> &str { &self.name }
-    pub fn visible(&self) -> bool { self.visible }
-    pub fn billable(&self) -> bool { self.billable }
+    pub fn id(&self) -> &ActivityId {
+        &self.id
+    }
+    pub fn project_id(&self) -> Option<&ProjectId> {
+        self.project_id.as_ref()
+    }
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+    pub fn visible(&self) -> bool {
+        self.visible
+    }
+    pub fn billable(&self) -> bool {
+        self.billable
+    }
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -37,13 +47,24 @@ impl Aggregate for Activity {
     type Event = ActivityEvent;
     type Error = Error;
 
-    fn type_name() -> &'static str { "activity" }
+    fn type_name() -> &'static str {
+        "activity"
+    }
 
-    fn aggregate_id(&self) -> &Self::Id { &self.id }
+    fn aggregate_id(&self) -> &Self::Id {
+        &self.id
+    }
 
     fn apply(state: Option<Self>, event: Self::Event) -> Result<Self, Self::Error> {
         match (state, event) {
-            (None, ActivityEvent::Created { id, project_id, name }) => Ok(Self {
+            (
+                None,
+                ActivityEvent::Created {
+                    id,
+                    project_id,
+                    name,
+                },
+            ) => Ok(Self {
                 id,
                 project_id,
                 name,
@@ -52,7 +73,15 @@ impl Aggregate for Activity {
             }),
             (Some(_), ActivityEvent::Created { .. }) => Err(Error::AlreadyExists),
             (None, _) => Err(Error::NotFound),
-            (Some(mut a), ActivityEvent::Updated { name, visible, billable, .. }) => {
+            (
+                Some(mut a),
+                ActivityEvent::Updated {
+                    name,
+                    visible,
+                    billable,
+                    ..
+                },
+            ) => {
                 a.name = name;
                 a.visible = visible;
                 a.billable = billable;

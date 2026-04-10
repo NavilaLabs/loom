@@ -1,17 +1,30 @@
 use crate::components::atoms::card::{Card, CardContent, CardFooter, CardHeader, CardTitle};
-use crate::components::atoms::{Button, Input, Select, SelectOption, ToastMessage, Toasts};
+use crate::components::atoms::{
+    Button, Input, Select, SelectOption, SkeletonListItem, ToastMessage, Toasts,
+};
+use crate::form_machine::{new_form, FormAction, State};
 use crate::layouts::DefaultLayout;
 use api::customer::CustomerDto;
 use api::project::ProjectDto;
 use dioxus::prelude::*;
-use dioxus_free_icons::icons::hi_solid_icons::{HiBriefcase, HiPencil, HiPlus, HiSave, HiX};
+use dioxus_free_icons::icons::hi_solid_icons::{
+    HiBriefcase, HiPencil, HiPlus, HiRefresh, HiSave, HiX,
+};
 use dioxus_free_icons::Icon;
+use loom_core::{
+    tenant::project::{CreateProjectInput, UpdateProjectInput},
+    validation::{validation_summary, Validate},
+};
 
 #[component]
 pub fn Projects() -> Element {
     let mut projects = use_signal(Vec::<ProjectDto>::new);
     let mut customers = use_signal(Vec::<CustomerDto>::new);
+    let mut loading = use_signal(|| true);
     let mut toasts: Toasts = use_context();
+
+    // State machine drives the create-form lifecycle.
+    let mut create_form = use_signal(new_form);
 
     // Create form
     let mut new_name = use_signal(String::new);
@@ -19,6 +32,7 @@ pub fn Projects() -> Element {
 
     // Inline edit state
     let mut editing_id = use_signal(|| Option::<String>::None);
+    let mut edit_form = use_signal(new_form);
     let mut edit_name = use_signal(String::new);
     let mut edit_comment = use_signal(String::new);
     let mut edit_order_number = use_signal(String::new);
@@ -37,12 +51,24 @@ pub fn Projects() -> Element {
             Ok(list) => customers.set(list),
             Err(e) => toasts.write().push(ToastMessage::error(e.to_string())),
         }
+        loading.set(false);
     });
 
     let on_create = move |_| async move {
         let name = new_name.peek().clone();
         let cid = new_customer_id.peek().clone();
-        if name.is_empty() || cid.is_none() {
+
+        create_form.write().handle(&FormAction::Submit);
+        if cid.is_none() {
+            create_form
+                .write()
+                .handle(&FormAction::Fail("Please select a customer".into()));
+            return;
+        }
+        if let Err(e) = (CreateProjectInput { name: name.clone() }).validate() {
+            create_form
+                .write()
+                .handle(&FormAction::Fail(validation_summary(&e)));
             return;
         }
         match api::project::create_project(cid.unwrap(), name).await {
@@ -50,9 +76,17 @@ pub fn Projects() -> Element {
                 projects.write().push(dto);
                 new_name.set(String::new());
                 new_customer_id.set(None);
-                toasts.write().push(ToastMessage::success("Project created"));
+                create_form
+                    .write()
+                    .handle(&FormAction::Succeed("Project created".into()));
+                toasts
+                    .write()
+                    .push(ToastMessage::success("Project created"));
             }
-            Err(e) => toasts.write().push(ToastMessage::error(e.to_string())),
+            Err(e) => {
+                create_form.write().handle(&FormAction::Fail(e.to_string()));
+                toasts.write().push(ToastMessage::error(e.to_string()));
+            }
         }
     };
 
@@ -64,37 +98,70 @@ pub fn Projects() -> Element {
         let name = edit_name.peek().clone();
         let comment = {
             let s = edit_comment.peek().clone();
-            if s.is_empty() { None } else { Some(s) }
+            if s.is_empty() {
+                None
+            } else {
+                Some(s)
+            }
         };
         let order_number = {
             let s = edit_order_number.peek().clone();
-            if s.is_empty() { None } else { Some(s) }
+            if s.is_empty() {
+                None
+            } else {
+                Some(s)
+            }
         };
         let visible = *edit_visible.peek();
         let billable = *edit_billable.peek();
 
+        edit_form.write().handle(&FormAction::Submit);
+        if let Err(e) = (UpdateProjectInput { name: name.clone() }).validate() {
+            edit_form
+                .write()
+                .handle(&FormAction::Fail(validation_summary(&e)));
+            return;
+        }
+
         if let Err(e) = api::project::update_project(
-            id.clone(), name.clone(), comment.clone(), order_number.clone(), visible, billable,
-        ).await {
+            id.clone(),
+            name.clone(),
+            comment.clone(),
+            order_number.clone(),
+            visible,
+            billable,
+        )
+        .await
+        {
+            edit_form.write().handle(&FormAction::Fail(e.to_string()));
             toasts.write().push(ToastMessage::error(e.to_string()));
             return;
         }
 
         // time_budget stored in seconds; GUI shows hours
-        let time_budget: Option<i32> = edit_time_budget.peek().parse::<f64>().ok()
+        let time_budget: Option<i32> = edit_time_budget
+            .peek()
+            .parse::<f64>()
+            .ok()
             .map(|h| (h * 3600.0) as i32);
-        let money_budget: Option<i64> = edit_money_budget.peek().parse::<f64>().ok()
+        let money_budget: Option<i64> = edit_money_budget
+            .peek()
+            .parse::<f64>()
+            .ok()
             .map(|v| (v * 100.0) as i64);
         let budget_monthly = *edit_budget_monthly.peek();
-        if let Err(e) = api::project::set_project_budget(
-            id.clone(), time_budget, money_budget, budget_monthly,
-        ).await {
+        if let Err(e) =
+            api::project::set_project_budget(id.clone(), time_budget, money_budget, budget_monthly)
+                .await
+        {
+            edit_form.write().handle(&FormAction::Fail(e.to_string()));
             toasts.write().push(ToastMessage::error(e.to_string()));
             return;
         }
 
         // Patch the item in-place — no extra round-trip needed
-        let customer_id = projects.read()
+        let customer_id = projects
+            .read()
             .iter()
             .find(|x| x.id == id)
             .map(|p| p.customer_id.clone())
@@ -114,9 +181,14 @@ pub fn Projects() -> Element {
         if let Some(item) = projects.write().iter_mut().find(|x| x.id == id) {
             *item = updated;
         }
+        edit_form
+            .write()
+            .handle(&FormAction::Succeed("Project saved".into()));
         editing_id.set(None);
         toasts.write().push(ToastMessage::success("Project saved"));
     };
+
+    let create_submitting = matches!(create_form.read().state(), State::Submitting {});
 
     rsx! {
         DefaultLayout {
@@ -155,17 +227,34 @@ pub fn Projects() -> Element {
                                 }
                             }
                         }
+                        if matches!(create_form.read().state(), State::Error {}) {
+                            p { class: "text-red-500 text-sm mt-2",
+                                "{create_form.read().message}"
+                            }
+                        }
                     }
                     CardFooter {
-                        Button { onclick: on_create,
-                            Icon { icon: HiPlus, width: 16, height: 16 }
-                            "Create"
+                        Button {
+                            onclick: on_create,
+                            disabled: create_submitting,
+                            if create_submitting {
+                                Icon { icon: HiRefresh, width: 16, height: 16 }
+                                "Creating…"
+                            } else {
+                                Icon { icon: HiPlus, width: 16, height: 16 }
+                                "Create"
+                            }
                         }
                     }
                 }
 
                 // ── Project list ─────────────────────────────────────────────
                 div { class: "flex flex-col gap-3",
+                    if *loading.read() {
+                        for _ in 0..4 {
+                            SkeletonListItem {}
+                        }
+                    }
                     for project in projects.read().clone() {
                         {
                             let p = project.clone();
@@ -176,6 +265,7 @@ pub fn Projects() -> Element {
                                 .find(|c| c.id == p.customer_id)
                                 .map(|c| c.name.clone())
                                 .unwrap_or_else(|| p.customer_id.clone());
+                            let edit_submitting = matches!(edit_form.read().state(), State::Submitting {});
 
                             if is_editing {
                                 rsx! {
@@ -185,9 +275,16 @@ pub fn Projects() -> Element {
                                                 div { class: "flex items-center justify-between",
                                                     span { "{p.name}" }
                                                     div { class: "flex gap-2",
-                                                        Button { onclick: on_save,
-                                                            Icon { icon: HiSave, width: 15, height: 15 }
-                                                            "Save"
+                                                        Button {
+                                                            onclick: on_save,
+                                                            disabled: edit_submitting,
+                                                            if edit_submitting {
+                                                                Icon { icon: HiRefresh, width: 15, height: 15 }
+                                                                "Saving…"
+                                                            } else {
+                                                                Icon { icon: HiSave, width: 15, height: 15 }
+                                                                "Save"
+                                                            }
                                                         }
                                                         Button {
                                                             onclick: move |_| editing_id.set(None),
@@ -272,6 +369,11 @@ pub fn Projects() -> Element {
                                                     }
                                                 }
                                             }
+                                            if matches!(edit_form.read().state(), State::Error {}) {
+                                                p { class: "text-red-500 text-sm mt-2",
+                                                    "{edit_form.read().message}"
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -316,6 +418,7 @@ pub fn Projects() -> Element {
                                                             edit_time_budget.set(pr.time_budget.map(|v| format!("{:.1}", v as f64 / 3600.0)).unwrap_or_default());
                                                             edit_money_budget.set(pr.money_budget.map(|v| format!("{:.2}", v as f64 / 100.0)).unwrap_or_default());
                                                             edit_budget_monthly.set(pr.budget_is_monthly);
+                                                            edit_form.write().handle(&FormAction::Reset);
                                                             editing_id.set(Some(pr.id));
                                                         }
                                                     },

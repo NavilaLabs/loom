@@ -39,3 +39,6 @@ pub use tabs::*;
 
 pub mod tooltip;
 pub use tooltip::*;
+
+pub mod skeleton;
+pub use skeleton::*;

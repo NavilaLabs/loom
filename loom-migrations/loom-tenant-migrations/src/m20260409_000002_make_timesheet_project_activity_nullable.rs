@@ -37,14 +37,8 @@ impl MigrationTrait for Migration {
                     .col(big_integer_null("internal_rate"))
                     .col(big_integer_null("rate"))
                     .col(integer("exported").default(0))
-                    .col(
-                        timestamp_with_time_zone("created_at")
-                            .default(Expr::current_timestamp()),
-                    )
-                    .col(
-                        timestamp_with_time_zone("updated_at")
-                            .default(Expr::current_timestamp()),
-                    )
+                    .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
+                    .col(timestamp_with_time_zone("updated_at").default(Expr::current_timestamp()))
                     // No FK constraints — project/activity are optional
                     .to_owned(),
             )

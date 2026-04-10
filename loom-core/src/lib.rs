@@ -1,6 +1,8 @@
 pub mod admin;
+pub mod permissions;
 pub mod shared;
 pub mod tenant;
+pub mod validation;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {

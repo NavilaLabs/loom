@@ -18,11 +18,21 @@ pub struct ActivityRate {
 }
 
 impl ActivityRate {
-    pub fn id(&self) -> &ActivityRateId { &self.id }
-    pub fn activity_id(&self) -> &ActivityId { &self.activity_id }
-    pub fn user_id(&self) -> Option<&UserId> { self.user_id.as_ref() }
-    pub fn hourly_rate(&self) -> i64 { self.hourly_rate }
-    pub fn internal_rate(&self) -> Option<i64> { self.internal_rate }
+    pub fn id(&self) -> &ActivityRateId {
+        &self.id
+    }
+    pub fn activity_id(&self) -> &ActivityId {
+        &self.activity_id
+    }
+    pub fn user_id(&self) -> Option<&UserId> {
+        self.user_id.as_ref()
+    }
+    pub fn hourly_rate(&self) -> i64 {
+        self.hourly_rate
+    }
+    pub fn internal_rate(&self) -> Option<i64> {
+        self.internal_rate
+    }
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -38,16 +48,32 @@ impl Aggregate for ActivityRate {
     type Event = ActivityRateEvent;
     type Error = Error;
 
-    fn type_name() -> &'static str { "activity_rate" }
+    fn type_name() -> &'static str {
+        "activity_rate"
+    }
 
-    fn aggregate_id(&self) -> &Self::Id { &self.id }
+    fn aggregate_id(&self) -> &Self::Id {
+        &self.id
+    }
 
     fn apply(state: Option<Self>, event: Self::Event) -> Result<Self, Self::Error> {
         match (state, event) {
             (
                 None,
-                ActivityRateEvent::Set { id, activity_id, user_id, hourly_rate, internal_rate },
-            ) => Ok(Self { id, activity_id, user_id, hourly_rate, internal_rate }),
+                ActivityRateEvent::Set {
+                    id,
+                    activity_id,
+                    user_id,
+                    hourly_rate,
+                    internal_rate,
+                },
+            ) => Ok(Self {
+                id,
+                activity_id,
+                user_id,
+                hourly_rate,
+                internal_rate,
+            }),
             (Some(_), ActivityRateEvent::Set { .. }) => Err(Error::AlreadyExists),
             (None, _) => Err(Error::NotFound),
             (Some(r), ActivityRateEvent::Removed) => Ok(r),

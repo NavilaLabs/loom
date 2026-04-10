@@ -1,8 +1,8 @@
 use eventually::message::Message;
 use serde::{Deserialize, Serialize};
 
-use crate::tenant::project::ProjectId;
 use crate::tenant::customer::CustomerId;
+use crate::tenant::project::ProjectId;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum ProjectEvent {

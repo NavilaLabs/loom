@@ -1,5 +1,7 @@
 use crate::components::atoms::card::{Card, CardContent, CardFooter, CardHeader, CardTitle};
-use crate::components::atoms::{Button, Input, Select, SelectOption, ToastMessage, Toasts};
+use crate::components::atoms::{
+    Button, Input, Select, SelectOption, SkeletonListItem, ToastMessage, Toasts,
+};
 use crate::layouts::DefaultLayout;
 use api::activity::ActivityDto;
 use api::project::ProjectDto;
@@ -14,6 +16,7 @@ use dioxus_free_icons::Icon;
 #[component]
 pub fn Timesheets() -> Element {
     let mut timesheets = use_signal(Vec::<TimesheetDto>::new);
+    let mut loading = use_signal(|| true);
     let mut running: crate::RunningTimer = use_context();
     let mut projects = use_signal(Vec::<ProjectDto>::new);
     let mut activities = use_signal(Vec::<ActivityDto>::new);
@@ -74,6 +77,7 @@ pub fn Timesheets() -> Element {
         if let Ok(list) = api::tag::list_tags().await {
             all_tags.set(list);
         }
+        loading.set(false);
     });
 
     let on_start = move |_| async move {
@@ -85,7 +89,14 @@ pub fn Timesheets() -> Element {
             return;
         };
         let desc_opt = if desc.is_empty() { None } else { Some(desc) };
-        match api::timesheet::start_timesheet(Some(pid.clone()), Some(aid.clone()), desc_opt.clone(), bill).await {
+        match api::timesheet::start_timesheet(
+            Some(pid.clone()),
+            Some(aid.clone()),
+            desc_opt.clone(),
+            bill,
+        )
+        .await
+        {
             Ok(dto) => {
                 run_project_id.set(Some(pid));
                 run_activity_id.set(Some(aid));
@@ -120,19 +131,29 @@ pub fn Timesheets() -> Element {
         let new_aid = run_activity_id.peek().clone();
         let desc = {
             let s = run_description.peek().clone();
-            if s.is_empty() { None } else { Some(s) }
+            if s.is_empty() {
+                None
+            } else {
+                Some(s)
+            }
         };
         let bill = *run_billable.peek();
 
         // Reassign project/activity if changed
         if let (Some(pid), Some(aid)) = (new_pid.clone(), new_aid.clone()) {
-            let needs_reassign = running.peek().as_ref().map(|ts| {
-                ts.project_id.as_deref() != Some(pid.as_str()) || ts.activity_id.as_deref() != Some(aid.as_str())
-            }).unwrap_or(false);
+            let needs_reassign = running
+                .peek()
+                .as_ref()
+                .map(|ts| {
+                    ts.project_id.as_deref() != Some(pid.as_str())
+                        || ts.activity_id.as_deref() != Some(aid.as_str())
+                })
+                .unwrap_or(false);
             if needs_reassign {
-                if let Err(e) = api::timesheet::reassign_timesheet(
-                    ts_id.clone(), pid.clone(), aid.clone(),
-                ).await {
+                if let Err(e) =
+                    api::timesheet::reassign_timesheet(ts_id.clone(), pid.clone(), aid.clone())
+                        .await
+                {
                     toasts.write().push(ToastMessage::error(e.to_string()));
                     return;
                 }
@@ -140,17 +161,19 @@ pub fn Timesheets() -> Element {
         }
 
         // Update description/billable
-        if let Err(e) = api::timesheet::update_timesheet(
-            ts_id.clone(), desc.clone(), bill,
-        ).await {
+        if let Err(e) = api::timesheet::update_timesheet(ts_id.clone(), desc.clone(), bill).await {
             toasts.write().push(ToastMessage::error(e.to_string()));
             return;
         }
 
         // Patch running signal in-place
         if let Some(ts) = running.write().as_mut() {
-            if let Some(pid) = new_pid { ts.project_id = Some(pid); }
-            if let Some(aid) = new_aid { ts.activity_id = Some(aid); }
+            if let Some(pid) = new_pid {
+                ts.project_id = Some(pid);
+            }
+            if let Some(aid) = new_aid {
+                ts.activity_id = Some(aid);
+            }
             ts.description = desc;
             ts.billable = bill;
         }
@@ -188,7 +211,11 @@ pub fn Timesheets() -> Element {
 
         let desc = {
             let s = edit_description.peek().clone();
-            if s.is_empty() { None } else { Some(s) }
+            if s.is_empty() {
+                None
+            } else {
+                Some(s)
+            }
         };
         let bill = *edit_billable.peek();
         if let Err(e) = api::timesheet::update_timesheet(id.clone(), desc.clone(), bill).await {
@@ -198,11 +225,17 @@ pub fn Timesheets() -> Element {
         if let Some(item) = timesheets.write().iter_mut().find(|x| x.id == id) {
             item.description = desc;
             item.billable = bill;
-            if let Some(pid) = new_pid { item.project_id = Some(pid); }
-            if let Some(aid) = new_aid { item.activity_id = Some(aid); }
+            if let Some(pid) = new_pid {
+                item.project_id = Some(pid);
+            }
+            if let Some(aid) = new_aid {
+                item.activity_id = Some(aid);
+            }
         }
         editing_id.set(None);
-        toasts.write().push(ToastMessage::success("Timesheet updated"));
+        toasts
+            .write()
+            .push(ToastMessage::success("Timesheet updated"));
     };
 
     rsx! {
@@ -349,6 +382,11 @@ pub fn Timesheets() -> Element {
                 // ── Recent timesheets ────────────────────────────────────────
                 h2 { class: "text-base font-semibold", "Recent" }
                 div { class: "flex flex-col gap-3",
+                    if *loading.read() {
+                        for _ in 0..5 {
+                            SkeletonListItem {}
+                        }
+                    }
                     for ts in timesheets.read().clone() {
                         {
                             let t = ts.clone();

@@ -25,8 +25,11 @@ impl Projector for ActivityProjector {
     async fn handle(&mut self, event: RawEvent) -> Result<(), Self::Error> {
         match event.event_type.as_str() {
             "ActivityCreated" => {
-                let ActivityEvent::Created { id, project_id, name } =
-                    serde_json::from_slice(&event.payload_bytes)?
+                let ActivityEvent::Created {
+                    id,
+                    project_id,
+                    name,
+                } = serde_json::from_slice(&event.payload_bytes)?
                 else {
                     return Ok(());
                 };
@@ -47,11 +50,17 @@ impl Projector for ActivityProjector {
                     .to_owned();
 
                 let (sql, values) = self.pool.build_query(&query);
-                sqlx::query_with(&sql, values).execute(self.pool.as_ref()).await?;
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
             }
             "ActivityUpdated" => {
-                let ActivityEvent::Updated { name, comment, visible, billable } =
-                    serde_json::from_slice(&event.payload_bytes)?
+                let ActivityEvent::Updated {
+                    name,
+                    comment,
+                    visible,
+                    billable,
+                } = serde_json::from_slice(&event.payload_bytes)?
                 else {
                     return Ok(());
                 };
@@ -74,7 +83,9 @@ impl Projector for ActivityProjector {
                     DatabaseType::Sqlite => query.build_sqlx(sea_query::SqliteQueryBuilder),
                     DatabaseType::Postgres => query.build_sqlx(sea_query::PostgresQueryBuilder),
                 };
-                sqlx::query_with(&sql, values).execute(self.pool.as_ref()).await?;
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
             }
             _ => {}
         }

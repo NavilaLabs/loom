@@ -1,17 +1,28 @@
 use crate::components::atoms::card::{Card, CardContent, CardFooter, CardHeader, CardTitle};
-use crate::components::atoms::{Button, Input, Select, SelectOption, ToastMessage, Toasts};
+use crate::components::atoms::{
+    Button, Input, Select, SelectOption, SkeletonListItem, ToastMessage, Toasts,
+};
+use crate::form_machine::{new_form, FormAction, State};
 use crate::layouts::DefaultLayout;
 use api::activity::ActivityDto;
 use api::project::ProjectDto;
 use dioxus::prelude::*;
-use dioxus_free_icons::icons::hi_solid_icons::{HiPencil, HiPlus, HiSave, HiTag, HiX};
+use dioxus_free_icons::icons::hi_solid_icons::{HiPencil, HiPlus, HiRefresh, HiSave, HiTag, HiX};
 use dioxus_free_icons::Icon;
+use loom_core::{
+    tenant::activity::{CreateActivityInput, UpdateActivityInput},
+    validation::{validation_summary, Validate},
+};
 
 #[component]
 pub fn Activities() -> Element {
     let mut activities = use_signal(Vec::<ActivityDto>::new);
     let mut projects = use_signal(Vec::<ProjectDto>::new);
+    let mut loading = use_signal(|| true);
     let mut toasts: Toasts = use_context();
+
+    // State machine drives the create-form lifecycle.
+    let mut create_form = use_signal(new_form);
 
     // Create form
     let mut new_name = use_signal(String::new);
@@ -21,6 +32,7 @@ pub fn Activities() -> Element {
 
     // Inline edit state
     let mut editing_id = use_signal(|| Option::<String>::None);
+    let mut edit_form = use_signal(new_form);
     let mut edit_name = use_signal(String::new);
     let mut edit_comment = use_signal(String::new);
     let mut edit_visible = use_signal(|| true);
@@ -35,23 +47,37 @@ pub fn Activities() -> Element {
             Ok(list) => projects.set(list),
             Err(e) => toasts.write().push(ToastMessage::error(e.to_string())),
         }
+        loading.set(false);
     });
 
     let on_create = move |_| async move {
         let name = new_name.peek().clone();
-        if name.is_empty() {
+        let project_id = new_project_id.peek().clone();
+
+        create_form.write().handle(&FormAction::Submit);
+        if let Err(e) = (CreateActivityInput { name: name.clone() }).validate() {
+            create_form
+                .write()
+                .handle(&FormAction::Fail(validation_summary(&e)));
             return;
         }
-        let project_id = new_project_id.peek().clone();
         match api::activity::create_activity(project_id, name).await {
             Ok(dto) => {
                 activities.write().push(dto);
                 new_name.set(String::new());
                 new_comment.set(String::new());
                 new_project_id.set(None);
-                toasts.write().push(ToastMessage::success("Activity created"));
+                create_form
+                    .write()
+                    .handle(&FormAction::Succeed("Activity created".into()));
+                toasts
+                    .write()
+                    .push(ToastMessage::success("Activity created"));
             }
-            Err(e) => toasts.write().push(ToastMessage::error(e.to_string())),
+            Err(e) => {
+                create_form.write().handle(&FormAction::Fail(e.to_string()));
+                toasts.write().push(ToastMessage::error(e.to_string()));
+            }
         }
     };
 
@@ -63,12 +89,27 @@ pub fn Activities() -> Element {
         let name = edit_name.peek().clone();
         let comment = {
             let s = edit_comment.peek().clone();
-            if s.is_empty() { None } else { Some(s) }
+            if s.is_empty() {
+                None
+            } else {
+                Some(s)
+            }
         };
         let visible = *edit_visible.peek();
         let billable = *edit_billable.peek();
 
-        if let Err(e) = api::activity::update_activity(id.clone(), name, comment, visible, billable).await {
+        edit_form.write().handle(&FormAction::Submit);
+        if let Err(e) = (UpdateActivityInput { name: name.clone() }).validate() {
+            edit_form
+                .write()
+                .handle(&FormAction::Fail(validation_summary(&e)));
+            return;
+        }
+
+        if let Err(e) =
+            api::activity::update_activity(id.clone(), name, comment, visible, billable).await
+        {
+            edit_form.write().handle(&FormAction::Fail(e.to_string()));
             toasts.write().push(ToastMessage::error(e.to_string()));
             return;
         }
@@ -77,9 +118,14 @@ pub fn Activities() -> Element {
             Ok(list) => activities.set(list),
             Err(e) => toasts.write().push(ToastMessage::error(e.to_string())),
         }
+        edit_form
+            .write()
+            .handle(&FormAction::Succeed("Activity saved".into()));
         editing_id.set(None);
         toasts.write().push(ToastMessage::success("Activity saved"));
     };
+
+    let create_submitting = matches!(create_form.read().state(), State::Submitting {});
 
     rsx! {
         DefaultLayout {
@@ -140,17 +186,34 @@ pub fn Activities() -> Element {
                                 }
                             }
                         }
+                        if matches!(create_form.read().state(), State::Error {}) {
+                            p { class: "text-red-500 text-sm mt-2",
+                                "{create_form.read().message}"
+                            }
+                        }
                     }
                     CardFooter {
-                        Button { onclick: on_create,
-                            Icon { icon: HiPlus, width: 16, height: 16 }
-                            "Create"
+                        Button {
+                            onclick: on_create,
+                            disabled: create_submitting,
+                            if create_submitting {
+                                Icon { icon: HiRefresh, width: 16, height: 16 }
+                                "Creating…"
+                            } else {
+                                Icon { icon: HiPlus, width: 16, height: 16 }
+                                "Create"
+                            }
                         }
                     }
                 }
 
                 // ── Activity list ────────────────────────────────────────────
                 div { class: "flex flex-col gap-3",
+                    if *loading.read() {
+                        for _ in 0..4 {
+                            SkeletonListItem {}
+                        }
+                    }
                     for activity in activities.read().clone() {
                         {
                             let a = activity.clone();
@@ -159,6 +222,7 @@ pub fn Activities() -> Element {
                             let project_name = a.project_id.as_ref().and_then(|pid| {
                                 projects.read().iter().find(|p| &p.id == pid).map(|p| p.name.clone())
                             });
+                            let edit_submitting = matches!(edit_form.read().state(), State::Submitting {});
 
                             if is_editing {
                                 rsx! {
@@ -168,9 +232,16 @@ pub fn Activities() -> Element {
                                                 div { class: "flex items-center justify-between",
                                                     span { "{a.name}" }
                                                     div { class: "flex gap-2",
-                                                        Button { onclick: on_save,
-                                                            Icon { icon: HiSave, width: 15, height: 15 }
-                                                            "Save"
+                                                        Button {
+                                                            onclick: on_save,
+                                                            disabled: edit_submitting,
+                                                            if edit_submitting {
+                                                                Icon { icon: HiRefresh, width: 15, height: 15 }
+                                                                "Saving…"
+                                                            } else {
+                                                                Icon { icon: HiSave, width: 15, height: 15 }
+                                                                "Save"
+                                                            }
                                                         }
                                                         Button {
                                                             onclick: move |_| editing_id.set(None),
@@ -219,6 +290,11 @@ pub fn Activities() -> Element {
                                                     }
                                                 }
                                             }
+                                            if matches!(edit_form.read().state(), State::Error {}) {
+                                                p { class: "text-red-500 text-sm mt-2",
+                                                    "{edit_form.read().message}"
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -255,6 +331,7 @@ pub fn Activities() -> Element {
                                                             edit_comment.set(ac.comment.clone().unwrap_or_default());
                                                             edit_visible.set(ac.visible);
                                                             edit_billable.set(ac.billable);
+                                                            edit_form.write().handle(&FormAction::Reset);
                                                             editing_id.set(Some(ac.id));
                                                         }
                                                     },

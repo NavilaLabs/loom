@@ -19,10 +19,7 @@
 ///   - `require_admin` returns Ok for admins, Err for others      ✓
 ///   - `require_permission` admin bypass works                    ✓
 ///   - `require_permission` returns Err when permission absent    ✓
-use loom::{
-    auth::CurrentUser,
-    authorization::AuthorizationService,
-};
+use loom::{auth::CurrentUser, authorization::AuthorizationService};
 use loom_tests::{get_admin_pool, get_default_pool, refresh_databases, test_database_lifecycle};
 use serial_test::serial;
 use with_lifecycle::with_lifecycle;
@@ -78,13 +75,11 @@ async fn reset_and_seed() -> Result<(), Box<dyn std::error::Error>> {
     let pool = admin_pool.as_ref();
 
     // 1. Workspace (required by FK chain for workspace_roles and workspace_user_roles)
-    sqlx::query(
-        "INSERT INTO projections__workspaces (id, name) VALUES ($1, $2)",
-    )
-    .bind(WORKSPACE_ID)
-    .bind("Test Workspace")
-    .execute(pool)
-    .await?;
+    sqlx::query("INSERT INTO projections__workspaces (id, name) VALUES ($1, $2)")
+        .bind(WORKSPACE_ID)
+        .bind("Test Workspace")
+        .execute(pool)
+        .await?;
 
     // 2. Users (required by FK from workspace_user_roles and workspace_user_permissions)
     sqlx::query(
@@ -193,7 +188,11 @@ async fn is_admin_returns_true_for_user_with_admin_role() {
 #[tokio::test]
 async fn is_admin_returns_false_for_user_with_non_admin_role() {
     reset_and_seed().await.unwrap();
-    assert!(!AuthorizationService::is_admin(REGULAR_USER_ID).await.unwrap());
+    assert!(
+        !AuthorizationService::is_admin(REGULAR_USER_ID)
+            .await
+            .unwrap()
+    );
 }
 
 #[serial]
@@ -202,7 +201,9 @@ async fn is_admin_returns_false_for_user_with_non_admin_role() {
 async fn is_admin_returns_false_for_unknown_user() {
     reset_and_seed().await.unwrap();
     assert!(
-        !AuthorizationService::is_admin(UNRELATED_USER_ID).await.unwrap(),
+        !AuthorizationService::is_admin(UNRELATED_USER_ID)
+            .await
+            .unwrap(),
         "a user that exists nowhere in the system must not be admin"
     );
 }
@@ -290,7 +291,9 @@ async fn is_admin_role_name_matching_is_case_sensitive() {
     .unwrap();
 
     assert!(
-        !AuthorizationService::is_admin(UNRELATED_USER_ID).await.unwrap(),
+        !AuthorizationService::is_admin(UNRELATED_USER_ID)
+            .await
+            .unwrap(),
         "role named 'Admin' (capital A) must not satisfy the 'admin' check"
     );
 }

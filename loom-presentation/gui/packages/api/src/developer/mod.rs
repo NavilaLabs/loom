@@ -150,20 +150,21 @@ async fn _migrate_tenant_database() -> Result<(), ServerFnError> {
             details: None,
         })?;
 
-    let workspace_id = user.workspace_id.ok_or_else(|| ServerFnError::ServerError {
-        message: "no workspace selected".to_string(),
-        code: 400,
-        details: None,
-    })?;
+    let workspace_id = user
+        .workspace_id
+        .ok_or_else(|| ServerFnError::ServerError {
+            message: "no workspace selected".to_string(),
+            code: 400,
+            details: None,
+        })?;
 
-    let default_pool =
-        Pool::connect_default()
-            .await
-            .map_err(|e| ServerFnError::ServerError {
-                message: e.to_string(),
-                code: 500,
-                details: None,
-            })?;
+    let default_pool = Pool::connect_default()
+        .await
+        .map_err(|e| ServerFnError::ServerError {
+            message: e.to_string(),
+            code: 500,
+            details: None,
+        })?;
 
     Initializer::new(SqliteInitializationStrategy)
         .initialize_tenant(&default_pool, Some(&workspace_id))
@@ -174,13 +175,14 @@ async fn _migrate_tenant_database() -> Result<(), ServerFnError> {
             details: None,
         })?;
 
-    let tenant_pool = Pool::connect_tenant(&workspace_id)
-        .await
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })?;
+    let tenant_pool =
+        Pool::connect_tenant(&workspace_id)
+            .await
+            .map_err(|e| ServerFnError::ServerError {
+                message: e.to_string(),
+                code: 500,
+                details: None,
+            })?;
 
     tenant_pool
         .migrate_database()

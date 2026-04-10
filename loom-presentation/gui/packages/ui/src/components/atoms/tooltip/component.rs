@@ -23,7 +23,9 @@ pub fn Tooltip(props: TooltipProps) -> Element {
 
 #[component]
 pub fn TooltipTrigger(props: TooltipTriggerProps) -> Element {
-    let base = attributes!(div { class: "tooltip-trigger" });
+    let base = attributes!(div {
+        class: "tooltip-trigger"
+    });
     let merged = merge_attributes(vec![base, props.attributes.clone()]);
 
     rsx! {
@@ -33,7 +35,9 @@ pub fn TooltipTrigger(props: TooltipTriggerProps) -> Element {
 
 #[component]
 pub fn TooltipContent(props: TooltipContentProps) -> Element {
-    let base = attributes!(div { class: "tooltip-content" });
+    let base = attributes!(div {
+        class: "tooltip-content"
+    });
     let merged = merge_attributes(vec![base, props.attributes.clone()]);
 
     rsx! {

@@ -1,10 +1,10 @@
 use eventually::message::Message;
 use serde::{Deserialize, Serialize};
 
+use crate::shared::AggregateId;
 use crate::tenant::activity::ActivityId;
 use crate::tenant::project::ProjectId;
 use crate::tenant::timesheet::TimesheetId;
-use crate::shared::AggregateId;
 
 /// User ID references an admin-domain user — stored as a plain AggregateId.
 pub type UserId = AggregateId;

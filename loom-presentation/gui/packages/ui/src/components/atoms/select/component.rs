@@ -12,7 +12,10 @@ pub struct SelectOption<T: Clone + PartialEq> {
 
 impl<T: Clone + PartialEq> SelectOption<T> {
     pub fn new(value: T, label: impl Into<String>) -> Self {
-        Self { value, label: label.into() }
+        Self {
+            value,
+            label: label.into(),
+        }
     }
 }
 
@@ -31,8 +34,7 @@ pub fn Select<T: Clone + PartialEq + 'static>(
     options: Vec<SelectOption<T>>,
     value: Option<T>,
     on_change: EventHandler<T>,
-    #[props(default = "Select…".to_string())]
-    placeholder: String,
+    #[props(default = "Select…".to_string())] placeholder: String,
 ) -> Element {
     let selected_label = options
         .iter()

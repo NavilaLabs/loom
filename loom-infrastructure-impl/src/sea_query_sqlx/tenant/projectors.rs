@@ -4,12 +4,9 @@ use eventually_projection::{Projector, RawEvent};
 use crate::{
     ConnectedTenantPool,
     sea_query_sqlx::tenant::{
-        activity::projectors::ActivityProjector,
-        activity_rate::projectors::ActivityRateProjector,
-        customer::projectors::CustomerProjector,
-        project::projectors::ProjectProjector,
-        project_rate::projectors::ProjectRateProjector,
-        tag::projectors::TagProjector,
+        activity::projectors::ActivityProjector, activity_rate::projectors::ActivityRateProjector,
+        customer::projectors::CustomerProjector, project::projectors::ProjectProjector,
+        project_rate::projectors::ProjectRateProjector, tag::projectors::TagProjector,
         timesheet::projectors::TimesheetProjector,
     },
 };

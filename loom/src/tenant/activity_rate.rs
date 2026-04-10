@@ -1,5 +1,8 @@
 use anyhow::Result;
-use eventually::aggregate::{Root, repository::{Getter, Saver}};
+use eventually::aggregate::{
+    Root,
+    repository::{Getter, Saver},
+};
 use loom_core::tenant::{
     activity::ActivityId,
     activity_rate::{ActivityRate, ActivityRateEvent, ActivityRateId},

@@ -40,15 +40,9 @@ impl WorkspaceRepository {
         }
     }
 
-    pub async fn from_pool(
-        pool: ConnectedAdminPool,
-    ) -> Result<Self, sqlx::migrate::MigrateError> {
-        let repository = Repository::new(
-            pool.as_ref().clone(),
-            Json::default(),
-            Json::default(),
-        )
-        .await?;
+    pub async fn from_pool(pool: ConnectedAdminPool) -> Result<Self, sqlx::migrate::MigrateError> {
+        let repository =
+            Repository::new(pool.as_ref().clone(), Json::default(), Json::default()).await?;
         Ok(Self {
             database: pool,
             repository,
@@ -76,7 +70,10 @@ impl WorkspaceRepository {
 
         rows.into_iter()
             .map(|row| -> Result<_, crate::Error> {
-                Ok((row.try_get::<String, _>("id")?, row.try_get::<Option<String>, _>("name")?))
+                Ok((
+                    row.try_get::<String, _>("id")?,
+                    row.try_get::<Option<String>, _>("name")?,
+                ))
             })
             .collect()
     }

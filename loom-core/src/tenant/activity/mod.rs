@@ -1,7 +1,11 @@
 pub(crate) mod application;
 pub(crate) mod domain;
 
-pub use application::{commands::ActivityCommand, views::ActivityView};
+pub use application::{
+    commands::ActivityCommand,
+    inputs::{CreateActivityInput, UpdateActivityInput},
+    views::ActivityView,
+};
 pub use domain::{
     Error as DomainError,
     aggregates::{Activity, ActivityId},

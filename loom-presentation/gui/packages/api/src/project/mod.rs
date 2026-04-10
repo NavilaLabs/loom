@@ -39,7 +39,11 @@ pub async fn create_project(
     #[cfg(not(feature = "server"))]
     {
         let _ = (customer_id, name);
-        Err(ServerFnError::ServerError { message: "server only".into(), code: 500, details: None })
+        Err(ServerFnError::ServerError {
+            message: "server only".into(),
+            code: 500,
+            details: None,
+        })
     }
 }
 
@@ -63,36 +67,32 @@ pub async fn update_project(
     }
 }
 
-#[cfg(feature = "server")]
-async fn workspace_id_from_session() -> Result<String, ServerFnError> {
-    use crate::auth::UserInfo;
-    use dioxus::fullstack::extract;
-    use tower_sessions::Session;
-
-    let session: Session = extract().await?;
-    let user: Option<UserInfo> = session.get("user").await.map_err(|e| ServerFnError::ServerError {
-        message: e.to_string(),
-        code: 500,
-        details: None,
-    })?;
-    user.and_then(|u| u.workspace_id)
-        .ok_or_else(|| ServerFnError::ServerError {
-            message: "not authenticated or no workspace".into(),
-            code: 401,
-            details: None,
-        })
+#[post("/api/projects/budget")]
+pub async fn set_project_budget(
+    id: String,
+    time_budget: Option<i32>,
+    money_budget: Option<i64>,
+    budget_is_monthly: bool,
+) -> Result<(), ServerFnError> {
+    #[cfg(feature = "server")]
+    {
+        _set_project_budget(id, time_budget, money_budget, budget_is_monthly).await
+    }
+    #[cfg(not(feature = "server"))]
+    {
+        let _ = (id, time_budget, money_budget, budget_is_monthly);
+        Ok(())
+    }
 }
 
 #[cfg(feature = "server")]
 async fn _list_projects() -> Result<Vec<ProjectDto>, ServerFnError> {
-    let workspace_id = workspace_id_from_session().await?;
+    use crate::session;
+
+    let (_, workspace_id) = session::session_workspace().await?;
     let rows = loom::tenant::project::list(&workspace_id)
         .await
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })?;
+        .map_err(session::internal)?;
     Ok(rows
         .into_iter()
         .map(|r| ProjectDto {
@@ -111,18 +111,16 @@ async fn _list_projects() -> Result<Vec<ProjectDto>, ServerFnError> {
 }
 
 #[cfg(feature = "server")]
-async fn _create_project(
-    customer_id: String,
-    name: String,
-) -> Result<ProjectDto, ServerFnError> {
-    let workspace_id = workspace_id_from_session().await?;
+async fn _create_project(customer_id: String, name: String) -> Result<ProjectDto, ServerFnError> {
+    use crate::session;
+    use loom::core::permissions;
+
+    let (user, workspace_id) = session::session_workspace().await?;
+    session::require_permission(&user, permissions::PROJECT_CREATE).await?;
+
     let r = loom::tenant::project::create(&workspace_id, customer_id, name)
         .await
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })?;
+        .map_err(session::internal)?;
     Ok(ProjectDto {
         id: r.id,
         customer_id: r.customer_id,
@@ -146,32 +144,23 @@ async fn _update_project(
     visible: bool,
     billable: bool,
 ) -> Result<(), ServerFnError> {
-    let workspace_id = workspace_id_from_session().await?;
-    loom::tenant::project::update(&workspace_id, &id, name, comment, order_number, visible, billable)
-        .await
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })
-}
+    use crate::session;
+    use loom::core::permissions;
 
-#[post("/api/projects/budget")]
-pub async fn set_project_budget(
-    id: String,
-    time_budget: Option<i32>,
-    money_budget: Option<i64>,
-    budget_is_monthly: bool,
-) -> Result<(), ServerFnError> {
-    #[cfg(feature = "server")]
-    {
-        _set_project_budget(id, time_budget, money_budget, budget_is_monthly).await
-    }
-    #[cfg(not(feature = "server"))]
-    {
-        let _ = (id, time_budget, money_budget, budget_is_monthly);
-        Ok(())
-    }
+    let (user, workspace_id) = session::session_workspace().await?;
+    session::require_permission(&user, permissions::PROJECT_UPDATE).await?;
+
+    loom::tenant::project::update(
+        &workspace_id,
+        &id,
+        name,
+        comment,
+        order_number,
+        visible,
+        billable,
+    )
+    .await
+    .map_err(session::internal)
 }
 
 #[cfg(feature = "server")]
@@ -181,12 +170,19 @@ async fn _set_project_budget(
     money_budget: Option<i64>,
     budget_is_monthly: bool,
 ) -> Result<(), ServerFnError> {
-    let workspace_id = workspace_id_from_session().await?;
-    loom::tenant::project::set_budget(&workspace_id, &id, time_budget, money_budget, budget_is_monthly)
-        .await
-        .map_err(|e| ServerFnError::ServerError {
-            message: e.to_string(),
-            code: 500,
-            details: None,
-        })
+    use crate::session;
+    use loom::core::permissions;
+
+    let (user, workspace_id) = session::session_workspace().await?;
+    session::require_permission(&user, permissions::PROJECT_UPDATE).await?;
+
+    loom::tenant::project::set_budget(
+        &workspace_id,
+        &id,
+        time_budget,
+        money_budget,
+        budget_is_monthly,
+    )
+    .await
+    .map_err(session::internal)
 }

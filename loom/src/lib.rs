@@ -1,5 +1,6 @@
 pub mod auth;
 pub mod authorization;
+pub mod error;
 pub mod setup;
 pub mod tenant;
 pub mod workspace;

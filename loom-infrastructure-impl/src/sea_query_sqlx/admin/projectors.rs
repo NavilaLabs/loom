@@ -4,8 +4,7 @@ use eventually_projection::{Projector, RawEvent};
 use crate::{
     Pool, ScopeAdmin, StateConnected,
     sea_query_sqlx::admin::{
-        permission::projectors::PermissionProjector,
-        user::projectors::UserProjector,
+        permission::projectors::PermissionProjector, user::projectors::UserProjector,
         workspace::projectors::WorkspaceProjector,
         workspace_role::projectors::WorkspaceRoleProjector,
     },

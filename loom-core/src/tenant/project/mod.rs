@@ -1,7 +1,11 @@
 pub(crate) mod application;
 pub(crate) mod domain;
 
-pub use application::{commands::ProjectCommand, views::ProjectView};
+pub use application::{
+    commands::ProjectCommand,
+    inputs::{CreateProjectInput, UpdateProjectInput},
+    views::ProjectView,
+};
 pub use domain::{
     Error as DomainError,
     aggregates::{Project, ProjectId},

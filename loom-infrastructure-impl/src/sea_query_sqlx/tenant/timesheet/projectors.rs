@@ -62,7 +62,9 @@ impl Projector for TimesheetProjector {
                     .to_owned();
 
                 let (sql, values) = self.pool.build_query(&query);
-                sqlx::query_with(&sql, values).execute(self.pool.as_ref()).await?;
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
             }
             "TimesheetStopped" => {
                 let TimesheetEvent::Stopped {
@@ -97,11 +99,15 @@ impl Projector for TimesheetProjector {
                     DatabaseType::Sqlite => query.build_sqlx(sea_query::SqliteQueryBuilder),
                     DatabaseType::Postgres => query.build_sqlx(sea_query::PostgresQueryBuilder),
                 };
-                sqlx::query_with(&sql, values).execute(self.pool.as_ref()).await?;
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
             }
             "TimesheetUpdated" => {
-                let TimesheetEvent::Updated { description, billable } =
-                    serde_json::from_slice(&event.payload_bytes)?
+                let TimesheetEvent::Updated {
+                    description,
+                    billable,
+                } = serde_json::from_slice(&event.payload_bytes)?
                 else {
                     return Ok(());
                 };
@@ -122,11 +128,15 @@ impl Projector for TimesheetProjector {
                     DatabaseType::Sqlite => query.build_sqlx(sea_query::SqliteQueryBuilder),
                     DatabaseType::Postgres => query.build_sqlx(sea_query::PostgresQueryBuilder),
                 };
-                sqlx::query_with(&sql, values).execute(self.pool.as_ref()).await?;
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
             }
             "TimesheetReassigned" => {
-                let TimesheetEvent::Reassigned { project_id, activity_id } =
-                    serde_json::from_slice(&event.payload_bytes)?
+                let TimesheetEvent::Reassigned {
+                    project_id,
+                    activity_id,
+                } = serde_json::from_slice(&event.payload_bytes)?
                 else {
                     return Ok(());
                 };
@@ -147,7 +157,9 @@ impl Projector for TimesheetProjector {
                     DatabaseType::Sqlite => query.build_sqlx(sea_query::SqliteQueryBuilder),
                     DatabaseType::Postgres => query.build_sqlx(sea_query::PostgresQueryBuilder),
                 };
-                sqlx::query_with(&sql, values).execute(self.pool.as_ref()).await?;
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
             }
             "TimesheetExported" => {
                 let query = Query::update()
@@ -163,7 +175,9 @@ impl Projector for TimesheetProjector {
                     DatabaseType::Sqlite => query.build_sqlx(sea_query::SqliteQueryBuilder),
                     DatabaseType::Postgres => query.build_sqlx(sea_query::PostgresQueryBuilder),
                 };
-                sqlx::query_with(&sql, values).execute(self.pool.as_ref()).await?;
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
             }
             _ => {}
         }
