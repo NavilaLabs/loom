@@ -15,6 +15,7 @@ dioxus-primitives = { git = "https://github.com/DioxusLabs/components", default-
 dioxus-free-icons = { workspace = true }
 dioxus-i18n = { workspace = true }
 unic-langid = { workspace = true }
+dioxus-charts = "0.4.0"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 gloo-timers = { version = "0.3", features = ["futures"] }
