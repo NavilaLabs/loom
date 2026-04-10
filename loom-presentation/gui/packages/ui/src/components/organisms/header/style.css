@@ -56,11 +56,10 @@
     background-color: color-mix(in srgb, var(--color-bg) 85%, transparent);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid
-        color-mix(in srgb, var(--color-border) 30%, transparent);
     height: 52px;
     flex-shrink: 0;
-    padding: 0 1.5rem;
+    padding: 0 2rem;
+    padding-top: 1.5rem;
     display: flex;
     align-items: center;
 }
