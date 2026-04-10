@@ -4,6 +4,9 @@ pub use accordion::*;
 pub mod select;
 pub use select::*;
 
+pub mod searchable_select;
+pub use searchable_select::*;
+
 pub mod toast;
 pub use toast::*;
 
@@ -42,3 +45,6 @@ pub use tooltip::*;
 
 pub mod skeleton;
 pub use skeleton::*;
+
+pub mod table;
+pub use table::*;

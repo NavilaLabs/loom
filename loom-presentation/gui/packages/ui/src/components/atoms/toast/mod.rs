@@ -1,2 +1,2 @@
 mod component;
-pub use component::{ToastMessage, ToastStack, ToastVariant, Toasts};
+pub use component::{ToastExt, ToastMessage, ToastStack, ToastVariant, Toasts};

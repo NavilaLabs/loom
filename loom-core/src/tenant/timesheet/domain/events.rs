@@ -42,6 +42,16 @@ pub enum TimesheetEvent {
         project_id: ProjectId,
         activity_id: ActivityId,
     },
+    /// Corrects the start and/or end time of a timesheet after the fact.
+    /// For a running timer `end_time` and `duration` remain `None`.
+    TimeUpdated {
+        /// RFC-3339 timestamp string.
+        start_time: String,
+        /// RFC-3339 timestamp string. `None` if the timer is still running.
+        end_time: Option<String>,
+        /// Duration in seconds. `None` if the timer is still running.
+        duration: Option<i32>,
+    },
     Exported,
 }
 
@@ -52,6 +62,7 @@ impl Message for TimesheetEvent {
             TimesheetEvent::Stopped { .. } => "TimesheetStopped",
             TimesheetEvent::Updated { .. } => "TimesheetUpdated",
             TimesheetEvent::Reassigned { .. } => "TimesheetReassigned",
+            TimesheetEvent::TimeUpdated { .. } => "TimesheetTimeUpdated",
             TimesheetEvent::Exported => "TimesheetExported",
         }
     }

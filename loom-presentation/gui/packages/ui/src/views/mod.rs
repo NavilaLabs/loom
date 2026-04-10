@@ -16,5 +16,7 @@ pub mod setup;
 pub use setup::*;
 pub mod tags;
 pub use tags::*;
+pub mod settings;
+pub use settings::*;
 pub mod timesheets;
 pub use timesheets::*;

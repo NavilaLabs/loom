@@ -36,13 +36,7 @@ impl Customer {
     }
 }
 
-#[derive(Debug, thiserror::Error)]
-pub enum Error {
-    #[error("customer already exists")]
-    AlreadyExists,
-    #[error("customer not found")]
-    NotFound,
-}
+crate::aggregate_errors!("customer");
 
 impl Aggregate for Customer {
     type Id = CustomerId;

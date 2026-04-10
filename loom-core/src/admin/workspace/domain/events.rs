@@ -27,6 +27,13 @@ pub enum WorkspaceEvent {
         user_id: UserId,
         permission_id: PermissionId,
     },
+    SettingsUpdated {
+        name: Option<String>,
+        timezone: String,
+        date_format: String,
+        currency: String,
+        week_start: String,
+    },
 }
 
 impl Message for WorkspaceEvent {
@@ -37,6 +44,7 @@ impl Message for WorkspaceEvent {
             WorkspaceEvent::UserRoleRevoked { .. } => "WorkspaceUserRoleRevoked",
             WorkspaceEvent::UserPermissionGranted { .. } => "WorkspaceUserPermissionGranted",
             WorkspaceEvent::UserPermissionRevoked { .. } => "WorkspaceUserPermissionRevoked",
+            WorkspaceEvent::SettingsUpdated { .. } => "WorkspaceSettingsUpdated",
         }
     }
 }

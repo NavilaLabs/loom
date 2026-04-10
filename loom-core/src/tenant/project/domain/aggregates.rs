@@ -34,13 +34,7 @@ impl Project {
     }
 }
 
-#[derive(Debug, thiserror::Error)]
-pub enum Error {
-    #[error("project already exists")]
-    AlreadyExists,
-    #[error("project not found")]
-    NotFound,
-}
+crate::aggregate_errors!("project");
 
 impl Aggregate for Project {
     type Id = ProjectId;

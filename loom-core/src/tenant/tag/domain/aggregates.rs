@@ -21,13 +21,7 @@ impl Tag {
     }
 }
 
-#[derive(Debug, thiserror::Error)]
-pub enum Error {
-    #[error("tag already exists")]
-    AlreadyExists,
-    #[error("tag not found")]
-    NotFound,
-}
+crate::aggregate_errors!("tag");
 
 impl Aggregate for Tag {
     type Id = TagId;

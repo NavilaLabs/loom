@@ -89,6 +89,20 @@ impl UserRepository {
         Ok(self.count().await? > 0)
     }
 
+    /// Fetch a `UserView` by string ID, avoiding the AnyPool UUID-type panic.
+    pub async fn find_view_by_id(&self, id: &str) -> Result<Option<UserView>, crate::Error> {
+        let statement = sea_query::Query::select()
+            .expr(Expr::col(sea_query::Asterisk))
+            .from(Alias::new(TABLE))
+            .and_where(Expr::col(Alias::new("id")).eq(id))
+            .to_owned();
+        let (sql, arguments) = self.database.build_query(&statement);
+        let row = sqlx::query_with(&sql, arguments)
+            .fetch_optional(self.database.as_ref())
+            .await?;
+        row.map(|r| self.row_to_view(r)).transpose()
+    }
+
     fn select(&self) -> SelectStatement {
         sea_query::Query::select()
             .expr(Expr::col(sea_query::Asterisk))
@@ -113,8 +127,19 @@ impl RowToView<AnyRow> for UserRepository {
         let id = Uuid::from_str(&id)?;
         let name: String = row.try_get("name")?;
         let email: String = row.try_get("email")?;
+        let timezone: String = row.try_get("timezone").unwrap_or_else(|_| "UTC".to_string());
+        let date_format: String =
+            row.try_get("date_format").unwrap_or_else(|_| "%Y-%m-%d".to_string());
+        let language: String = row.try_get("language").unwrap_or_else(|_| "en".to_string());
 
-        Ok(UserView::new(id.into(), name, email))
+        Ok(UserView::new_with_settings(
+            id.into(),
+            name,
+            email,
+            timezone,
+            date_format,
+            language,
+        ))
     }
 }
 

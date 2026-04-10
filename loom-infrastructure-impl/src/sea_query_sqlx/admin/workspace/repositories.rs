@@ -9,7 +9,7 @@ use loom_core::admin::workspace::{
     WorkspaceView,
 };
 use loom_infrastructure::query::{Query, RowToView};
-use sea_query::{Condition, Expr, ExprTrait, Func, SelectStatement};
+use sea_query::{Alias, Condition, Expr, ExprTrait, Func, SelectStatement};
 use sqlx::{Row, any::AnyRow, types::Uuid};
 
 use crate::ConnectedAdminPool;
@@ -101,6 +101,20 @@ impl WorkspaceRepository {
             .transpose()
     }
 
+    /// Fetch a `WorkspaceView` by string ID, avoiding the AnyPool UUID-type panic.
+    pub async fn find_view_by_id(&self, id: &str) -> Result<Option<WorkspaceView>, crate::Error> {
+        let statement = sea_query::Query::select()
+            .expr(Expr::col(sea_query::Asterisk))
+            .from(Alias::new(TABLE))
+            .and_where(Expr::col(Alias::new("id")).eq(id))
+            .to_owned();
+        let (sql, arguments) = self.database.build_query(&statement);
+        let row = sqlx::query_with(&sql, arguments)
+            .fetch_optional(self.database.as_ref())
+            .await?;
+        row.map(|r| self.row_to_view(r)).transpose()
+    }
+
     fn select(&self) -> SelectStatement {
         sea_query::Query::select()
             .expr(Expr::col(sea_query::Asterisk))
@@ -124,7 +138,22 @@ impl RowToView<AnyRow> for WorkspaceRepository {
         let id: String = row.try_get("id")?;
         let id = Uuid::from_str(&id)?;
         let name: Option<String> = row.try_get("name")?;
-        Ok(WorkspaceView::new(id.into(), name))
+        let timezone: String =
+            row.try_get("timezone").unwrap_or_else(|_| "UTC".to_string());
+        let date_format: String =
+            row.try_get("date_format").unwrap_or_else(|_| "%Y-%m-%d".to_string());
+        let currency: String =
+            row.try_get("currency").unwrap_or_else(|_| "USD".to_string());
+        let week_start: String =
+            row.try_get("week_start").unwrap_or_else(|_| "monday".to_string());
+        Ok(WorkspaceView::new_with_settings(
+            id.into(),
+            name,
+            timezone,
+            date_format,
+            currency,
+            week_start,
+        ))
     }
 }
 

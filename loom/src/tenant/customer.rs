@@ -3,23 +3,13 @@ use eventually::aggregate::{
     Root,
     repository::{Getter, Saver},
 };
-use loom_core::{
-    tenant::customer::{
-        CreateCustomerInput, Customer, CustomerEvent, CustomerId, UpdateCustomerInput,
-    },
-    validation::{Validate, validation_summary},
+use loom_core::tenant::customer::{
+    CreateCustomerInput, Customer, CustomerEvent, CustomerId, UpdateCustomerInput,
 };
-use loom_infrastructure_impl::{
-    Pool, ScopeTenant, StateDisconnected,
-    tenant::customer::repositories::{CustomerRepository, CustomerRow},
-};
-
-async fn tenant_pool(workspace_id: &str) -> Result<loom_infrastructure_impl::ConnectedTenantPool> {
-    Ok(Pool::<ScopeTenant, StateDisconnected>::connect_tenant(workspace_id).await?)
-}
+use loom_infrastructure_impl::tenant::customer::repositories::{CustomerRepository, CustomerRow};
 
 pub async fn list(workspace_id: &str) -> Result<Vec<CustomerRow>> {
-    let pool = tenant_pool(workspace_id).await?;
+    let pool = super::tenant_pool(workspace_id).await?;
     let repo = CustomerRepository::from_pool(pool).await?;
     Ok(repo.all().await?)
 }
@@ -30,15 +20,13 @@ pub async fn create(
     currency: String,
     timezone: String,
 ) -> Result<CustomerRow> {
-    CreateCustomerInput {
+    crate::error::validate(CreateCustomerInput {
         name: name.clone(),
         currency: currency.clone(),
         timezone: timezone.clone(),
-    }
-    .validate()
-    .map_err(|e| crate::error::ValidationError::new(validation_summary(&e)))?;
+    })?;
 
-    let pool = tenant_pool(workspace_id).await?;
+    let pool = super::tenant_pool(workspace_id).await?;
     let repo = CustomerRepository::from_pool(pool).await?;
     let id = CustomerId::new();
     let mut root = Root::<Customer>::record_new(
@@ -75,15 +63,13 @@ pub async fn update(
     country: Option<String>,
     visible: bool,
 ) -> Result<()> {
-    UpdateCustomerInput {
+    crate::error::validate(UpdateCustomerInput {
         name: name.clone(),
         currency: currency.clone(),
         timezone: timezone.clone(),
-    }
-    .validate()
-    .map_err(|e| crate::error::ValidationError::new(validation_summary(&e)))?;
+    })?;
 
-    let pool = tenant_pool(workspace_id).await?;
+    let pool = super::tenant_pool(workspace_id).await?;
     let repo = CustomerRepository::from_pool(pool).await?;
     let agg_id: CustomerId = id.parse()?;
     let mut root = repo.get(&agg_id).await?;
@@ -109,7 +95,7 @@ pub async fn set_budget(
     money_budget: Option<i64>,
     budget_is_monthly: bool,
 ) -> Result<()> {
-    let pool = tenant_pool(workspace_id).await?;
+    let pool = super::tenant_pool(workspace_id).await?;
     let repo = CustomerRepository::from_pool(pool).await?;
     let agg_id: CustomerId = id.parse()?;
     let mut root = repo.get(&agg_id).await?;

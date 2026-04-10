@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 use dioxus_free_icons::icons::hi_solid_icons::{
-    HiBriefcase, HiClock, HiHashtag, HiHome, HiLogout, HiOfficeBuilding, HiPlay, HiStop, HiTag,
+    HiBriefcase, HiClock, HiCog, HiHashtag, HiHome, HiLogout, HiOfficeBuilding, HiPlay, HiStop,
+    HiTag,
 };
 use dioxus_free_icons::Icon;
 
@@ -97,6 +98,13 @@ pub fn Sidebar() -> Element {
                         to: "/tags",
                         Icon { icon: HiHashtag, width: 16, height: 16 }
                         "Tags"
+                    }
+                    NavbarItem {
+                        index: 6usize,
+                        value: "settings".to_string(),
+                        to: "/settings",
+                        Icon { icon: HiCog, width: 16, height: 16 }
+                        "Settings"
                     }
                 }
             }

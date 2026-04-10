@@ -71,6 +71,32 @@ impl ToastMessage {
 /// Shared toast signal. Inject with `use_context::<Toasts>()` and push messages to it.
 pub type Toasts = Signal<Vec<ToastMessage>>;
 
+/// Extension methods on [`Toasts`] for ergonomic message pushing.
+///
+/// Reduces `toasts.write().push(ToastMessage::error(msg))` to `toasts.push_error(msg)`.
+/// This is the idiomatic Rust extension-trait pattern applied to a foreign type alias.
+pub trait ToastExt {
+    fn push_error(&mut self, msg: impl Into<String>);
+    fn push_success(&mut self, msg: impl Into<String>);
+    fn push_info(&mut self, msg: impl Into<String>);
+    fn push_warning(&mut self, msg: impl Into<String>);
+}
+
+impl ToastExt for Toasts {
+    fn push_error(&mut self, msg: impl Into<String>) {
+        self.write().push(ToastMessage::error(msg));
+    }
+    fn push_success(&mut self, msg: impl Into<String>) {
+        self.write().push(ToastMessage::success(msg));
+    }
+    fn push_info(&mut self, msg: impl Into<String>) {
+        self.write().push(ToastMessage::info(msg));
+    }
+    fn push_warning(&mut self, msg: impl Into<String>) {
+        self.write().push(ToastMessage::warning(msg));
+    }
+}
+
 /// Renders the active toast stack fixed in the bottom-right corner.
 /// Place this once in your top-level layout after providing the `Toasts` context.
 #[component]
@@ -96,6 +122,19 @@ pub fn ToastStack() -> Element {
 fn ToastItem(toast: ToastMessage) -> Element {
     let mut toasts: Toasts = use_context();
     let id = toast.id;
+
+    // Auto-dismiss after 4 s for success/info, 7 s for errors (WASM only).
+    #[cfg(target_arch = "wasm32")]
+    {
+        let delay_ms: u32 = match toast.variant {
+            ToastVariant::Error => 7000,
+            _ => 4000,
+        };
+        use_future(move || async move {
+            gloo_timers::future::TimeoutFuture::new(delay_ms).await;
+            toasts.write().retain(|t| t.id != id);
+        });
+    }
 
     rsx! {
         div {

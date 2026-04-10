@@ -1,7 +1,13 @@
 use crate::components::atoms::card::{Card, CardContent, CardFooter, CardHeader, CardTitle};
-use crate::components::atoms::{Button, Input, SkeletonListItem, ToastMessage, Toasts};
+use crate::components::atoms::{
+    Button, ColumnDef, DataTable, Input, SearchableSelect, Select, TableCell, TableExpandRow,
+    TableRow, ToastExt, Toasts,
+};
 use crate::form_machine::{new_form, FormAction, State};
+use crate::hooks::use_workspace_field;
 use crate::layouts::DefaultLayout;
+use crate::views::settings::{currency_options, timezone_options};
+use crate::CustomersCache;
 use api::customer::CustomerDto;
 use dioxus::prelude::*;
 use dioxus_free_icons::icons::hi_solid_icons::{
@@ -13,19 +19,23 @@ use loom_core::{
     validation::{validation_summary, Validate},
 };
 
+const PAGE_SIZE: usize = 15;
+
 #[component]
 pub fn Customers() -> Element {
-    let mut customers = use_signal(Vec::<CustomerDto>::new);
-    let mut loading = use_signal(|| true);
+    let cache: CustomersCache = use_context();
+    let mut customers = use_signal(|| cache.read().clone());
+    let mut loading = use_signal(|| cache.read().is_empty());
     let mut toasts: Toasts = use_context();
+    let mut page = use_signal(|| 0_usize);
 
     // State machine drives the create-form lifecycle.
     let mut create_form = use_signal(new_form);
 
-    // Create form fields
+    // Create form fields — reactive defaults from workspace settings.
     let mut new_name = use_signal(String::new);
-    let mut new_currency = use_signal(|| "EUR".to_string());
-    let mut new_timezone = use_signal(|| "UTC".to_string());
+    let (new_currency, mut new_currency_set) = use_workspace_field(|ws| ws.currency.clone());
+    let (new_timezone, mut new_timezone_set) = use_workspace_field(|ws| ws.timezone.clone());
     let mut new_comment = use_signal(String::new);
     let mut new_country = use_signal(String::new);
 
@@ -44,10 +54,15 @@ pub fn Customers() -> Element {
 
     use_resource(move || async move {
         match api::customer::list_customers().await {
-            Ok(list) => customers.set(list),
-            Err(e) => toasts.write().push(ToastMessage::error(e.to_string())),
+            Ok(list) => {
+                customers.set(list);
+                loading.set(false);
+            }
+            Err(e) => {
+                toasts.push_error(e.to_string());
+                loading.set(false);
+            }
         }
-        loading.set(false);
     });
 
     let on_create = move |_| async move {
@@ -73,16 +88,16 @@ pub fn Customers() -> Element {
                 new_name.set(String::new());
                 new_comment.set(String::new());
                 new_country.set(String::new());
+                new_currency_set.set(None);
+                new_timezone_set.set(None);
                 create_form
                     .write()
                     .handle(&FormAction::Succeed("Customer created".into()));
-                toasts
-                    .write()
-                    .push(ToastMessage::success("Customer created"));
+                toasts.push_success("Customer created");
             }
             Err(e) => {
                 create_form.write().handle(&FormAction::Fail(e.to_string()));
-                toasts.write().push(ToastMessage::error(e.to_string()));
+                toasts.push_error(e.to_string());
             }
         }
     };
@@ -95,21 +110,13 @@ pub fn Customers() -> Element {
         let name = edit_name.peek().clone();
         let comment = {
             let s = edit_comment.peek().clone();
-            if s.is_empty() {
-                None
-            } else {
-                Some(s)
-            }
+            if s.is_empty() { None } else { Some(s) }
         };
         let currency = edit_currency.peek().clone();
         let timezone = edit_timezone.peek().clone();
         let country = {
             let s = edit_country.peek().clone();
-            if s.is_empty() {
-                None
-            } else {
-                Some(s)
-            }
+            if s.is_empty() { None } else { Some(s) }
         };
         let visible = *edit_visible.peek();
 
@@ -126,7 +133,6 @@ pub fn Customers() -> Element {
             return;
         }
 
-        // Update basic info
         if let Err(e) = api::customer::update_customer(
             id.clone(),
             name.clone(),
@@ -139,11 +145,10 @@ pub fn Customers() -> Element {
         .await
         {
             edit_form.write().handle(&FormAction::Fail(e.to_string()));
-            toasts.write().push(ToastMessage::error(e.to_string()));
+            toasts.push_error(e.to_string());
             return;
         }
 
-        // Update budget — time_budget stored in seconds; GUI shows hours
         let time_budget: Option<i32> = edit_time_budget
             .peek()
             .parse::<f64>()
@@ -155,20 +160,15 @@ pub fn Customers() -> Element {
             .ok()
             .map(|v| (v * 100.0) as i64);
         let budget_monthly = *edit_budget_monthly.peek();
-        if let Err(e) = api::customer::set_customer_budget(
-            id.clone(),
-            time_budget,
-            money_budget,
-            budget_monthly,
-        )
-        .await
+        if let Err(e) =
+            api::customer::set_customer_budget(id.clone(), time_budget, money_budget, budget_monthly)
+                .await
         {
             edit_form.write().handle(&FormAction::Fail(e.to_string()));
-            toasts.write().push(ToastMessage::error(e.to_string()));
+            toasts.push_error(e.to_string());
             return;
         }
 
-        // Patch the item in-place — no extra round-trip needed
         let updated = api::customer::CustomerDto {
             id: id.clone(),
             name,
@@ -188,10 +188,29 @@ pub fn Customers() -> Element {
             .write()
             .handle(&FormAction::Succeed("Customer saved".into()));
         editing_id.set(None);
-        toasts.write().push(ToastMessage::success("Customer saved"));
+        toasts.push_success("Customer saved");
     };
 
     let create_submitting = matches!(create_form.read().state(), State::Submitting {});
+
+    // Pagination slice
+    let total = customers.read().len();
+    let current_page = *page.read();
+    let page_items: Vec<CustomerDto> = customers
+        .read()
+        .iter()
+        .skip(current_page * PAGE_SIZE)
+        .take(PAGE_SIZE)
+        .cloned()
+        .collect();
+
+    let columns = vec![
+        ColumnDef::new("Name"),
+        ColumnDef::new("Currency / Timezone"),
+        ColumnDef::new("Budget"),
+        ColumnDef::new("").width("80px"),
+    ];
+    let col_count = columns.len();
 
     rsx! {
         DefaultLayout {
@@ -219,21 +238,21 @@ pub fn Customers() -> Element {
                                 }
                             }
                             div { class: "form-field",
-                                label { class: "form-label", r#for: "c-currency", "Currency" }
-                                Input {
-                                    id: "c-currency",
-                                    placeholder: "EUR",
-                                    value: new_currency.read().clone(),
-                                    oninput: move |e: FormEvent| new_currency.set(e.value()),
+                                label { class: "form-label", "Currency" }
+                                Select::<String> {
+                                    options: currency_options(),
+                                    value: Some(new_currency.read().clone()),
+                                    on_change: move |v| new_currency_set.set(Some(v)),
+                                    placeholder: "Select currency".to_string(),
                                 }
                             }
                             div { class: "form-field",
-                                label { class: "form-label", r#for: "c-tz", "Timezone" }
-                                Input {
-                                    id: "c-tz",
-                                    placeholder: "UTC",
-                                    value: new_timezone.read().clone(),
-                                    oninput: move |e: FormEvent| new_timezone.set(e.value()),
+                                label { class: "form-label", "Timezone" }
+                                SearchableSelect::<String> {
+                                    options: timezone_options(),
+                                    value: Some(new_timezone.read().clone()),
+                                    on_change: move |v| new_timezone_set.set(Some(v)),
+                                    placeholder: "Select timezone".to_string(),
                                 }
                             }
                             div { class: "form-field",
@@ -277,49 +296,85 @@ pub fn Customers() -> Element {
                 }
 
                 // ── Customer list ────────────────────────────────────────────
-                div { class: "flex flex-col gap-3",
-                    if *loading.read() {
-                        for _ in 0..4 {
-                            SkeletonListItem {}
-                        }
+                div { class: "island",
+                    div { class: "island-header",
+                        span { class: "island-title", "Customers" }
                     }
-                    for customer in customers.read().clone() {
-                        {
-                            let c = customer.clone();
-                            let is_editing = editing_id.read().as_deref() == Some(c.id.as_str());
-                            let cid = c.id.clone();
-                            let edit_submitting = matches!(edit_form.read().state(), State::Submitting {});
+                    DataTable {
+                        columns,
+                        total,
+                        page: current_page,
+                        page_size: PAGE_SIZE,
+                        loading: *loading.read(),
+                        on_page_change: move |p| page.set(p),
 
-                            if is_editing {
+                        for customer in page_items {
+                            {
+                                let c = customer.clone();
+                                let cid = c.id.clone();
+                                let is_editing = editing_id.read().as_deref() == Some(c.id.as_str());
+                                let edit_submitting = matches!(edit_form.read().state(), State::Submitting {});
+
                                 rsx! {
-                                    Card { key: "{c.id}",
-                                        CardHeader {
-                                            CardTitle {
-                                                div { class: "flex items-center justify-between",
-                                                    span { "{c.name}" }
-                                                    div { class: "flex gap-2",
-                                                        Button {
-                                                            onclick: on_save,
-                                                            disabled: edit_submitting,
-                                                            if edit_submitting {
-                                                                Icon { icon: HiRefresh, width: 15, height: 15 }
-                                                                "Saving…"
-                                                            } else {
-                                                                Icon { icon: HiSave, width: 15, height: 15 }
-                                                                "Save"
-                                                            }
-                                                        }
-                                                        Button {
-                                                            onclick: move |_| editing_id.set(None),
-                                                            Icon { icon: HiX, width: 15, height: 15 }
-                                                            "Cancel"
-                                                        }
-                                                    }
+                                    TableRow { key: "{c.id}", muted: !c.visible,
+                                        TableCell { span { class: "font-medium", "{c.name}" } }
+                                        TableCell {
+                                            div { class: "flex flex-col gap-0.5 text-sm",
+                                                span { "{c.currency}" }
+                                                span { class: "text-secondary text-xs", "{c.timezone}" }
+                                                if let Some(ref country) = c.country {
+                                                    span { class: "text-secondary text-xs", "{country}" }
                                                 }
                                             }
                                         }
-                                        CardContent {
-                                            div { class: "grid grid-cols-1 gap-4 md:grid-cols-2",
+                                        TableCell {
+                                            div { class: "flex flex-col gap-0.5 text-xs text-secondary",
+                                                if let Some(tb) = c.time_budget {
+                                                    span { {format!("{:.1}h time", tb as f64 / 3600.0)} }
+                                                }
+                                                if let Some(mb) = c.money_budget {
+                                                    span { {format!("{:.0} {}", mb as f64 / 100.0, c.currency)} }
+                                                }
+                                                if !c.visible {
+                                                    span { class: "text-warning", "Hidden" }
+                                                }
+                                            }
+                                        }
+                                        TableCell {
+                                            if is_editing {
+                                                Button {
+                                                    onclick: move |_| editing_id.set(None),
+                                                    Icon { icon: HiX, width: 14, height: 14 }
+                                                }
+                                            } else {
+                                                Button {
+                                                    onclick: move |_| {
+                                                        let cu = customers.read()
+                                                            .iter()
+                                                            .find(|x| x.id == cid)
+                                                            .cloned();
+                                                        if let Some(cu) = cu {
+                                                            edit_name.set(cu.name.clone());
+                                                            edit_comment.set(cu.comment.clone().unwrap_or_default());
+                                                            edit_currency.set(cu.currency.clone());
+                                                            edit_timezone.set(cu.timezone.clone());
+                                                            edit_country.set(cu.country.clone().unwrap_or_default());
+                                                            edit_visible.set(cu.visible);
+                                                            edit_time_budget.set(cu.time_budget.map(|v| format!("{:.1}", v as f64 / 3600.0)).unwrap_or_default());
+                                                            edit_money_budget.set(cu.money_budget.map(|v| format!("{:.2}", v as f64 / 100.0)).unwrap_or_default());
+                                                            edit_budget_monthly.set(cu.budget_is_monthly);
+                                                            edit_form.write().handle(&FormAction::Reset);
+                                                            editing_id.set(Some(cu.id));
+                                                        }
+                                                    },
+                                                    Icon { icon: HiPencil, width: 14, height: 14 }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if is_editing {
+                                        TableExpandRow { col_count,
+                                            div { class: "grid grid-cols-1 gap-4 md:grid-cols-3",
                                                 div { class: "form-field",
                                                     label { class: "form-label", r#for: "e-name", "Name" }
                                                     Input {
@@ -329,19 +384,21 @@ pub fn Customers() -> Element {
                                                     }
                                                 }
                                                 div { class: "form-field",
-                                                    label { class: "form-label", r#for: "e-currency", "Currency" }
-                                                    Input {
-                                                        id: "e-currency",
-                                                        value: edit_currency.read().clone(),
-                                                        oninput: move |e: FormEvent| edit_currency.set(e.value()),
+                                                    label { class: "form-label", "Currency" }
+                                                    Select::<String> {
+                                                        options: currency_options(),
+                                                        value: Some(edit_currency.read().clone()),
+                                                        on_change: move |v| edit_currency.set(v),
+                                                        placeholder: "Select currency".to_string(),
                                                     }
                                                 }
                                                 div { class: "form-field",
-                                                    label { class: "form-label", r#for: "e-tz", "Timezone" }
-                                                    Input {
-                                                        id: "e-tz",
-                                                        value: edit_timezone.read().clone(),
-                                                        oninput: move |e: FormEvent| edit_timezone.set(e.value()),
+                                                    label { class: "form-label", "Timezone" }
+                                                    SearchableSelect::<String> {
+                                                        options: timezone_options(),
+                                                        value: Some(edit_timezone.read().clone()),
+                                                        on_change: move |v| edit_timezone.set(v),
+                                                        placeholder: "Select timezone".to_string(),
                                                     }
                                                 }
                                                 div { class: "form-field",
@@ -353,7 +410,7 @@ pub fn Customers() -> Element {
                                                         oninput: move |e: FormEvent| edit_country.set(e.value()),
                                                     }
                                                 }
-                                                div { class: "form-field md:col-span-2",
+                                                div { class: "form-field",
                                                     label { class: "form-label", r#for: "e-comment", "Comment" }
                                                     Input {
                                                         id: "e-comment",
@@ -372,7 +429,7 @@ pub fn Customers() -> Element {
                                                     }
                                                 }
                                                 div { class: "form-field",
-                                                    label { class: "form-label", r#for: "e-money-budget", "Money Budget (EUR)" }
+                                                    label { class: "form-label", r#for: "e-money-budget", "Money Budget" }
                                                     Input {
                                                         id: "e-money-budget",
                                                         placeholder: "e.g. 5000.00",
@@ -380,22 +437,27 @@ pub fn Customers() -> Element {
                                                         oninput: move |e: FormEvent| edit_money_budget.set(e.value()),
                                                     }
                                                 }
-                                                div { class: "form-field flex items-center gap-3",
-                                                    label { class: "form-label", "Visible" }
-                                                    input {
-                                                        r#type: "checkbox",
-                                                        class: "form-checkbox",
-                                                        checked: *edit_visible.read(),
-                                                        oninput: move |_| { let v = *edit_visible.peek(); edit_visible.set(!v); },
-                                                    }
-                                                }
-                                                div { class: "form-field flex items-center gap-3",
-                                                    label { class: "form-label", "Monthly Budget" }
-                                                    input {
-                                                        r#type: "checkbox",
-                                                        class: "form-checkbox",
-                                                        checked: *edit_budget_monthly.read(),
-                                                        oninput: move |_| { let v = *edit_budget_monthly.peek(); edit_budget_monthly.set(!v); },
+                                                div { class: "form-field flex flex-col gap-2",
+                                                    label { class: "form-label", "Options" }
+                                                    div { class: "flex gap-4",
+                                                        label { class: "flex items-center gap-2 text-sm",
+                                                            input {
+                                                                r#type: "checkbox",
+                                                                class: "form-checkbox",
+                                                                checked: *edit_visible.read(),
+                                                                oninput: move |_| { let v = *edit_visible.peek(); edit_visible.set(!v); },
+                                                            }
+                                                            "Visible"
+                                                        }
+                                                        label { class: "flex items-center gap-2 text-sm",
+                                                            input {
+                                                                r#type: "checkbox",
+                                                                class: "form-checkbox",
+                                                                checked: *edit_budget_monthly.read(),
+                                                                oninput: move |_| { let v = *edit_budget_monthly.peek(); edit_budget_monthly.set(!v); },
+                                                            }
+                                                            "Monthly Budget"
+                                                        }
                                                     }
                                                 }
                                             }
@@ -404,58 +466,22 @@ pub fn Customers() -> Element {
                                                     "{edit_form.read().message}"
                                                 }
                                             }
-                                        }
-                                    }
-                                }
-                            } else {
-                                rsx! {
-                                    Card { key: "{c.id}",
-                                        CardContent {
-                                            div { class: "flex items-center justify-between",
-                                                div { class: "flex flex-col gap-1",
-                                                    span { class: "font-medium", "{c.name}" }
-                                                    span { class: "text-sm text-secondary",
-                                                        "{c.currency} · {c.timezone}"
-                                                        if let Some(country) = &c.country {
-                                                            " · {country}"
-                                                        }
-                                                    }
-                                                    div { class: "flex gap-3 text-xs text-secondary",
-                                                        if let Some(tb) = c.time_budget {
-                                                            span { {format!("Time: {:.1}h", tb as f64 / 3600.0)} }
-                                                        }
-                                                        if let Some(mb) = c.money_budget {
-                                                            span { "Budget: {mb / 100} {c.currency}" }
-                                                        }
-                                                        if !c.visible {
-                                                            span { class: "text-warning", "Hidden" }
-                                                        }
+                                            div { class: "flex gap-2 mt-2",
+                                                Button {
+                                                    onclick: on_save,
+                                                    disabled: edit_submitting,
+                                                    if edit_submitting {
+                                                        Icon { icon: HiRefresh, width: 14, height: 14 }
+                                                        "Saving…"
+                                                    } else {
+                                                        Icon { icon: HiSave, width: 14, height: 14 }
+                                                        "Save"
                                                     }
                                                 }
                                                 Button {
-                                                    onclick: move |_| {
-                                                        let customer = customers.read()
-                                                            .iter()
-                                                            .find(|x| x.id == cid)
-                                                            .cloned();
-                                                        if let Some(cu) = customer {
-                                                            edit_name.set(cu.name.clone());
-                                                            edit_comment.set(cu.comment.clone().unwrap_or_default());
-                                                            edit_currency.set(cu.currency.clone());
-                                                            edit_timezone.set(cu.timezone.clone());
-                                                            edit_country.set(cu.country.clone().unwrap_or_default());
-                                                            edit_visible.set(cu.visible);
-                                                            // convert seconds → hours for display
-                                                            edit_time_budget.set(cu.time_budget.map(|v| format!("{:.1}", v as f64 / 3600.0)).unwrap_or_default());
-                                                            edit_money_budget.set(cu.money_budget.map(|v| format!("{:.2}", v as f64 / 100.0)).unwrap_or_default());
-                                                            edit_budget_monthly.set(cu.budget_is_monthly);
-                                                            // Reset the edit form machine when opening a new edit
-                                                            edit_form.write().handle(&FormAction::Reset);
-                                                            editing_id.set(Some(cu.id));
-                                                        }
-                                                    },
-                                                    Icon { icon: HiPencil, width: 15, height: 15 }
-                                                    "Edit"
+                                                    onclick: move |_| editing_id.set(None),
+                                                    Icon { icon: HiX, width: 14, height: 14 }
+                                                    "Cancel"
                                                 }
                                             }
                                         }

@@ -20,3 +20,14 @@ impl ValidationError {
         Self(msg.into())
     }
 }
+
+/// Run `validator` on `input` and return a [`ValidationError`] on failure.
+///
+/// Consolidates the three-line `.validate().map_err(|e| ValidationError::new(...))?`
+/// boilerplate that would otherwise appear at every controller create/update call site.
+pub fn validate<T: loom_core::validation::Validate>(input: T) -> anyhow::Result<()> {
+    input
+        .validate()
+        .map_err(|e| ValidationError::new(loom_core::validation::validation_summary(&e)))
+        .map_err(Into::into)
+}

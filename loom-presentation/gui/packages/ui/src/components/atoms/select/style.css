@@ -59,3 +59,16 @@
 .select .dropdown-menu-content {
     min-width: 100%;
 }
+
+/* Option with a sublabel */
+.select-option-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.select-option-sublabel {
+    font-size: 0.7rem;
+    color: var(--color-text-secondary);
+    line-height: 1.2;
+}

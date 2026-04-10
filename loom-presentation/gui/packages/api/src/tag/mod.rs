@@ -19,7 +19,7 @@ pub async fn list_tags() -> Result<Vec<TagDto>, ServerFnError> {
     }
 }
 
-#[get("/api/tags/for-timesheet")]
+#[post("/api/tags/for-timesheet")]
 pub async fn list_timesheet_tags(timesheet_id: String) -> Result<Vec<TagDto>, ServerFnError> {
     #[cfg(feature = "server")]
     {

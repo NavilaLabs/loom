@@ -30,7 +30,10 @@ impl Projector for UserProjector {
                     name,
                     email,
                     password,
-                } = serde_json::from_slice(&event.payload_bytes)?;
+                } = serde_json::from_slice(&event.payload_bytes)?
+                else {
+                    return Ok(());
+                };
 
                 let query = Query::insert()
                     .into_table(TableRef::from(Self::TABLE))
@@ -52,6 +55,47 @@ impl Projector for UserProjector {
                 let (sql, values) = match self.pool.get_database_type() {
                     DatabaseType::Sqlite => query.build_sqlx(SqliteQueryBuilder),
                     DatabaseType::Postgres => query.build_sqlx(PostgresQueryBuilder),
+                };
+
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
+
+                Ok(())
+            }
+            "UserSettingsUpdated" => {
+                let UserEvent::SettingsUpdated {
+                    timezone,
+                    date_format,
+                    language,
+                } = serde_json::from_slice(&event.payload_bytes)?
+                else {
+                    return Ok(());
+                };
+
+                use sea_query::{Condition, Expr, ExprTrait, Query as SQ};
+                let query = SQ::update()
+                    .table(TableRef::from(Self::TABLE))
+                    .values([
+                        (DynIden::from("timezone"), timezone.into()),
+                        (DynIden::from("date_format"), date_format.into()),
+                        (DynIden::from("language"), language.into()),
+                    ])
+                    .cond_where(
+                        Condition::all()
+                            .add(Expr::col("id").eq(Expr::val(event.stream_id.clone()))),
+                    )
+                    .to_owned();
+
+                let (sql, values) = match self.pool.get_database_type() {
+                    DatabaseType::Sqlite => {
+                        use sea_query_sqlx::SqlxBinder;
+                        query.build_sqlx(SqliteQueryBuilder)
+                    }
+                    DatabaseType::Postgres => {
+                        use sea_query_sqlx::SqlxBinder;
+                        query.build_sqlx(PostgresQueryBuilder)
+                    }
                 };
 
                 sqlx::query_with(&sql, values)

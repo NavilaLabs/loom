@@ -3,6 +3,7 @@ pub mod authorization;
 pub mod error;
 pub mod setup;
 pub mod tenant;
+pub mod user_settings;
 pub mod workspace;
 
 pub use loom_core as core;

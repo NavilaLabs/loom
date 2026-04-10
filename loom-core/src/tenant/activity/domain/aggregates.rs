@@ -34,13 +34,7 @@ impl Activity {
     }
 }
 
-#[derive(Debug, thiserror::Error)]
-pub enum Error {
-    #[error("activity already exists")]
-    AlreadyExists,
-    #[error("activity not found")]
-    NotFound,
-}
+crate::aggregate_errors!("activity");
 
 impl Aggregate for Activity {
     type Id = ActivityId;

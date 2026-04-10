@@ -9,6 +9,10 @@ pub type WorkspaceId = AggregateId;
 pub struct Workspace {
     id: WorkspaceId,
     name: Option<String>,
+    pub timezone: String,
+    pub date_format: String,
+    pub currency: String,
+    pub week_start: String,
 }
 
 impl Workspace {
@@ -44,13 +48,37 @@ impl Aggregate for Workspace {
 
     fn apply(state: Option<Self>, event: Self::Event) -> Result<Self, Self::Error> {
         match (state, event) {
-            (None, WorkspaceEvent::Created { id, name }) => Ok(Self { id, name }),
+            (None, WorkspaceEvent::Created { id, name }) => Ok(Self {
+                id,
+                name,
+                timezone: "UTC".to_string(),
+                date_format: "%Y-%m-%d".to_string(),
+                currency: "USD".to_string(),
+                week_start: "monday".to_string(),
+            }),
             (Some(_), WorkspaceEvent::Created { .. }) => Err(Error::AlreadyExists),
             (None, _) => Err(Error::NotFound),
             (Some(workspace), WorkspaceEvent::UserRoleAssigned { .. }) => Ok(workspace),
             (Some(workspace), WorkspaceEvent::UserRoleRevoked { .. }) => Ok(workspace),
             (Some(workspace), WorkspaceEvent::UserPermissionGranted { .. }) => Ok(workspace),
             (Some(workspace), WorkspaceEvent::UserPermissionRevoked { .. }) => Ok(workspace),
+            (
+                Some(mut workspace),
+                WorkspaceEvent::SettingsUpdated {
+                    name,
+                    timezone,
+                    date_format,
+                    currency,
+                    week_start,
+                },
+            ) => {
+                workspace.name = name;
+                workspace.timezone = timezone;
+                workspace.date_format = date_format;
+                workspace.currency = currency;
+                workspace.week_start = week_start;
+                Ok(workspace)
+            }
         }
     }
 }

@@ -3,34 +3,22 @@ use eventually::aggregate::{
     Root,
     repository::{Getter, Saver},
 };
-use loom_core::{
-    tenant::{
-        customer::CustomerId,
-        project::{CreateProjectInput, Project, ProjectEvent, ProjectId, UpdateProjectInput},
-    },
-    validation::{Validate, validation_summary},
+use loom_core::tenant::{
+    customer::CustomerId,
+    project::{CreateProjectInput, Project, ProjectEvent, ProjectId, UpdateProjectInput},
 };
-use loom_infrastructure_impl::{
-    Pool, ScopeTenant, StateDisconnected,
-    tenant::project::repositories::{ProjectRepository, ProjectRow},
-};
-
-async fn tenant_pool(workspace_id: &str) -> Result<loom_infrastructure_impl::ConnectedTenantPool> {
-    Ok(Pool::<ScopeTenant, StateDisconnected>::connect_tenant(workspace_id).await?)
-}
+use loom_infrastructure_impl::tenant::project::repositories::{ProjectRepository, ProjectRow};
 
 pub async fn list(workspace_id: &str) -> Result<Vec<ProjectRow>> {
-    let pool = tenant_pool(workspace_id).await?;
+    let pool = super::tenant_pool(workspace_id).await?;
     let repo = ProjectRepository::from_pool(pool).await?;
     Ok(repo.all().await?)
 }
 
 pub async fn create(workspace_id: &str, customer_id: String, name: String) -> Result<ProjectRow> {
-    CreateProjectInput { name: name.clone() }
-        .validate()
-        .map_err(|e| crate::error::ValidationError::new(validation_summary(&e)))?;
+    crate::error::validate(CreateProjectInput { name: name.clone() })?;
 
-    let pool = tenant_pool(workspace_id).await?;
+    let pool = super::tenant_pool(workspace_id).await?;
     let repo = ProjectRepository::from_pool(pool).await?;
     let id = ProjectId::new();
     let cid: CustomerId = customer_id.parse()?;
@@ -66,11 +54,9 @@ pub async fn update(
     visible: bool,
     billable: bool,
 ) -> Result<()> {
-    UpdateProjectInput { name: name.clone() }
-        .validate()
-        .map_err(|e| crate::error::ValidationError::new(validation_summary(&e)))?;
+    crate::error::validate(UpdateProjectInput { name: name.clone() })?;
 
-    let pool = tenant_pool(workspace_id).await?;
+    let pool = super::tenant_pool(workspace_id).await?;
     let repo = ProjectRepository::from_pool(pool).await?;
     let agg_id: ProjectId = id.parse()?;
     let mut root = repo.get(&agg_id).await?;
@@ -95,7 +81,7 @@ pub async fn set_budget(
     money_budget: Option<i64>,
     budget_is_monthly: bool,
 ) -> Result<()> {
-    let pool = tenant_pool(workspace_id).await?;
+    let pool = super::tenant_pool(workspace_id).await?;
     let repo = ProjectRepository::from_pool(pool).await?;
     let agg_id: ProjectId = id.parse()?;
     let mut root = repo.get(&agg_id).await?;

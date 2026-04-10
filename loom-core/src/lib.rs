@@ -4,6 +4,42 @@ pub mod shared;
 pub mod tenant;
 pub mod validation;
 
+/// Generate the standard `AlreadyExists` / `NotFound` error enum for an aggregate.
+///
+/// This avoids repeating the same six-line boilerplate in every aggregate module.
+///
+/// # Usage
+///
+/// ```rust,ignore
+/// crate::aggregate_errors!("customer");
+/// // Expands to:
+/// // #[derive(Debug)]
+/// // pub enum Error { AlreadyExists, NotFound }
+/// // impl Display for Error { … "customer already exists" / "customer not found" }
+/// // impl std::error::Error for Error {}
+/// ```
+#[macro_export]
+macro_rules! aggregate_errors {
+    ($entity:literal) => {
+        #[derive(Debug)]
+        pub enum Error {
+            AlreadyExists,
+            NotFound,
+        }
+
+        impl ::std::fmt::Display for Error {
+            fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+                match self {
+                    Self::AlreadyExists => write!(f, concat!($entity, " already exists")),
+                    Self::NotFound => write!(f, concat!($entity, " not found")),
+                }
+            }
+        }
+
+        impl ::std::error::Error for Error {}
+    };
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("{0:?}")]

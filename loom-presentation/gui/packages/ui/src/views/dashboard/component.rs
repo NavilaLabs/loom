@@ -1,5 +1,6 @@
 use crate::components::atoms::card::{Card, CardContent};
-use crate::components::atoms::{Button, ButtonVariant, Select, SelectOption, ToastMessage, Toasts};
+use crate::components::atoms::{Button, ButtonVariant, Select, SelectOption, ToastExt, Toasts};
+use crate::formatting;
 use crate::layouts::DefaultLayout;
 use api::activity::ActivityDto;
 use api::project::ProjectDto;
@@ -12,6 +13,8 @@ use dioxus_free_icons::Icon;
 pub fn Dashboard() -> Element {
     let mut running: crate::RunningTimer = use_context();
     let mut toasts: Toasts = use_context();
+    let user_settings: crate::UserSettings = use_context();
+    let workspace_settings: crate::WorkspaceSettings = use_context();
 
     let mut projects = use_signal(Vec::<ProjectDto>::new);
     let mut activities = use_signal(Vec::<ActivityDto>::new);
@@ -41,7 +44,7 @@ pub fn Dashboard() -> Element {
                 selected_project_id.set(None);
                 selected_activity_id.set(None);
             }
-            Err(e) => toasts.write().push(ToastMessage::error(e.to_string())),
+            Err(e) => toasts.push_error(e.to_string()),
         }
     };
 
@@ -55,7 +58,7 @@ pub fn Dashboard() -> Element {
                         recent.set(list);
                     }
                 }
-                Err(e) => toasts.write().push(ToastMessage::error(e.to_string())),
+                Err(e) => toasts.push_error(e.to_string()),
             }
         }
     };
@@ -153,8 +156,10 @@ pub fn Dashboard() -> Element {
 
                 // ── Recent Entries ───────────────────────────────────────────
                 if !recent.read().is_empty() {
-                    div { class: "flex flex-col gap-2",
-                        h2 { class: "text-base font-semibold", "Recent Entries" }
+                    div { class: "island",
+                        div { class: "island-header",
+                            span { class: "island-title", "Recent Entries" }
+                        }
                         div { class: "flex flex-col gap-2",
                             for ts in recent.read().iter().take(5) {
                                 {
@@ -168,6 +173,13 @@ pub fn Dashboard() -> Element {
                                         let h = d / 3600;
                                         let m = (d % 3600) / 60;
                                         if h > 0 { format!("{h}h {m:02}m") } else { format!("{m}m") }
+                                    });
+                                    let date_str = {
+                                        let s = user_settings.read();
+                                        formatting::format_datetime(&ts.start_time, &s.timezone, &s.date_format)
+                                    };
+                                    let rate_str = ts.rate.map(|r| {
+                                        formatting::format_money(r, &workspace_settings.read().currency)
                                     });
                                     rsx! {
                                         Card { key: "{ts.id}",
@@ -184,9 +196,15 @@ pub fn Dashboard() -> Element {
                                                         span { class: "text-xs text-secondary",
                                                             "{proj_name} · {act_name}"
                                                         }
+                                                        span { class: "text-xs text-secondary", "{date_str}" }
                                                     }
-                                                    if let Some(ref d) = duration_str {
-                                                        span { class: "text-sm font-medium", "{d}" }
+                                                    div { class: "flex flex-col items-end gap-1",
+                                                        if let Some(ref d) = duration_str {
+                                                            span { class: "text-sm font-medium", "{d}" }
+                                                        }
+                                                        if let Some(ref r) = rate_str {
+                                                            span { class: "text-xs text-secondary", "{r}" }
+                                                        }
                                                     }
                                                 }
                                             }

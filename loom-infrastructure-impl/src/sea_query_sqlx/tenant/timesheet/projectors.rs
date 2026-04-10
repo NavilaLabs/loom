@@ -161,6 +161,37 @@ impl Projector for TimesheetProjector {
                     .execute(self.pool.as_ref())
                     .await?;
             }
+            "TimesheetTimeUpdated" => {
+                let TimesheetEvent::TimeUpdated {
+                    start_time,
+                    end_time,
+                    duration,
+                } = serde_json::from_slice(&event.payload_bytes)?
+                else {
+                    return Ok(());
+                };
+
+                let query = Query::update()
+                    .table(TableRef::from(Self::TABLE))
+                    .values([
+                        (DynIden::from("start_time"), start_time.into()),
+                        (DynIden::from("end_time"), end_time.into()),
+                        (DynIden::from("duration"), duration.into()),
+                    ])
+                    .cond_where(
+                        Condition::all()
+                            .add(Expr::col("id").eq(Expr::val(event.stream_id.clone()))),
+                    )
+                    .to_owned();
+
+                let (sql, values) = match self.pool.get_database_type() {
+                    DatabaseType::Sqlite => query.build_sqlx(sea_query::SqliteQueryBuilder),
+                    DatabaseType::Postgres => query.build_sqlx(sea_query::PostgresQueryBuilder),
+                };
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
+            }
             "TimesheetExported" => {
                 let query = Query::update()
                     .table(TableRef::from(Self::TABLE))

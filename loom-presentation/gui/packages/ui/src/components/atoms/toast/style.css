@@ -12,6 +12,7 @@
 }
 
 .toast {
+    position: relative;
     display: flex;
     align-items: flex-start;
     gap: 0.75rem;
@@ -22,6 +23,7 @@
     border-left-width: 3px;
     box-shadow: var(--shadow-raised);
     pointer-events: auto;
+    overflow: hidden;
     animation: toast-slide-in 200ms ease-out;
 }
 
@@ -35,6 +37,29 @@
         transform: translateX(0);
     }
 }
+
+/* Progress bar showing time left before auto-dismiss */
+.toast::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background-color: currentColor;
+    opacity: 0.25;
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    animation: toast-progress 4s linear forwards;
+}
+
+.toast[data-variant="error"]::after {
+    animation-duration: 7s;
+}
+
+@keyframes toast-progress {
+    from { width: 100%; }
+    to { width: 0%; }
+}
+
 
 .toast[data-variant="success"] {
     border-left-color: var(--color-primary);

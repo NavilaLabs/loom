@@ -102,6 +102,47 @@ pub async fn update_timesheet(
     }
 }
 
+#[post("/api/timesheets/create-manual")]
+pub async fn create_timesheet_manual(
+    project_id: Option<String>,
+    activity_id: Option<String>,
+    start_time: String,
+    end_time: String,
+    description: Option<String>,
+    billable: bool,
+) -> Result<TimesheetDto, ServerFnError> {
+    #[cfg(feature = "server")]
+    {
+        _create_timesheet_manual(project_id, activity_id, start_time, end_time, description, billable).await
+    }
+    #[cfg(not(feature = "server"))]
+    {
+        let _ = (project_id, activity_id, start_time, end_time, description, billable);
+        Err(ServerFnError::ServerError {
+            message: "server only".into(),
+            code: 500,
+            details: None,
+        })
+    }
+}
+
+#[post("/api/timesheets/update-time")]
+pub async fn update_timesheet_time(
+    timesheet_id: String,
+    start_time: String,
+    end_time: Option<String>,
+) -> Result<(), ServerFnError> {
+    #[cfg(feature = "server")]
+    {
+        _update_timesheet_time(timesheet_id, start_time, end_time).await
+    }
+    #[cfg(not(feature = "server"))]
+    {
+        let _ = (timesheet_id, start_time, end_time);
+        Ok(())
+    }
+}
+
 #[post("/api/timesheets/stop")]
 pub async fn stop_timesheet(timesheet_id: String) -> Result<(), ServerFnError> {
     #[cfg(feature = "server")]
@@ -242,6 +283,53 @@ async fn _stop_timesheet(timesheet_id: String) -> Result<(), ServerFnError> {
     session::require_permission(&user, permissions::TIMESHEET_UPDATE).await?;
 
     loom::tenant::timesheet::stop(&workspace_id, &timesheet_id)
+        .await
+        .map_err(session::internal)
+}
+
+#[cfg(feature = "server")]
+async fn _create_timesheet_manual(
+    project_id: Option<String>,
+    activity_id: Option<String>,
+    start_time: String,
+    end_time: String,
+    description: Option<String>,
+    billable: bool,
+) -> Result<TimesheetDto, ServerFnError> {
+    use crate::session;
+    use loom::core::permissions;
+
+    let (user, workspace_id) = session::session_workspace().await?;
+    session::require_permission(&user, permissions::TIMESHEET_CREATE).await?;
+
+    let r = loom::tenant::timesheet::create_manual(
+        &workspace_id,
+        &user.id,
+        project_id,
+        activity_id,
+        start_time,
+        end_time,
+        description,
+        billable,
+    )
+    .await
+    .map_err(session::internal)?;
+    Ok(row_to_dto(r))
+}
+
+#[cfg(feature = "server")]
+async fn _update_timesheet_time(
+    timesheet_id: String,
+    start_time: String,
+    end_time: Option<String>,
+) -> Result<(), ServerFnError> {
+    use crate::session;
+    use loom::core::permissions;
+
+    let (_user, workspace_id) = session::session_workspace().await?;
+    session::require_permission(&_user, permissions::TIMESHEET_UPDATE).await?;
+
+    loom::tenant::timesheet::update_time(&workspace_id, &timesheet_id, start_time, end_time)
         .await
         .map_err(session::internal)
 }

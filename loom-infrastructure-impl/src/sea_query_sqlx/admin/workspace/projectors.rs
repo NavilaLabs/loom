@@ -179,6 +179,42 @@ impl Projector for WorkspaceProjector {
                     .execute(self.pool.as_ref())
                     .await?;
             }
+            "WorkspaceSettingsUpdated" => {
+                let WorkspaceEvent::SettingsUpdated {
+                    name,
+                    timezone,
+                    date_format,
+                    currency,
+                    week_start,
+                } = serde_json::from_slice(&event.payload_bytes)?
+                else {
+                    return Ok(());
+                };
+
+                let query = Query::update()
+                    .table(TableRef::from(Self::TABLE))
+                    .values([
+                        (DynIden::from("name"), sea_query::Value::String(name).into()),
+                        (DynIden::from("timezone"), timezone.into()),
+                        (DynIden::from("date_format"), date_format.into()),
+                        (DynIden::from("currency"), currency.into()),
+                        (DynIden::from("week_start"), week_start.into()),
+                    ])
+                    .cond_where(
+                        Condition::all()
+                            .add(Expr::col("id").eq(Expr::val(event.stream_id.clone()))),
+                    )
+                    .to_owned();
+
+                let (sql, values) = match self.pool.get_database_type() {
+                    DatabaseType::Sqlite => query.build_sqlx(SqliteQueryBuilder),
+                    DatabaseType::Postgres => query.build_sqlx(PostgresQueryBuilder),
+                };
+
+                sqlx::query_with(&sql, values)
+                    .execute(self.pool.as_ref())
+                    .await?;
+            }
             _ => {}
         }
 

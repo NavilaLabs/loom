@@ -8,6 +8,8 @@ use crate::components::atoms::dropdown_menu::{
 pub struct SelectOption<T: Clone + PartialEq> {
     pub value: T,
     pub label: String,
+    /// Optional muted subtitle shown below the label in the dropdown.
+    pub sublabel: Option<String>,
 }
 
 impl<T: Clone + PartialEq> SelectOption<T> {
@@ -15,7 +17,13 @@ impl<T: Clone + PartialEq> SelectOption<T> {
         Self {
             value,
             label: label.into(),
+            sublabel: None,
         }
+    }
+
+    pub fn sublabel(mut self, s: impl Into<String>) -> Self {
+        self.sublabel = Some(s.into());
+        self
     }
 }
 
@@ -55,14 +63,22 @@ pub fn Select<T: Clone + PartialEq + 'static>(
                     for (i, option) in options.into_iter().enumerate() {
                         {
                             let val = option.value;
-                            let label = option.label;
+                            let label = option.label.clone();
+                            let sublabel = option.sublabel.clone();
                             rsx! {
                                 DropdownMenuItem {
                                     key: "{label}",
                                     value: val,
                                     index: i,
                                     on_select: move |v: T| on_change.call(v),
-                                    "{label}"
+                                    if let Some(ref sub) = sublabel {
+                                        div { class: "select-option-group",
+                                            span { "{label}" }
+                                            span { class: "select-option-sublabel", "{sub}" }
+                                        }
+                                    } else {
+                                        "{label}"
+                                    }
                                 }
                             }
                         }

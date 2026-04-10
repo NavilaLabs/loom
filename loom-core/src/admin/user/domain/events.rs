@@ -11,12 +11,18 @@ pub enum UserEvent {
         email: String,
         password: String,
     },
+    SettingsUpdated {
+        timezone: String,
+        date_format: String,
+        language: String,
+    },
 }
 
 impl Message for UserEvent {
     fn name(&self) -> &'static str {
         match self {
             UserEvent::Created { .. } => "UserCreated",
+            UserEvent::SettingsUpdated { .. } => "UserSettingsUpdated",
         }
     }
 }

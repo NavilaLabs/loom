@@ -1,4 +1,5 @@
 use api::auth::UserInfo;
+use api::settings::{UserSettingsDto, WorkspaceSettingsDto};
 use dioxus::prelude::*;
 use dioxus_motion::prelude::*;
 use easer::functions::Easing;
@@ -9,9 +10,10 @@ use ui::{
     },
     views::{
         setup::Setup, Activities, Customers, Dashboard, Database, Login, Projects, SelectWorkspace,
-        Tags, Timesheets,
+        Settings, Tags, Timesheets,
     },
-    RunningElapsed, RunningTimer, FAVICON,
+    ActivitiesCache, CustomersCache, ProjectsCache, RunningElapsed, RunningTimer, TagsCache,
+    TimesheetsCache, UserSettings, WorkspaceSettings, FAVICON,
 };
 
 /// Three-state auth signal shared across the whole app.
@@ -68,6 +70,9 @@ enum Route {
 
                     #[route("/tags")]
                     Tags {},
+
+                    #[route("/settings")]
+                    Settings {},
 
                     #[layout(RequireAdmin)]
                         #[route("/developer/database")]
@@ -133,7 +138,8 @@ fn App() -> Element {
                 Route::Activities { .. } => 6,
                 Route::Timesheets { .. } => 7,
                 Route::Tags { .. } => 8,
-                Route::Database { .. } => 9,
+                Route::Settings { .. } => 9,
+                Route::Database { .. } => 10,
                 _ => -1,
             }
         }
@@ -195,6 +201,36 @@ fn Layout() -> Element {
     let mut running: RunningTimer =
         use_context_provider(|| Signal::new(None::<api::timesheet::TimesheetDto>));
 
+    // Provide entity caches — views read from these to avoid the empty-then-loaded flash.
+    let mut customers_cache: CustomersCache =
+        use_context_provider(|| Signal::new(Vec::new()));
+    let mut projects_cache: ProjectsCache =
+        use_context_provider(|| Signal::new(Vec::new()));
+    let mut activities_cache: ActivitiesCache =
+        use_context_provider(|| Signal::new(Vec::new()));
+    let mut tags_cache: TagsCache =
+        use_context_provider(|| Signal::new(Vec::new()));
+    let mut timesheets_cache: TimesheetsCache =
+        use_context_provider(|| Signal::new(Vec::new()));
+
+    // Provide user and workspace settings with sane defaults; refreshed after login.
+    let mut user_settings: UserSettings = use_context_provider(|| {
+        Signal::new(UserSettingsDto {
+            timezone: "UTC".to_string(),
+            date_format: "%Y-%m-%d".to_string(),
+            language: "en".to_string(),
+        })
+    });
+    let mut workspace_settings: WorkspaceSettings = use_context_provider(|| {
+        Signal::new(WorkspaceSettingsDto {
+            name: None,
+            timezone: "UTC".to_string(),
+            date_format: "%Y-%m-%d".to_string(),
+            currency: "USD".to_string(),
+            week_start: "monday".to_string(),
+        })
+    });
+
     // Provide shared elapsed-seconds counter — updated by one coroutine, read everywhere.
     #[cfg(target_arch = "wasm32")]
     let mut elapsed: RunningElapsed = use_context_provider(|| Signal::new(0u64));
@@ -227,33 +263,69 @@ fn Layout() -> Element {
         auth.set(Some(user));
     });
 
-    // Re-fetch running timer whenever auth state changes (e.g. after login/workspace select).
+    // Re-fetch running timer, settings, and entity caches whenever auth/workspace changes.
     use_resource(move || async move {
         let _ = auth.read(); // subscribe — re-runs when auth changes
         if let Ok(r) = api::timesheet::running_timesheet().await {
             running.set(r);
         }
+        if let Ok(s) = api::settings::get_user_settings().await {
+            user_settings.set(s);
+        }
+        if let Ok(s) = api::settings::get_workspace_settings().await {
+            workspace_settings.set(s);
+        }
+        // Pre-populate entity caches so views render with data immediately on mount.
+        if let Ok(list) = api::customer::list_customers().await {
+            customers_cache.set(list);
+        }
+        if let Ok(list) = api::project::list_projects().await {
+            projects_cache.set(list);
+        }
+        if let Ok(list) = api::activity::list_activities().await {
+            activities_cache.set(list);
+        }
+        if let Ok(list) = api::tag::list_tags().await {
+            tags_cache.set(list);
+        }
+        if let Ok(list) = api::timesheet::list_timesheets().await {
+            timesheets_cache.set(list);
+        }
     });
 
     let route: Route = use_route();
-    let page_title = match &route {
+    let view_title = match &route {
         Route::Dashboard {} => "Dashboard",
         Route::Customers {} => "Customers",
         Route::Projects {} => "Projects",
         Route::Activities {} => "Activities",
         Route::Timesheets {} => "Timesheets",
         Route::Tags {} => "Tags",
+        Route::Settings {} => "Settings",
         Route::Database {} => "Developer",
         Route::SelectWorkspace {} => "Workspaces",
         Route::Login {} | Route::Setup {} => "",
         Route::NotFound { .. } => "Not Found",
     };
 
+    // Build "Workspace / View" title; show only the view name while on non-workspace routes.
+    let page_title = {
+        let ws_name = workspace_settings.read().name.clone();
+        let skip_prefix = matches!(
+            &route,
+            Route::Login {} | Route::Setup {} | Route::SelectWorkspace {} | Route::NotFound { .. }
+        );
+        match (ws_name.filter(|_| !skip_prefix), view_title) {
+            (Some(ws), vt) if !vt.is_empty() => format!("{ws} / {vt}"),
+            _ => view_title.to_string(),
+        }
+    };
+
     rsx! {
         div { class: "app-shell",
             Sidebar {}
             div { class: "app-right",
-                Header { title: page_title.to_string() }
+                Header { title: page_title }
                 main { class: "app-main",
                     AnimatedOutlet::<Route> {}
                 }

@@ -13,6 +13,9 @@ mod m20260406_000004_create_workspace_user_roles_projection_table;
 mod m20260406_000005_create_workspace_user_permissions_projection_table;
 mod m20260406_000006_create_workspace_role_permissions_projection_table;
 mod m20260410_000001_seed_permissions;
+mod m20260410_000002_add_user_settings;
+mod m20260410_000003_add_workspace_settings;
+mod m20260410_000004_fix_date_format_strings;
 
 pub struct Migrator;
 
@@ -36,6 +39,9 @@ impl MigratorTrait for Migrator {
                 m20260406_000006_create_workspace_role_permissions_projection_table::Migration,
             ),
             Box::new(m20260410_000001_seed_permissions::Migration),
+            Box::new(m20260410_000002_add_user_settings::Migration),
+            Box::new(m20260410_000003_add_workspace_settings::Migration),
+            Box::new(m20260410_000004_fix_date_format_strings::Migration),
         ]
     }
 }

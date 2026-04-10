@@ -10,6 +10,7 @@ pub mod login;
 pub mod project;
 pub mod project_rate;
 pub mod session;
+pub mod settings;
 pub mod setup;
 pub mod tag;
 pub mod timesheet;

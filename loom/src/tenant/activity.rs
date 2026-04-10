@@ -3,24 +3,14 @@ use eventually::aggregate::{
     Root,
     repository::{Getter, Saver},
 };
-use loom_core::{
-    tenant::{
-        activity::{Activity, ActivityEvent, ActivityId, CreateActivityInput, UpdateActivityInput},
-        project::ProjectId,
-    },
-    validation::{Validate, validation_summary},
+use loom_core::tenant::{
+    activity::{Activity, ActivityEvent, ActivityId, CreateActivityInput, UpdateActivityInput},
+    project::ProjectId,
 };
-use loom_infrastructure_impl::{
-    Pool, ScopeTenant, StateDisconnected,
-    tenant::activity::repositories::{ActivityRepository, ActivityRow},
-};
-
-async fn tenant_pool(workspace_id: &str) -> Result<loom_infrastructure_impl::ConnectedTenantPool> {
-    Ok(Pool::<ScopeTenant, StateDisconnected>::connect_tenant(workspace_id).await?)
-}
+use loom_infrastructure_impl::tenant::activity::repositories::{ActivityRepository, ActivityRow};
 
 pub async fn list(workspace_id: &str) -> Result<Vec<ActivityRow>> {
-    let pool = tenant_pool(workspace_id).await?;
+    let pool = super::tenant_pool(workspace_id).await?;
     let repo = ActivityRepository::from_pool(pool).await?;
     Ok(repo.all().await?)
 }
@@ -30,11 +20,9 @@ pub async fn create(
     project_id: Option<String>,
     name: String,
 ) -> Result<ActivityRow> {
-    CreateActivityInput { name: name.clone() }
-        .validate()
-        .map_err(|e| crate::error::ValidationError::new(validation_summary(&e)))?;
+    crate::error::validate(CreateActivityInput { name: name.clone() })?;
 
-    let pool = tenant_pool(workspace_id).await?;
+    let pool = super::tenant_pool(workspace_id).await?;
     let repo = ActivityRepository::from_pool(pool).await?;
     let id = ActivityId::new();
     let pid: Option<ProjectId> = project_id.as_deref().map(|s| s.parse()).transpose()?;
@@ -65,11 +53,9 @@ pub async fn update(
     visible: bool,
     billable: bool,
 ) -> Result<()> {
-    UpdateActivityInput { name: name.clone() }
-        .validate()
-        .map_err(|e| crate::error::ValidationError::new(validation_summary(&e)))?;
+    crate::error::validate(UpdateActivityInput { name: name.clone() })?;
 
-    let pool = tenant_pool(workspace_id).await?;
+    let pool = super::tenant_pool(workspace_id).await?;
     let repo = ActivityRepository::from_pool(pool).await?;
     let agg_id: ActivityId = id.parse()?;
     let mut root = repo.get(&agg_id).await?;

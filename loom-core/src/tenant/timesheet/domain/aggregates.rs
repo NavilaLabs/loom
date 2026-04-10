@@ -143,6 +143,19 @@ impl Aggregate for Timesheet {
                 t.activity_id = Some(activity_id);
                 Ok(t)
             }
+            (
+                Some(mut t),
+                TimesheetEvent::TimeUpdated {
+                    start_time,
+                    end_time,
+                    duration,
+                },
+            ) => {
+                t.start_time = start_time;
+                t.end_time = end_time;
+                t.duration = duration;
+                Ok(t)
+            }
             (Some(t), TimesheetEvent::Exported) => {
                 if t.exported {
                     return Err(Error::AlreadyExported);

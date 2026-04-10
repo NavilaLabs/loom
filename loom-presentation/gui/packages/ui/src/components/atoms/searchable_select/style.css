@@ -1,0 +1,152 @@
+/* SearchableSelect — a searchable, scrollable single-value picker */
+
+.ss-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+/* ── Backdrop ──────────────────────────────────────────────────────────────── */
+
+.ss-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: transparent;
+}
+
+/* ── Trigger ───────────────────────────────────────────────────────────────── */
+
+.ss-trigger {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    background-color: var(--color-input-bg);
+    border: 1px solid var(--color-input-border);
+    border-radius: var(--radius-md);
+    color: var(--color-input-text);
+    padding: 8px 12px;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        border-color var(--transition-fast),
+        background-color var(--transition-fast);
+    position: relative;
+    z-index: 1000;
+}
+
+.ss-trigger:hover {
+    border-color: var(--color-border-strong);
+}
+
+.ss-trigger:focus-visible {
+    outline: none;
+    border-color: var(--color-focus-ring);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus-ring) 35%, transparent);
+}
+
+.ss-trigger-label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ss-trigger-chevron {
+    flex-shrink: 0;
+    font-size: 0.6rem;
+    color: var(--color-text-secondary);
+}
+
+/* ── Panel ─────────────────────────────────────────────────────────────────── */
+
+.ss-panel {
+    position: absolute;
+    z-index: 1000;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background-color: var(--color-surface-raised);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-raised);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: ss-in 120ms ease-out;
+}
+
+@keyframes ss-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Search input ──────────────────────────────────────────────────────────── */
+
+.ss-search {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    border: none;
+    border-bottom: 1px solid var(--color-border);
+    background-color: var(--color-surface-raised);
+    color: var(--color-text-primary);
+    font-size: 0.875rem;
+    outline: none;
+}
+
+.ss-search::placeholder {
+    color: var(--color-text-placeholder, var(--color-text-secondary));
+}
+
+/* ── Scrollable list ───────────────────────────────────────────────────────── */
+
+.ss-list {
+    max-height: 240px;
+    overflow-y: auto;
+    padding: 0.25rem;
+}
+
+/* ── Option items ──────────────────────────────────────────────────────────── */
+
+.ss-item {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 7px 10px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--color-text-primary);
+    font-size: 0.875rem;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+}
+
+.ss-item:hover {
+    background-color: var(--color-surface-tonal);
+}
+
+.ss-item--selected {
+    background-color: color-mix(in srgb, var(--color-accent) 15%, transparent);
+    color: var(--color-accent);
+    font-weight: 500;
+}
+
+.ss-item--selected:hover {
+    background-color: color-mix(in srgb, var(--color-accent) 20%, transparent);
+}
+
+/* ── Empty state ───────────────────────────────────────────────────────────── */
+
+.ss-empty {
+    padding: 12px 10px;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    text-align: center;
+}

@@ -130,7 +130,7 @@
     ============================================================ */
 
     --color-border: var(--dark, #3a3a3a) var(--light, #dcdcd4);
-    --color-border-subtle: var(--dark, #2e2e2e) var(--light, #ebebE5);
+    --color-border-subtle: var(--dark, #2e2e2e) var(--light, #ebebe5);
     --color-border-strong: var(--dark, #555555) var(--light, #707a6c);
 
     /* ============================================================
@@ -315,6 +315,36 @@
     }
 }
 
+/* ── Island ──────────────────────────────────────────────────────────────────
+   A tonal container that groups related content.  Cards (#fff / dark-raised)
+   inside an island visually "float" against the warm tonal background,
+   creating depth without making the entire page grey.
+   ─────────────────────────────────────────────────────────────────────────── */
+.island {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    /* surface (#f4f4ef light / #242424 dark) — one step darker than the white main bg,
+       clearly visible without being heavy. Cards inside remain surface-raised (#fff). */
+    background-color: var(--color-surface);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+}
+
+.island-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.island-title {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+}
+
 /* ── Border colour helpers ───────────────────────────────────────────────── */
 .border-surface-tonal {
     border-color: var(--color-surface-tonal);
@@ -344,7 +374,9 @@
     color: var(--color-text-secondary);
     border: 1px solid transparent;
     cursor: pointer;
-    transition: background-color 120ms ease, border-color 120ms ease;
+    transition:
+        background-color 120ms ease,
+        border-color 120ms ease;
 }
 
 .tag-pill:hover {
@@ -356,6 +388,34 @@
     background-color: var(--color-workspace-accent);
     color: #fff;
     border-color: transparent;
+}
+
+/* ── Mode toggle tabs (e.g. "Timer / Manual" in the timesheet card) ─────────── */
+.tab-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: var(--radius-pill);
+    font-size: 0.75rem;
+    background-color: transparent;
+    color: var(--color-text-secondary);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition:
+        background-color 120ms ease,
+        border-color 120ms ease;
+}
+
+.tab-pill:hover {
+    background-color: var(--color-surface-tonal);
+    border-color: var(--color-border);
+}
+
+.tab-pill--active {
+    background-color: var(--color-surface-tonal);
+    color: var(--color-text);
+    border-color: var(--color-border);
+    font-weight: 500;
 }
 
 /* Running timer indicator dot used on the Dashboard */
@@ -370,6 +430,11 @@
 }
 
 @keyframes timer-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.3;
+    }
 }

@@ -11,6 +11,9 @@ pub struct User {
     name: String,
     email: String,
     password: String,
+    pub timezone: String,
+    pub date_format: String,
+    pub language: String,
 }
 
 impl User {
@@ -61,8 +64,25 @@ impl Aggregate for User {
                 name,
                 email,
                 password,
+                timezone: "UTC".to_string(),
+                date_format: "%Y-%m-%d".to_string(),
+                language: "en".to_string(),
             }),
             (Some(_), UserEvent::Created { .. }) => Err(Error::AlreadyExists),
+            (
+                Some(mut user),
+                UserEvent::SettingsUpdated {
+                    timezone,
+                    date_format,
+                    language,
+                },
+            ) => {
+                user.timezone = timezone;
+                user.date_format = date_format;
+                user.language = language;
+                Ok(user)
+            }
+            (None, UserEvent::SettingsUpdated { .. }) => Err(Error::AlreadyExists),
         }
     }
 }

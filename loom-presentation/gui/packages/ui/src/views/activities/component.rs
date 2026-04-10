@@ -1,11 +1,12 @@
 use crate::components::atoms::card::{Card, CardContent, CardFooter, CardHeader, CardTitle};
 use crate::components::atoms::{
-    Button, Input, Select, SelectOption, SkeletonListItem, ToastMessage, Toasts,
+    Button, ColumnDef, DataTable, Input, Select, SelectOption, TableCell, TableExpandRow, TableRow,
+    ToastExt, Toasts,
 };
 use crate::form_machine::{new_form, FormAction, State};
 use crate::layouts::DefaultLayout;
+use crate::{ActivitiesCache, CustomersCache, ProjectsCache};
 use api::activity::ActivityDto;
-use api::project::ProjectDto;
 use dioxus::prelude::*;
 use dioxus_free_icons::icons::hi_solid_icons::{HiPencil, HiPlus, HiRefresh, HiSave, HiTag, HiX};
 use dioxus_free_icons::Icon;
@@ -14,12 +15,19 @@ use loom_core::{
     validation::{validation_summary, Validate},
 };
 
+const PAGE_SIZE: usize = 15;
+
 #[component]
 pub fn Activities() -> Element {
-    let mut activities = use_signal(Vec::<ActivityDto>::new);
-    let mut projects = use_signal(Vec::<ProjectDto>::new);
-    let mut loading = use_signal(|| true);
+    let activities_cache: ActivitiesCache = use_context();
+    let projects_cache: ProjectsCache = use_context();
+    let customers_cache: CustomersCache = use_context();
+    let mut activities = use_signal(|| activities_cache.read().clone());
+    let mut projects = use_signal(|| projects_cache.read().clone());
+    let mut customers = use_signal(|| customers_cache.read().clone());
+    let mut loading = use_signal(|| activities_cache.read().is_empty());
     let mut toasts: Toasts = use_context();
+    let mut page = use_signal(|| 0_usize);
 
     // State machine drives the create-form lifecycle.
     let mut create_form = use_signal(new_form);
@@ -41,14 +49,19 @@ pub fn Activities() -> Element {
     use_resource(move || async move {
         match api::activity::list_activities().await {
             Ok(list) => activities.set(list),
-            Err(e) => toasts.write().push(ToastMessage::error(e.to_string())),
+            Err(e) => toasts.push_error(e.to_string()),
         }
         match api::project::list_projects().await {
             Ok(list) => projects.set(list),
-            Err(e) => toasts.write().push(ToastMessage::error(e.to_string())),
+            Err(e) => toasts.push_error(e.to_string()),
+        }
+        match api::customer::list_customers().await {
+            Ok(list) => customers.set(list),
+            Err(e) => toasts.push_error(e.to_string()),
         }
         loading.set(false);
     });
+
 
     let on_create = move |_| async move {
         let name = new_name.peek().clone();
@@ -70,13 +83,11 @@ pub fn Activities() -> Element {
                 create_form
                     .write()
                     .handle(&FormAction::Succeed("Activity created".into()));
-                toasts
-                    .write()
-                    .push(ToastMessage::success("Activity created"));
+                toasts.push_success("Activity created");
             }
             Err(e) => {
                 create_form.write().handle(&FormAction::Fail(e.to_string()));
-                toasts.write().push(ToastMessage::error(e.to_string()));
+                toasts.push_error(e.to_string());
             }
         }
     };
@@ -89,11 +100,7 @@ pub fn Activities() -> Element {
         let name = edit_name.peek().clone();
         let comment = {
             let s = edit_comment.peek().clone();
-            if s.is_empty() {
-                None
-            } else {
-                Some(s)
-            }
+            if s.is_empty() { None } else { Some(s) }
         };
         let visible = *edit_visible.peek();
         let billable = *edit_billable.peek();
@@ -110,22 +117,41 @@ pub fn Activities() -> Element {
             api::activity::update_activity(id.clone(), name, comment, visible, billable).await
         {
             edit_form.write().handle(&FormAction::Fail(e.to_string()));
-            toasts.write().push(ToastMessage::error(e.to_string()));
+            toasts.push_error(e.to_string());
             return;
         }
 
         match api::activity::list_activities().await {
             Ok(list) => activities.set(list),
-            Err(e) => toasts.write().push(ToastMessage::error(e.to_string())),
+            Err(e) => toasts.push_error(e.to_string()),
         }
         edit_form
             .write()
             .handle(&FormAction::Succeed("Activity saved".into()));
         editing_id.set(None);
-        toasts.write().push(ToastMessage::success("Activity saved"));
+        toasts.push_success("Activity saved");
     };
 
     let create_submitting = matches!(create_form.read().state(), State::Submitting {});
+
+    // Pagination slice
+    let total = activities.read().len();
+    let current_page = *page.read();
+    let page_items: Vec<ActivityDto> = activities
+        .read()
+        .iter()
+        .skip(current_page * PAGE_SIZE)
+        .take(PAGE_SIZE)
+        .cloned()
+        .collect();
+
+    let columns = vec![
+        ColumnDef::new("Name"),
+        ColumnDef::new("Project"),
+        ColumnDef::new("Flags"),
+        ColumnDef::new("").width("80px"),
+    ];
+    let col_count = columns.len();
 
     rsx! {
         DefaultLayout {
@@ -157,7 +183,15 @@ pub fn Activities() -> Element {
                                 Select::<String> {
                                     options: {
                                         let mut opts = vec![SelectOption::new("".to_string(), "— Global —".to_string())];
-                                        opts.extend(projects.read().iter().map(|p| SelectOption::new(p.id.clone(), p.name.clone())));
+                                        opts.extend(projects.read().iter().map(|p| {
+                                    let customer_name = customers.read()
+                                        .iter()
+                                        .find(|c| c.id == p.customer_id)
+                                        .map(|c| c.name.clone());
+                                    let mut opt = SelectOption::new(p.id.clone(), p.name.clone());
+                                    if let Some(cn) = customer_name { opt = opt.sublabel(cn); }
+                                    opt
+                                }));
                                         opts
                                     },
                                     value: new_project_id.read().clone(),
@@ -208,51 +242,77 @@ pub fn Activities() -> Element {
                 }
 
                 // ── Activity list ────────────────────────────────────────────
-                div { class: "flex flex-col gap-3",
-                    if *loading.read() {
-                        for _ in 0..4 {
-                            SkeletonListItem {}
-                        }
+                div { class: "island",
+                    div { class: "island-header",
+                        span { class: "island-title", "Activities" }
                     }
-                    for activity in activities.read().clone() {
-                        {
-                            let a = activity.clone();
-                            let aid = a.id.clone();
-                            let is_editing = editing_id.read().as_deref() == Some(a.id.as_str());
-                            let project_name = a.project_id.as_ref().and_then(|pid| {
-                                projects.read().iter().find(|p| &p.id == pid).map(|p| p.name.clone())
-                            });
-                            let edit_submitting = matches!(edit_form.read().state(), State::Submitting {});
+                    DataTable {
+                        columns,
+                        total,
+                        page: current_page,
+                        page_size: PAGE_SIZE,
+                        loading: *loading.read(),
+                        on_page_change: move |p| page.set(p),
 
-                            if is_editing {
+                        for activity in page_items {
+                            {
+                                let a = activity.clone();
+                                let aid = a.id.clone();
+                                let is_editing = editing_id.read().as_deref() == Some(a.id.as_str());
+                                let project_name = a.project_id.as_ref().and_then(|pid| {
+                                    projects.read().iter().find(|p| &p.id == pid).map(|p| p.name.clone())
+                                });
+                                let edit_submitting = matches!(edit_form.read().state(), State::Submitting {});
+
                                 rsx! {
-                                    Card { key: "{a.id}",
-                                        CardHeader {
-                                            CardTitle {
-                                                div { class: "flex items-center justify-between",
-                                                    span { "{a.name}" }
-                                                    div { class: "flex gap-2",
-                                                        Button {
-                                                            onclick: on_save,
-                                                            disabled: edit_submitting,
-                                                            if edit_submitting {
-                                                                Icon { icon: HiRefresh, width: 15, height: 15 }
-                                                                "Saving…"
-                                                            } else {
-                                                                Icon { icon: HiSave, width: 15, height: 15 }
-                                                                "Save"
-                                                            }
-                                                        }
-                                                        Button {
-                                                            onclick: move |_| editing_id.set(None),
-                                                            Icon { icon: HiX, width: 15, height: 15 }
-                                                            "Cancel"
-                                                        }
-                                                    }
+                                    TableRow { key: "{a.id}", muted: !a.visible,
+                                        TableCell { "{a.name}" }
+                                        TableCell {
+                                            if let Some(pn) = project_name {
+                                                span { "{pn}" }
+                                            } else {
+                                                span { class: "text-secondary text-xs", "Global" }
+                                            }
+                                        }
+                                        TableCell {
+                                            div { class: "flex gap-2 text-xs",
+                                                if a.billable {
+                                                    span { class: "text-success", "Billable" }
+                                                }
+                                                if !a.visible {
+                                                    span { class: "text-warning", "Hidden" }
                                                 }
                                             }
                                         }
-                                        CardContent {
+                                        TableCell {
+                                            if is_editing {
+                                                Button {
+                                                    onclick: move |_| editing_id.set(None),
+                                                    Icon { icon: HiX, width: 14, height: 14 }
+                                                }
+                                            } else {
+                                                Button {
+                                                    onclick: move |_| {
+                                                        let act = activities.read()
+                                                            .iter()
+                                                            .find(|x| x.id == aid)
+                                                            .cloned();
+                                                        if let Some(ac) = act {
+                                                            edit_name.set(ac.name.clone());
+                                                            edit_comment.set(ac.comment.clone().unwrap_or_default());
+                                                            edit_visible.set(ac.visible);
+                                                            edit_billable.set(ac.billable);
+                                                            edit_form.write().handle(&FormAction::Reset);
+                                                            editing_id.set(Some(ac.id));
+                                                        }
+                                                    },
+                                                    Icon { icon: HiPencil, width: 14, height: 14 }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if is_editing {
+                                        TableExpandRow { col_count,
                                             div { class: "grid grid-cols-1 gap-4 md:grid-cols-2",
                                                 div { class: "form-field",
                                                     label { class: "form-label", r#for: "ea-name", "Name" }
@@ -295,48 +355,22 @@ pub fn Activities() -> Element {
                                                     "{edit_form.read().message}"
                                                 }
                                             }
-                                        }
-                                    }
-                                }
-                            } else {
-                                rsx! {
-                                    Card { key: "{a.id}",
-                                        CardContent {
-                                            div { class: "flex items-center justify-between",
-                                                div { class: "flex flex-col gap-1",
-                                                    span { class: "font-medium", "{a.name}" }
-                                                    if let Some(pname) = project_name {
-                                                        span { class: "text-sm text-secondary", "{pname}" }
-                                                    }
-                                                    div { class: "flex gap-3 text-xs text-secondary",
-                                                        if let Some(c) = &a.comment {
-                                                            span { "{c}" }
-                                                        }
-                                                        if a.billable {
-                                                            span { class: "text-success", "Billable" }
-                                                        }
-                                                        if !a.visible {
-                                                            span { class: "text-warning", "Hidden" }
-                                                        }
+                                            div { class: "flex gap-2 mt-2",
+                                                Button {
+                                                    onclick: on_save,
+                                                    disabled: edit_submitting,
+                                                    if edit_submitting {
+                                                        Icon { icon: HiRefresh, width: 14, height: 14 }
+                                                        "Saving…"
+                                                    } else {
+                                                        Icon { icon: HiSave, width: 14, height: 14 }
+                                                        "Save"
                                                     }
                                                 }
                                                 Button {
-                                                    onclick: move |_| {
-                                                        let act = activities.read()
-                                                            .iter()
-                                                            .find(|x| x.id == aid)
-                                                            .cloned();
-                                                        if let Some(ac) = act {
-                                                            edit_name.set(ac.name.clone());
-                                                            edit_comment.set(ac.comment.clone().unwrap_or_default());
-                                                            edit_visible.set(ac.visible);
-                                                            edit_billable.set(ac.billable);
-                                                            edit_form.write().handle(&FormAction::Reset);
-                                                            editing_id.set(Some(ac.id));
-                                                        }
-                                                    },
-                                                    Icon { icon: HiPencil, width: 15, height: 15 }
-                                                    "Edit"
+                                                    onclick: move |_| editing_id.set(None),
+                                                    Icon { icon: HiX, width: 14, height: 14 }
+                                                    "Cancel"
                                                 }
                                             }
                                         }
