@@ -29,7 +29,7 @@ impl Deref for UserRepository {
 }
 
 impl UserRepository {
-    #[must_use] 
+    #[must_use]
     pub const fn new(
         database: ConnectedAdminPool,
         repository: Repository<User, Json<User>, Json<UserEvent>>,
@@ -52,7 +52,7 @@ impl UserRepository {
         })
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn event_store(&self) -> &Repository<User, Json<User>, Json<UserEvent>> {
         &self.repository
     }
@@ -145,9 +145,12 @@ impl RowToView<AnyRow> for UserRepository {
         let id = Uuid::from_str(&id)?;
         let name: String = row.try_get("name")?;
         let email: String = row.try_get("email")?;
-        let timezone: String = row.try_get("timezone").unwrap_or_else(|_| "UTC".to_string());
-        let date_format: String =
-            row.try_get("date_format").unwrap_or_else(|_| "%Y-%m-%d".to_string());
+        let timezone: String = row
+            .try_get("timezone")
+            .unwrap_or_else(|_| "UTC".to_string());
+        let date_format: String = row
+            .try_get("date_format")
+            .unwrap_or_else(|_| "%Y-%m-%d".to_string());
         let language: String = row.try_get("language").unwrap_or_else(|_| "en".to_string());
 
         Ok(UserView::new_with_settings(

@@ -23,7 +23,7 @@ pub struct StateConnected {
 }
 
 impl StateConnected {
-    #[must_use] 
+    #[must_use]
     pub const fn new(pool: sqlx::AnyPool) -> Self {
         Self { pool }
     }
@@ -95,12 +95,12 @@ where
 }
 
 impl<Scope> Pool<Scope, StateConnected> {
-    #[must_use] 
+    #[must_use]
     pub fn into_pool(self) -> sqlx::AnyPool {
         self.state.pool
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn get_uri(&self) -> Url {
         self.state.pool.connect_options().database_url.clone()
     }

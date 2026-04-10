@@ -25,47 +25,47 @@ pub struct Timesheet {
 }
 
 impl Timesheet {
-    #[must_use] 
+    #[must_use]
     pub const fn id(&self) -> &TimesheetId {
         &self.id
     }
-    #[must_use] 
+    #[must_use]
     pub const fn user_id(&self) -> &UserId {
         &self.user_id
     }
-    #[must_use] 
+    #[must_use]
     pub const fn project_id(&self) -> Option<&ProjectId> {
         self.project_id.as_ref()
     }
-    #[must_use] 
+    #[must_use]
     pub const fn activity_id(&self) -> Option<&ActivityId> {
         self.activity_id.as_ref()
     }
-    #[must_use] 
+    #[must_use]
     pub fn start_time(&self) -> &str {
         &self.start_time
     }
-    #[must_use] 
+    #[must_use]
     pub fn end_time(&self) -> Option<&str> {
         self.end_time.as_deref()
     }
-    #[must_use] 
+    #[must_use]
     pub const fn duration(&self) -> Option<i32> {
         self.duration
     }
-    #[must_use] 
+    #[must_use]
     pub fn description(&self) -> Option<&str> {
         self.description.as_deref()
     }
-    #[must_use] 
+    #[must_use]
     pub fn timezone(&self) -> &str {
         &self.timezone
     }
-    #[must_use] 
+    #[must_use]
     pub const fn billable(&self) -> bool {
         self.billable
     }
-    #[must_use] 
+    #[must_use]
     pub const fn exported(&self) -> bool {
         self.exported
     }

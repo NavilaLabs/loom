@@ -26,7 +26,7 @@ impl Deref for PermissionRepository {
 }
 
 impl PermissionRepository {
-    #[must_use] 
+    #[must_use]
     pub const fn new(
         database: ConnectedAdminPool,
         repository: Repository<Permission, Json<Permission>, Json<PermissionEvent>>,
@@ -37,8 +37,10 @@ impl PermissionRepository {
         }
     }
 
-    #[must_use] 
-    pub const fn event_store(&self) -> &Repository<Permission, Json<Permission>, Json<PermissionEvent>> {
+    #[must_use]
+    pub const fn event_store(
+        &self,
+    ) -> &Repository<Permission, Json<Permission>, Json<PermissionEvent>> {
         &self.repository
     }
 

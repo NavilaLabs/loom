@@ -13,7 +13,7 @@ pub struct TimesheetProjector {
 impl TimesheetProjector {
     const TABLE: &'static str = "projections__timesheets";
 
-    #[must_use] 
+    #[must_use]
     pub const fn new(pool: ConnectedTenantPool) -> Self {
         Self { pool }
     }

@@ -1,5 +1,8 @@
 #[allow(clippy::wildcard_imports)]
-use sea_orm_migration::{prelude::*, schema::{string, integer, binary, json_binary, timestamp}};
+use sea_orm_migration::{
+    prelude::*,
+    schema::{binary, integer, json_binary, string, timestamp},
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {

@@ -1,4 +1,10 @@
-use sea_orm_migration::{prelude::*, schema::{pk_uuid, uuid, timestamp_with_time_zone, timestamp_with_time_zone_null, integer_null, string_null, string, integer, big_integer_null}};
+use sea_orm_migration::{
+    prelude::*,
+    schema::{
+        big_integer_null, integer, integer_null, pk_uuid, string, string_null,
+        timestamp_with_time_zone, timestamp_with_time_zone_null, uuid,
+    },
+};
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;

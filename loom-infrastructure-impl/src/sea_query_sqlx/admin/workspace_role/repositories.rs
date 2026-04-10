@@ -29,7 +29,7 @@ impl Deref for WorkspaceRoleRepository {
 }
 
 impl WorkspaceRoleRepository {
-    #[must_use] 
+    #[must_use]
     pub const fn new(
         database: ConnectedAdminPool,
         repository: Repository<WorkspaceRole, Json<WorkspaceRole>, Json<WorkspaceRoleEvent>>,
@@ -52,7 +52,7 @@ impl WorkspaceRoleRepository {
         })
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn event_store(
         &self,
     ) -> &Repository<WorkspaceRole, Json<WorkspaceRole>, Json<WorkspaceRoleEvent>> {

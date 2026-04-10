@@ -17,23 +17,23 @@ pub struct Project {
 }
 
 impl Project {
-    #[must_use] 
+    #[must_use]
     pub const fn id(&self) -> &ProjectId {
         &self.id
     }
-    #[must_use] 
+    #[must_use]
     pub const fn customer_id(&self) -> &CustomerId {
         &self.customer_id
     }
-    #[must_use] 
+    #[must_use]
     pub fn name(&self) -> &str {
         &self.name
     }
-    #[must_use] 
+    #[must_use]
     pub const fn visible(&self) -> bool {
         self.visible
     }
-    #[must_use] 
+    #[must_use]
     pub const fn billable(&self) -> bool {
         self.billable
     }

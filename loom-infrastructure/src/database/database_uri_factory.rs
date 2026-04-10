@@ -66,10 +66,8 @@ impl DatabaseUri for TenantDatabaseUri {
         tenant_token: Option<&str>,
     ) -> Result<Url, crate::Error> {
         let base_uri = CONFIG.get_database().get_base_uri();
-        let tenant_token = tenant_token.map_or_else(
-            || Err(crate::database::Error::NoTenantTokenProvided),
-            Ok,
-        )?;
+        let tenant_token =
+            tenant_token.map_or_else(|| Err(crate::database::Error::NoTenantTokenProvided), Ok)?;
         let mut database_name_builder = TenantDatabaseNameConcreteBuilder::new();
         TenantDatabaseNameDirector::construct(&mut database_name_builder, tenant_token);
         let database_name = database_name_builder.get_tenant_database_name();
@@ -83,7 +81,7 @@ impl DatabaseUri for TenantDatabaseUri {
 pub struct Factory;
 
 impl Factory {
-    #[must_use] 
+    #[must_use]
     pub fn new_database_uri(database_uri_type: &DatabaseUriType) -> Box<dyn DatabaseUri> {
         match database_uri_type {
             DatabaseUriType::Admin => Box::new(AdminDatabaseUri),

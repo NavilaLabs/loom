@@ -15,27 +15,27 @@ pub struct Customer {
 }
 
 impl Customer {
-    #[must_use] 
+    #[must_use]
     pub const fn id(&self) -> &CustomerId {
         &self.id
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn name(&self) -> &str {
         &self.name
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn currency(&self) -> &str {
         &self.currency
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn timezone(&self) -> &str {
         &self.timezone
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn visible(&self) -> bool {
         self.visible
     }

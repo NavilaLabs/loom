@@ -30,7 +30,7 @@ impl Deref for WorkspaceRepository {
 }
 
 impl WorkspaceRepository {
-    #[must_use] 
+    #[must_use]
     pub const fn new(
         database: ConnectedAdminPool,
         repository: Repository<Workspace, Json<Workspace>, Json<WorkspaceEvent>>,
@@ -53,8 +53,10 @@ impl WorkspaceRepository {
         })
     }
 
-    #[must_use] 
-    pub const fn event_store(&self) -> &Repository<Workspace, Json<Workspace>, Json<WorkspaceEvent>> {
+    #[must_use]
+    pub const fn event_store(
+        &self,
+    ) -> &Repository<Workspace, Json<Workspace>, Json<WorkspaceEvent>> {
         &self.repository
     }
 
@@ -157,14 +159,18 @@ impl RowToView<AnyRow> for WorkspaceRepository {
         let id: String = row.try_get("id")?;
         let id = Uuid::from_str(&id)?;
         let name: Option<String> = row.try_get("name")?;
-        let timezone: String =
-            row.try_get("timezone").unwrap_or_else(|_| "UTC".to_string());
-        let date_format: String =
-            row.try_get("date_format").unwrap_or_else(|_| "%Y-%m-%d".to_string());
-        let currency: String =
-            row.try_get("currency").unwrap_or_else(|_| "USD".to_string());
-        let week_start: String =
-            row.try_get("week_start").unwrap_or_else(|_| "monday".to_string());
+        let timezone: String = row
+            .try_get("timezone")
+            .unwrap_or_else(|_| "UTC".to_string());
+        let date_format: String = row
+            .try_get("date_format")
+            .unwrap_or_else(|_| "%Y-%m-%d".to_string());
+        let currency: String = row
+            .try_get("currency")
+            .unwrap_or_else(|_| "USD".to_string());
+        let week_start: String = row
+            .try_get("week_start")
+            .unwrap_or_else(|_| "monday".to_string());
         Ok(WorkspaceView::new_with_settings(
             id.into(),
             name,

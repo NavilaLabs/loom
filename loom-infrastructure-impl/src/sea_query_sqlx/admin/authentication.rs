@@ -85,8 +85,7 @@ pub mod jwt {
         #[test]
         fn jwt_lifetime_is_one_hour() {
             assert_eq!(
-                JWT_LIFETIME_SECS,
-                3_600,
+                JWT_LIFETIME_SECS, 3_600,
                 "JWT lifetime must be exactly 1 hour (3600 s)"
             );
         }

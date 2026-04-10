@@ -59,7 +59,12 @@ pub async fn tag_timesheet(workspace_id: &str, tag_id: &str, timesheet_id: &str)
     let agg_id: TagId = tag_id.parse()?;
     let ts_id: TimesheetId = timesheet_id.parse()?;
     let mut root = repo.get(&agg_id).await?;
-    root.record_that(TagEvent::TimesheetTagged { timesheet_id: ts_id }.into())?;
+    root.record_that(
+        TagEvent::TimesheetTagged {
+            timesheet_id: ts_id,
+        }
+        .into(),
+    )?;
     repo.save(&mut root).await?;
     Ok(())
 }
@@ -70,7 +75,12 @@ pub async fn untag_timesheet(workspace_id: &str, tag_id: &str, timesheet_id: &st
     let agg_id: TagId = tag_id.parse()?;
     let ts_id: TimesheetId = timesheet_id.parse()?;
     let mut root = repo.get(&agg_id).await?;
-    root.record_that(TagEvent::TimesheetUntagged { timesheet_id: ts_id }.into())?;
+    root.record_that(
+        TagEvent::TimesheetUntagged {
+            timesheet_id: ts_id,
+        }
+        .into(),
+    )?;
     repo.save(&mut root).await?;
     Ok(())
 }

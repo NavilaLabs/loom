@@ -13,11 +13,11 @@ pub struct Tag {
 }
 
 impl Tag {
-    #[must_use] 
+    #[must_use]
     pub const fn id(&self) -> &TagId {
         &self.id
     }
-    #[must_use] 
+    #[must_use]
     pub fn name(&self) -> &str {
         &self.name
     }

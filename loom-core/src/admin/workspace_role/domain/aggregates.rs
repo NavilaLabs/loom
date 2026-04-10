@@ -16,17 +16,17 @@ pub struct WorkspaceRole {
 }
 
 impl WorkspaceRole {
-    #[must_use] 
+    #[must_use]
     pub const fn id(&self) -> &WorkspaceRoleId {
         &self.id
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn workspace_id(&self) -> &WorkspaceId {
         &self.workspace_id
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn name(&self) -> Option<&str> {
         self.name.as_deref()
     }

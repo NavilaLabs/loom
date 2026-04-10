@@ -23,7 +23,10 @@ pub async fn update_user_settings(
     let repo = UserRepository::from_pool(pool).await?;
 
     let agg_id: UserId = user_id.parse()?;
-    let mut root = repo.get(&agg_id).await.map_err(|e| anyhow::anyhow!("{e}"))?;
+    let mut root = repo
+        .get(&agg_id)
+        .await
+        .map_err(|e| anyhow::anyhow!("{e}"))?;
     root.record_that(
         UserEvent::SettingsUpdated {
             timezone,
@@ -32,5 +35,7 @@ pub async fn update_user_settings(
         }
         .into(),
     )?;
-    repo.save(&mut root).await.map_err(|e| anyhow::anyhow!("{e}"))
+    repo.save(&mut root)
+        .await
+        .map_err(|e| anyhow::anyhow!("{e}"))
 }

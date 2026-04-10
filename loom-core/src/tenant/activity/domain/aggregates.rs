@@ -17,23 +17,23 @@ pub struct Activity {
 }
 
 impl Activity {
-    #[must_use] 
+    #[must_use]
     pub const fn id(&self) -> &ActivityId {
         &self.id
     }
-    #[must_use] 
+    #[must_use]
     pub const fn project_id(&self) -> Option<&ProjectId> {
         self.project_id.as_ref()
     }
-    #[must_use] 
+    #[must_use]
     pub fn name(&self) -> &str {
         &self.name
     }
-    #[must_use] 
+    #[must_use]
     pub const fn visible(&self) -> bool {
         self.visible
     }
-    #[must_use] 
+    #[must_use]
     pub const fn billable(&self) -> bool {
         self.billable
     }

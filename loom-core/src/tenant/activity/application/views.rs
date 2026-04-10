@@ -12,7 +12,7 @@ pub struct ActivityView {
 }
 
 impl ActivityView {
-    #[must_use] 
+    #[must_use]
     pub const fn new(
         id: ActivityId,
         project_id: Option<ProjectId>,
@@ -31,27 +31,27 @@ impl ActivityView {
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn get_id(&self) -> &ActivityId {
         &self.id
     }
-    #[must_use] 
+    #[must_use]
     pub const fn get_project_id(&self) -> Option<&ProjectId> {
         self.project_id.as_ref()
     }
-    #[must_use] 
+    #[must_use]
     pub fn get_name(&self) -> &str {
         &self.name
     }
-    #[must_use] 
+    #[must_use]
     pub fn get_comment(&self) -> Option<&str> {
         self.comment.as_deref()
     }
-    #[must_use] 
+    #[must_use]
     pub const fn is_visible(&self) -> bool {
         self.visible
     }
-    #[must_use] 
+    #[must_use]
     pub const fn is_billable(&self) -> bool {
         self.billable
     }

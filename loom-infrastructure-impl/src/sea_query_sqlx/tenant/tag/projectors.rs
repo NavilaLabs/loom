@@ -14,7 +14,7 @@ impl TagProjector {
     const TAGS_TABLE: &'static str = "projections__tags";
     const TIMESHEET_TAGS_TABLE: &'static str = "projections__timesheet_tags";
 
-    #[must_use] 
+    #[must_use]
     pub const fn new(pool: ConnectedTenantPool) -> Self {
         Self { pool }
     }

@@ -11,7 +11,7 @@ pub struct WorkspaceView {
 }
 
 impl WorkspaceView {
-    #[must_use] 
+    #[must_use]
     pub fn new(id: WorkspaceId, name: Option<String>) -> Self {
         Self {
             id,
@@ -23,7 +23,7 @@ impl WorkspaceView {
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn new_with_settings(
         id: WorkspaceId,
         name: Option<String>,
@@ -42,12 +42,12 @@ impl WorkspaceView {
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn get_id(&self) -> &WorkspaceId {
         &self.id
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn get_name(&self) -> Option<&str> {
         self.name.as_deref()
     }

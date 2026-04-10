@@ -26,7 +26,7 @@ pub struct TimesheetView {
 
 impl TimesheetView {
     #[allow(clippy::too_many_arguments)]
-    #[must_use] 
+    #[must_use]
     pub const fn new(
         id: TimesheetId,
         user_id: UserId,
@@ -63,63 +63,63 @@ impl TimesheetView {
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn get_id(&self) -> &TimesheetId {
         &self.id
     }
-    #[must_use] 
+    #[must_use]
     pub const fn get_user_id(&self) -> &UserId {
         &self.user_id
     }
-    #[must_use] 
+    #[must_use]
     pub const fn get_project_id(&self) -> &ProjectId {
         &self.project_id
     }
-    #[must_use] 
+    #[must_use]
     pub const fn get_activity_id(&self) -> &ActivityId {
         &self.activity_id
     }
-    #[must_use] 
+    #[must_use]
     pub fn get_start_time(&self) -> &str {
         &self.start_time
     }
-    #[must_use] 
+    #[must_use]
     pub fn get_end_time(&self) -> Option<&str> {
         self.end_time.as_deref()
     }
-    #[must_use] 
+    #[must_use]
     pub const fn get_duration(&self) -> Option<i32> {
         self.duration
     }
-    #[must_use] 
+    #[must_use]
     pub fn get_description(&self) -> Option<&str> {
         self.description.as_deref()
     }
-    #[must_use] 
+    #[must_use]
     pub fn get_timezone(&self) -> &str {
         &self.timezone
     }
-    #[must_use] 
+    #[must_use]
     pub const fn is_billable(&self) -> bool {
         self.billable
     }
-    #[must_use] 
+    #[must_use]
     pub const fn get_hourly_rate(&self) -> Option<i64> {
         self.hourly_rate
     }
-    #[must_use] 
+    #[must_use]
     pub const fn get_fixed_rate(&self) -> Option<i64> {
         self.fixed_rate
     }
-    #[must_use] 
+    #[must_use]
     pub const fn get_internal_rate(&self) -> Option<i64> {
         self.internal_rate
     }
-    #[must_use] 
+    #[must_use]
     pub const fn get_rate(&self) -> Option<i64> {
         self.rate
     }
-    #[must_use] 
+    #[must_use]
     pub const fn is_exported(&self) -> bool {
         self.exported
     }

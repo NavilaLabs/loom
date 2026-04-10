@@ -43,9 +43,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20260410_000002_add_user_settings::Migration),
             Box::new(m20260410_000003_add_workspace_settings::Migration),
             Box::new(m20260410_000004_fix_date_format_strings::Migration),
-            Box::new(
-                m20260410_000005_add_aggregate_type_to_event_streams::Migration,
-            ),
+            Box::new(m20260410_000005_add_aggregate_type_to_event_streams::Migration),
         ]
     }
 }

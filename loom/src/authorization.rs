@@ -67,7 +67,13 @@ impl AuthorizationService {
         workspace_id: &str,
         permission: &str,
     ) -> Result<bool> {
-        Self::has_permission_on(&Self::admin_pool().await?, user_id, workspace_id, permission).await
+        Self::has_permission_on(
+            &Self::admin_pool().await?,
+            user_id,
+            workspace_id,
+            permission,
+        )
+        .await
     }
 
     /// Pool-injected version of [`has_permission`] — use this in tests.

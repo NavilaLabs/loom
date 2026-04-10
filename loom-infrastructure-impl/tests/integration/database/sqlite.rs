@@ -19,13 +19,12 @@ pub mod tests {
     #[tokio::test]
     async fn test_tables_visible_in_admin_pool() {
         let db = TestFixture::setup().await;
-        let rows: Vec<(String,)> = sqlx::query_as(
-            "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name",
-        )
-        .fetch_all(db.admin.as_ref())
-        .await
-        .expect("sqlite_master query must succeed");
-        let names: Vec<&str> = rows.iter().map(|(n, )| n.as_str()).collect();
+        let rows: Vec<(String,)> =
+            sqlx::query_as("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
+                .fetch_all(db.admin.as_ref())
+                .await
+                .expect("sqlite_master query must succeed");
+        let names: Vec<&str> = rows.iter().map(|(n,)| n.as_str()).collect();
         assert!(
             names.contains(&"event_streams"),
             "event_streams must exist after setup, found: {names:?}"

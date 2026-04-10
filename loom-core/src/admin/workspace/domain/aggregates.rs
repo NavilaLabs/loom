@@ -16,12 +16,12 @@ pub struct Workspace {
 }
 
 impl Workspace {
-    #[must_use] 
+    #[must_use]
     pub const fn id(&self) -> &WorkspaceId {
         &self.id
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn name(&self) -> Option<&str> {
         self.name.as_deref()
     }

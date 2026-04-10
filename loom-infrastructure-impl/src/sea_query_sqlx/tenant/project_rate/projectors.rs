@@ -13,7 +13,7 @@ pub struct ProjectRateProjector {
 impl ProjectRateProjector {
     const TABLE: &'static str = "projections__project_rates";
 
-    #[must_use] 
+    #[must_use]
     pub const fn new(pool: ConnectedTenantPool) -> Self {
         Self { pool }
     }

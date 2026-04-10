@@ -10,7 +10,11 @@ pub struct UserController<R: UserRepository> {
 }
 
 impl<R: UserRepository> UserController<R> {
-    pub const fn new(repository: Arc<R>, commands: Arc<UserCommand>, queries: Arc<UserCommand>) -> Self {
+    pub const fn new(
+        repository: Arc<R>,
+        commands: Arc<UserCommand>,
+        queries: Arc<UserCommand>,
+    ) -> Self {
         Self {
             repository,
             commands,

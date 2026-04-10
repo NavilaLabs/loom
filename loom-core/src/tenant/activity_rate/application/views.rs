@@ -14,7 +14,7 @@ pub struct ActivityRateView {
 }
 
 impl ActivityRateView {
-    #[must_use] 
+    #[must_use]
     pub const fn new(
         id: ActivityRateId,
         activity_id: ActivityId,
@@ -31,23 +31,23 @@ impl ActivityRateView {
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn get_id(&self) -> &ActivityRateId {
         &self.id
     }
-    #[must_use] 
+    #[must_use]
     pub const fn get_activity_id(&self) -> &ActivityId {
         &self.activity_id
     }
-    #[must_use] 
+    #[must_use]
     pub const fn get_user_id(&self) -> Option<&UserId> {
         self.user_id.as_ref()
     }
-    #[must_use] 
+    #[must_use]
     pub const fn get_hourly_rate(&self) -> i64 {
         self.hourly_rate
     }
-    #[must_use] 
+    #[must_use]
     pub const fn get_internal_rate(&self) -> Option<i64> {
         self.internal_rate
     }

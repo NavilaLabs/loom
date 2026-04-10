@@ -11,7 +11,7 @@ pub struct UserView {
 }
 
 impl UserView {
-    #[must_use] 
+    #[must_use]
     pub fn new(id: UserId, name: String, email: String) -> Self {
         Self {
             id,
@@ -23,7 +23,7 @@ impl UserView {
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn new_with_settings(
         id: UserId,
         name: String,
@@ -42,17 +42,17 @@ impl UserView {
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn get_id(&self) -> &UserId {
         &self.id
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn get_name(&self) -> &str {
         &self.name
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn get_email(&self) -> &str {
         &self.email
     }

@@ -45,7 +45,10 @@ pub async fn update_workspace_settings(
     let repo = WorkspaceRepository::from_pool(pool).await?;
 
     let agg_id: WorkspaceId = workspace_id.parse()?;
-    let mut root = repo.get(&agg_id).await.map_err(|e| anyhow::anyhow!("{e}"))?;
+    let mut root = repo
+        .get(&agg_id)
+        .await
+        .map_err(|e| anyhow::anyhow!("{e}"))?;
     root.record_that(
         WorkspaceEvent::SettingsUpdated {
             name,
@@ -56,5 +59,7 @@ pub async fn update_workspace_settings(
         }
         .into(),
     )?;
-    repo.save(&mut root).await.map_err(|e| anyhow::anyhow!("{e}"))
+    repo.save(&mut root)
+        .await
+        .map_err(|e| anyhow::anyhow!("{e}"))
 }

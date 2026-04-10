@@ -18,23 +18,23 @@ pub struct ProjectRate {
 }
 
 impl ProjectRate {
-    #[must_use] 
+    #[must_use]
     pub const fn id(&self) -> &ProjectRateId {
         &self.id
     }
-    #[must_use] 
+    #[must_use]
     pub const fn project_id(&self) -> &ProjectId {
         &self.project_id
     }
-    #[must_use] 
+    #[must_use]
     pub const fn user_id(&self) -> Option<&UserId> {
         self.user_id.as_ref()
     }
-    #[must_use] 
+    #[must_use]
     pub const fn hourly_rate(&self) -> i64 {
         self.hourly_rate
     }
-    #[must_use] 
+    #[must_use]
     pub const fn internal_rate(&self) -> Option<i64> {
         self.internal_rate
     }

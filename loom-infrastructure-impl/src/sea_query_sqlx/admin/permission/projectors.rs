@@ -13,7 +13,7 @@ pub struct PermissionProjector {
 impl PermissionProjector {
     const TABLE: &'static str = "permissions";
 
-    #[must_use] 
+    #[must_use]
     pub const fn new(pool: Pool<ScopeAdmin, StateConnected>) -> Self {
         Self { pool }
     }
