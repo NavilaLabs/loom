@@ -13,8 +13,6 @@ async fn main() -> Result<()> {
         )
         .init();
 
-    dotenvy::from_filename_override(".env.dev").ok();
-
     let pool = Pool::connect_admin().await?;
 
     // Add the global_position column + trigger that the projection runner needs.

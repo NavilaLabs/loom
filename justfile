@@ -1,3 +1,7 @@
+set dotenv-load := true
+set dotenv-filename := ".env.dev"
+set shell := ["bash", "-uc"]
+
 serve:
     just update && \
     cd /workspaces/loom/loom-presentation/gui/packages/web && \
@@ -18,3 +22,6 @@ watch-tw:
 
 update:
     cargo update && cd loom-presentation/gui && cargo update
+
+load-dev-env:
+    [ -f .env.dev ] && set -a && source .env.dev && set +a

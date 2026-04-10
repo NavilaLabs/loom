@@ -16,7 +16,7 @@ pub fn DefaultLayout(
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("/assets/theme.css") }
         document::Link { rel: "stylesheet", href: asset!("/assets/tailwind.css") }
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Link { rel: "stylesheet", href: asset!("/src/layouts/default/style.css") }
 
         div {
             style: accent().as_css_var(),

@@ -202,16 +202,11 @@ fn Layout() -> Element {
         use_context_provider(|| Signal::new(None::<api::timesheet::TimesheetDto>));
 
     // Provide entity caches — views read from these to avoid the empty-then-loaded flash.
-    let mut customers_cache: CustomersCache =
-        use_context_provider(|| Signal::new(Vec::new()));
-    let mut projects_cache: ProjectsCache =
-        use_context_provider(|| Signal::new(Vec::new()));
-    let mut activities_cache: ActivitiesCache =
-        use_context_provider(|| Signal::new(Vec::new()));
-    let mut tags_cache: TagsCache =
-        use_context_provider(|| Signal::new(Vec::new()));
-    let mut timesheets_cache: TimesheetsCache =
-        use_context_provider(|| Signal::new(Vec::new()));
+    let mut customers_cache: CustomersCache = use_context_provider(|| Signal::new(Vec::new()));
+    let mut projects_cache: ProjectsCache = use_context_provider(|| Signal::new(Vec::new()));
+    let mut activities_cache: ActivitiesCache = use_context_provider(|| Signal::new(Vec::new()));
+    let mut tags_cache: TagsCache = use_context_provider(|| Signal::new(Vec::new()));
+    let mut timesheets_cache: TimesheetsCache = use_context_provider(|| Signal::new(Vec::new()));
 
     // Provide user and workspace settings with sane defaults; refreshed after login.
     let mut user_settings: UserSettings = use_context_provider(|| {

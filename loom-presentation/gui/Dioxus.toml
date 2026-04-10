@@ -1,7 +1,7 @@
 [application]
 
 # App (Project) Name
-name = "loom-presentation"
+name = "loom"
 
 # Dioxus App Default Platform
 # web, desktop, fullstack
@@ -10,7 +10,7 @@ default_platform = "web"
 [web.app]
 
 # HTML title tag content
-title = "loom-presentation"
+title = "loom"
 
 [web.watcher]
 
@@ -37,3 +37,8 @@ script = []
 [serve]
 port = 8080
 addr = "0.0.0.0"
+
+[bundle]
+identifier = "com.navilalabs"
+publisher = "NavilaLabs UG (haftungsbeschränkt)"
+icon = ["assets/favicon.svg"]

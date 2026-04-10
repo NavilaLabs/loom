@@ -31,7 +31,7 @@ pub fn Input(
     let merged = merge_attributes(vec![base, attributes]);
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Link { rel: "stylesheet", href: asset!("/src/components/atoms/input/style.css") }
         input {
             oninput: move |e| _ = oninput.map(|callback| callback(e)),
             onchange: move |e| _ = onchange.map(|callback| callback(e)),

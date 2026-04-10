@@ -14,8 +14,6 @@ async fn main() -> Result<()> {
         )
         .init();
 
-    dotenvy::from_filename_override(".env.dev").ok();
-
     // Discover all workspace (tenant) IDs from the admin database.
     let admin_pool = Pool::connect_admin().await?;
     let workspace_repo =
