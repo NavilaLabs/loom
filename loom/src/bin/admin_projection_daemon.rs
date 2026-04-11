@@ -1,8 +1,12 @@
-use anyhow::Result;
+use std::time::Duration;
+
+use anyhow::{Result, anyhow};
 use loom::infrastructure::{
     BackoffConfig, Pool, ProjectionDaemon, ProjectionRunner, ProjectionSource, SqlCheckpoint,
     admin::projectors::AdminProjector,
 };
+use loom_infrastructure_impl::ConnectedAdminPool;
+use tracing::warn;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -13,7 +17,26 @@ async fn main() -> Result<()> {
         )
         .init();
 
-    let pool = Pool::connect_admin().await?;
+    let mut pool: Option<ConnectedAdminPool> = None;
+    let mut is_initialized = false;
+    while !is_initialized {
+        match Pool::connect_admin().await {
+            Ok(connected_pool) => {
+                pool = Some(connected_pool);
+                is_initialized = true;
+            }
+            _ => {
+                warn!(
+                    "Failed establishing connection to the admin database. This is ok if your have not set up yet."
+                );
+                tokio::time::sleep(Duration::from_secs(3)).await
+            }
+        }
+    }
+    if pool.is_none() {
+        return Err(anyhow!("expected connected admin pool"));
+    }
+    let pool = pool.unwrap();
 
     // Add the global_position column + trigger that the projection runner needs.
     // This is idempotent — safe to call on every startup.

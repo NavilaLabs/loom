@@ -1,9 +1,13 @@
-use anyhow::Result;
+use std::time::Duration;
+
+use anyhow::{Result, anyhow};
 use loom::infrastructure::{
     BackoffConfig, Pool, ProjectionDaemon, ProjectionRunner, ProjectionSource, SqlCheckpoint,
     tenant::projectors::TenantProjector,
 };
 use loom_infrastructure::query::Query;
+use loom_infrastructure_impl::ConnectedAdminPool;
+use tracing::warn;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -15,17 +19,38 @@ async fn main() -> Result<()> {
         .init();
 
     // Discover all workspace (tenant) IDs from the admin database.
-    let admin_pool = Pool::connect_admin().await?;
+    let mut admin_pool: Option<ConnectedAdminPool> = None;
+    let mut is_initialized = false;
+    while !is_initialized {
+        match Pool::connect_admin().await {
+            Ok(connected_pool) => {
+                admin_pool = Some(connected_pool);
+                is_initialized = true;
+            }
+            _ => {
+                warn!(
+                    "Failed establishing connection to the admin database. This is ok if your have not set up yet."
+                );
+                tokio::time::sleep(Duration::from_secs(3)).await
+            }
+        }
+    }
+    if admin_pool.is_none() {
+        return Err(anyhow!("expected connected admin pool"));
+    }
+    let admin_pool = admin_pool.unwrap();
+
     let workspace_repo =
         loom::infrastructure::admin::workspace::repositories::WorkspaceRepository::from_pool(
             admin_pool,
         )
         .await?;
-    let workspaces = workspace_repo.all().await?;
+    let mut workspaces = workspace_repo.all().await?;
 
-    if workspaces.is_empty() {
+    while workspaces.is_empty() {
         tracing::warn!("No workspaces found in admin database — nothing to project.");
-        return Ok(());
+        tokio::time::sleep(Duration::from_secs(3)).await;
+        workspaces = workspace_repo.all().await?;
     }
 
     tracing::info!(
