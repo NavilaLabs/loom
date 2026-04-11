@@ -84,6 +84,7 @@ enum Route {
 
     #[end_layout]
 
+    #[redirect("/", || Route::Dashboard {})]
     #[route("/:..route")]
     NotFound { route: Vec<String> },
 }

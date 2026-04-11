@@ -30,6 +30,13 @@ ui = { path = "packages/ui" }
 api = { path = "packages/api" }
 loom-core = { path = "../../loom-core" }
 
+# Patch dioxus-fullstack to gate its wasm-specific deps (gloo-net, js-sys,
+# wasm-bindgen, wasm-bindgen-futures, wasm-streams) on wasm32 only.
+# This prevents js-sys thread-local statics from panicking at runtime when
+# the desktop binary tries to access them on native (non-wasm) targets.
+[patch.crates-io]
+dioxus-fullstack = { path = "vendor/dioxus-fullstack" }
+
 [workspace.lints.clippy]
 # Enforce correctness and best practices
 all = { level = "deny" }

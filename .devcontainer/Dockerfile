@@ -13,7 +13,11 @@ RUN apt-get update && apt-get install -y \
     libayatana-appindicator3-dev \
     librsvg2-dev \
     lld \
-    clang
+    clang \
+    libsoup-3.0-dev \
+    libwebkit2gtk-4.1-dev \
+    libgtk-3-dev \
+    librsvg2-dev
 
 # Install rust-analyzer (latest release)
 RUN curl -L https://github.com/rust-lang/rust-analyzer/releases/latest/download/rust-analyzer-$(uname -m)-unknown-linux-gnu.gz \

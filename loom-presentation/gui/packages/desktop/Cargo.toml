@@ -4,10 +4,24 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+api = { workspace = true }
+axum = { version = "0.8", optional = true }
+loom = { path = "../../../../loom", optional = true }
+chrono = { workspace = true }
+convert_case = "0.11.0"
 dioxus = { workspace = true, features = ["router", "fullstack"] }
+dioxus-motion = { git = "https://github.com/wheregmis/dioxus-motion.git", branch = "main", default-features = false, features = ["desktop", "transitions"] }
+dotenvy = { workspace = true }
+easer = { version = "0.3.0", default-features = false }
+# tokio is always-on: the timer coroutine in Layout needs it even without the
+# embedded server (i.e. during `dx serve` which manages the server itself).
+tokio = { version = "1", features = ["full"] }
+tower-sessions = { version = "0.14", optional = true }
 ui = { workspace = true }
 
 [features]
-default = []
+# `desktop` is the default so that plain `cargo check/clippy` works without
+# having to pass --features desktop every time.
+default = ["desktop"]
 desktop = ["dioxus/desktop"]
-server = ["dioxus/server", "ui/server"]
+server = ["dioxus/server", "axum", "api/server", "dep:loom", "loom/sqlite", "dep:tower-sessions", "ui/server"]

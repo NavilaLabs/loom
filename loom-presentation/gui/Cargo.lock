@@ -1427,7 +1427,17 @@ dependencies = [
 name = "desktop"
 version = "0.1.0"
 dependencies = [
+ "api",
+ "axum",
+ "chrono",
+ "convert_case 0.11.0",
  "dioxus",
+ "dioxus-motion",
+ "dotenvy",
+ "easer",
+ "loom",
+ "tokio",
+ "tower-sessions",
  "ui",
 ]
 
@@ -1702,8 +1712,6 @@ dependencies = [
 [[package]]
 name = "dioxus-fullstack"
 version = "0.7.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e90a04f9bfbdb42801efbb329f7d0a5be79530a856302a2090cefb2db99185b0"
 dependencies = [
  "anyhow",
  "async-stream",
