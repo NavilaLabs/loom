@@ -9,7 +9,7 @@ use dioxus::prelude::*;
 ///
 /// `use_signal(|| workspace_settings.peek().field)` only runs once at mount.
 /// When the page loads cold, the `Layout` context starts at hard-coded
-/// defaults (`UTC`, `USD`, …) and the real values arrive asynchronously.
+/// defaults (`Europe/Berlin`, `EUR`, …) and the real values arrive asynchronously.
 /// Any signal seeded with `peek()` at mount will stay on the wrong default.
 ///
 /// ## How it works

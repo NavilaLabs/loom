@@ -161,13 +161,13 @@ impl RowToView<AnyRow> for WorkspaceRepository {
         let name: Option<String> = row.try_get("name")?;
         let timezone: String = row
             .try_get("timezone")
-            .unwrap_or_else(|_| "UTC".to_string());
+            .unwrap_or_else(|_| "Europe/Berlin".to_string());
         let date_format: String = row
             .try_get("date_format")
             .unwrap_or_else(|_| "%Y-%m-%d".to_string());
         let currency: String = row
             .try_get("currency")
-            .unwrap_or_else(|_| "USD".to_string());
+            .unwrap_or_else(|_| "EUR".to_string());
         let week_start: String = row
             .try_get("week_start")
             .unwrap_or_else(|_| "monday".to_string());

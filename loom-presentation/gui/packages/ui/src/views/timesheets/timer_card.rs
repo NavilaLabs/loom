@@ -4,9 +4,7 @@ use crate::formatting;
 use api::activity::ActivityDto;
 use api::project::ProjectDto;
 use dioxus::prelude::*;
-use dioxus_free_icons::icons::hi_solid_icons::{
-    HiClock, HiPlay, HiPlus, HiRefresh, HiSave, HiStop,
-};
+use dioxus_free_icons::icons::hi_solid_icons::{HiClock, HiPlay, HiPlus, HiRefresh, HiStop};
 use dioxus_free_icons::Icon;
 
 #[derive(Clone, PartialEq, Props)]
@@ -91,45 +89,33 @@ pub(super) fn TimerCard(props: TimerCardProps) -> Element {
         }
     };
 
+    // Stop saves any in-progress edits to the running timer before stopping it,
+    // so there is no need for a separate "Save" button while the timer is running.
     let on_stop = move |_| async move {
         let maybe_ts = running.peek().clone();
-        if let Some(ts) = maybe_ts {
-            match api::timesheet::stop_timesheet(ts.id).await {
-                Ok(()) => {
-                    running.set(None);
-                    props.on_timer_changed.call(());
-                }
-                Err(e) => toasts.push_error(e.to_string()),
-            }
-        }
-    };
+        let Some(ts) = maybe_ts else { return };
+        let ts_id = ts.id.clone();
 
-    let on_save_running = move |_| async move {
-        let ts_id = match running.peek().clone() {
-            Some(ts) => ts.id,
-            None => return,
-        };
-        let new_pid = run_project_id.peek().clone();
-        let new_aid = run_activity_id.peek().clone();
+        // Persist description / billable changes.
         let desc = {
             let s = run_description.peek().clone();
             if s.is_empty() { None } else { Some(s) }
         };
         let bill = *run_billable.peek();
+        if let Err(e) = api::timesheet::update_timesheet(ts_id.clone(), desc, bill).await {
+            toasts.push_error(e.to_string());
+            return;
+        }
 
+        // Persist project / activity reassignment if changed.
+        let new_pid = run_project_id.peek().clone();
+        let new_aid = run_activity_id.peek().clone();
         if let (Some(pid), Some(aid)) = (new_pid.clone(), new_aid.clone()) {
-            let needs_reassign = running
-                .peek()
-                .as_ref()
-                .map(|ts| {
-                    ts.project_id.as_deref() != Some(pid.as_str())
-                        || ts.activity_id.as_deref() != Some(aid.as_str())
-                })
-                .unwrap_or(false);
+            let needs_reassign = ts.project_id.as_deref() != Some(pid.as_str())
+                || ts.activity_id.as_deref() != Some(aid.as_str());
             if needs_reassign {
                 if let Err(e) =
-                    api::timesheet::reassign_timesheet(ts_id.clone(), pid.clone(), aid.clone())
-                        .await
+                    api::timesheet::reassign_timesheet(ts_id.clone(), pid, aid).await
                 {
                     toasts.push_error(e.to_string());
                     return;
@@ -137,22 +123,13 @@ pub(super) fn TimerCard(props: TimerCardProps) -> Element {
             }
         }
 
-        if let Err(e) = api::timesheet::update_timesheet(ts_id.clone(), desc.clone(), bill).await {
-            toasts.push_error(e.to_string());
-            return;
-        }
-
-        if let Some(ts) = running.write().as_mut() {
-            if let Some(pid) = new_pid {
-                ts.project_id = Some(pid);
+        match api::timesheet::stop_timesheet(ts_id).await {
+            Ok(()) => {
+                running.set(None);
+                props.on_timer_changed.call(());
             }
-            if let Some(aid) = new_aid {
-                ts.activity_id = Some(aid);
-            }
-            ts.description = desc;
-            ts.billable = bill;
+            Err(e) => toasts.push_error(e.to_string()),
         }
-        toasts.push_success("Timer updated");
     };
 
     let on_create_manual = move |_| async move {
@@ -252,10 +229,6 @@ pub(super) fn TimerCard(props: TimerCardProps) -> Element {
                             }
                         }
                         CardFooter {
-                            Button { onclick: on_save_running,
-                                Icon { icon: HiSave, width: 16, height: 16 }
-                                "Save"
-                            }
                             Button { onclick: on_stop,
                                 Icon { icon: HiStop, width: 16, height: 16 }
                                 "Stop"

@@ -67,7 +67,7 @@ impl Aggregate for User {
                 name,
                 email,
                 password,
-                timezone: "UTC".to_string(),
+                timezone: "Europe/Berlin".to_string(),
                 date_format: "%Y-%m-%d".to_string(),
                 language: "en".to_string(),
             }),

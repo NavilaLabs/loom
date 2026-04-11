@@ -27,7 +27,7 @@ pub async fn get_user_settings() -> Result<UserSettingsDto, ServerFnError> {
     #[cfg(not(feature = "server"))]
     {
         Ok(UserSettingsDto {
-            timezone: "UTC".to_string(),
+            timezone: "Europe/Berlin".to_string(),
             date_format: "%Y-%m-%d".to_string(),
             language: "en".to_string(),
         })
@@ -63,9 +63,9 @@ pub async fn get_workspace_settings() -> Result<WorkspaceSettingsDto, ServerFnEr
     {
         Ok(WorkspaceSettingsDto {
             name: None,
-            timezone: "UTC".to_string(),
+            timezone: "Europe/Berlin".to_string(),
             date_format: "%Y-%m-%d".to_string(),
-            currency: "USD".to_string(),
+            currency: "EUR".to_string(),
             week_start: "monday".to_string(),
         })
     }

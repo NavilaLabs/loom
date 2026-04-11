@@ -15,7 +15,7 @@ impl MigrationTrait for Migration {
         let conn = manager.get_connection();
 
         for (col, default) in [
-            ("timezone", "UTC"),
+            ("timezone", "Europe/Berlin"),
             ("date_format", "%Y-%m-%d"),
             ("language", "en"),
         ] {

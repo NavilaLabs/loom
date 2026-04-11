@@ -16,9 +16,9 @@ impl WorkspaceView {
         Self {
             id,
             name,
-            timezone: "UTC".to_string(),
+            timezone: "Europe/Berlin".to_string(),
             date_format: "%Y-%m-%d".to_string(),
-            currency: "USD".to_string(),
+            currency: "EUR".to_string(),
             week_start: "monday".to_string(),
         }
     }

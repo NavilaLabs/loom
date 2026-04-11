@@ -12,8 +12,8 @@ use ui::{
         setup::Setup, Activities, Customers, Dashboard, Database, Login, Projects, SelectWorkspace,
         Settings, Tags, Timesheets,
     },
-    ActivitiesCache, CustomersCache, ProjectsCache, RunningElapsed, RunningTimer, TagsCache,
-    TimesheetsCache, UserSettings, WorkspaceSettings, FAVICON,
+    ActivitiesCache, CustomersCache, GlobalStyles, ProjectsCache, RunningElapsed, RunningTimer,
+    TagsCache, TimesheetsCache, UserSettings, WorkspaceSettings, FAVICON,
 };
 
 /// Three-state auth signal shared across the whole app.
@@ -166,6 +166,7 @@ fn App() -> Element {
     use_context_provider(|| tween);
 
     rsx! {
+        GlobalStyles {}
         document::Title { "Loom" }
         document::Meta { name: "description", content: "Loom" }
         document::Meta { name: "viewport", content: "width=device-width, initial-scale=1" }
@@ -211,7 +212,7 @@ fn Layout() -> Element {
     // Provide user and workspace settings with sane defaults; refreshed after login.
     let mut user_settings: UserSettings = use_context_provider(|| {
         Signal::new(UserSettingsDto {
-            timezone: "UTC".to_string(),
+            timezone: "Europe/Berlin".to_string(),
             date_format: "%Y-%m-%d".to_string(),
             language: "en".to_string(),
         })
@@ -219,9 +220,9 @@ fn Layout() -> Element {
     let mut workspace_settings: WorkspaceSettings = use_context_provider(|| {
         Signal::new(WorkspaceSettingsDto {
             name: None,
-            timezone: "UTC".to_string(),
+            timezone: "Europe/Berlin".to_string(),
             date_format: "%Y-%m-%d".to_string(),
-            currency: "USD".to_string(),
+            currency: "EUR".to_string(),
             week_start: "monday".to_string(),
         })
     });

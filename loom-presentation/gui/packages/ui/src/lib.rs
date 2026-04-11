@@ -11,6 +11,69 @@ pub mod views;
 
 pub const FAVICON: Asset = asset!("/assets/favicon.svg");
 
+// Preload all component stylesheets as compile-time assets so `GlobalStyles`
+// can inject them from the root `App`. This avoids a CSR race condition where
+// `document::Link` inside a component inserts a `<link>` tag *after* the
+// component has already rendered, causing unstyled flashes during navigation.
+const CSS_ACCORDION: Asset = asset!("./components/atoms/accordion/style.css");
+const CSS_BUTTON: Asset = asset!("./components/atoms/button/style.css");
+const CSS_CARD: Asset = asset!("./components/atoms/card/style.css");
+const CSS_DROPDOWN_MENU: Asset = asset!("./components/atoms/dropdown_menu/style.css");
+const CSS_HEADLINE: Asset = asset!("./components/atoms/headline/style.css");
+const CSS_IMAGE: Asset = asset!("./components/atoms/image/style.css");
+const CSS_INPUT: Asset = asset!("./components/atoms/input/style.css");
+const CSS_LABEL: Asset = asset!("./components/atoms/label/style.css");
+const CSS_NAVBAR: Asset = asset!("./components/atoms/navbar/style.css");
+const CSS_SEARCHABLE_SELECT: Asset = asset!("./components/atoms/searchable_select/style.css");
+const CSS_SELECT: Asset = asset!("./components/atoms/select/style.css");
+const CSS_SKELETON: Asset = asset!("./components/atoms/skeleton/style.css");
+const CSS_TABLE: Asset = asset!("./components/atoms/table/style.css");
+const CSS_TABS: Asset = asset!("./components/atoms/tabs/style.css");
+const CSS_TOAST: Asset = asset!("./components/atoms/toast/style.css");
+const CSS_TOOLTIP: Asset = asset!("./components/atoms/tooltip/style.css");
+const CSS_HEADER: Asset = asset!("./components/organisms/header/style.css");
+const CSS_SIDEBAR: Asset = asset!("./components/organisms/sidebar/style.css");
+const CSS_SETTINGS_MENU: Asset = asset!("./components/molecules/settings_menu/style.css");
+const CSS_THEME_SWITCHER: Asset = asset!("./components/molecules/theme_switcher/style.css");
+const CSS_DEFAULT_LAYOUT: Asset = asset!("./layouts/default/style.css");
+const CSS_DASHBOARD: Asset = asset!("./views/dashboard/style.css");
+const CSS_SELECT_WORKSPACE: Asset = asset!("./views/select_workspace/style.css");
+
+/// Inject all component stylesheets into the document head.
+///
+/// Render this once at the top of `App` so every stylesheet is present before
+/// any route renders. This prevents the CSR flash-of-unstyled-content that
+/// occurs when `document::Link` inside a component inserts a `<link>` tag
+/// after the component has already painted.
+#[component]
+pub fn GlobalStyles() -> Element {
+    rsx! {
+        document::Link { rel: "stylesheet", href: CSS_ACCORDION }
+        document::Link { rel: "stylesheet", href: CSS_BUTTON }
+        document::Link { rel: "stylesheet", href: CSS_CARD }
+        document::Link { rel: "stylesheet", href: CSS_DROPDOWN_MENU }
+        document::Link { rel: "stylesheet", href: CSS_HEADLINE }
+        document::Link { rel: "stylesheet", href: CSS_IMAGE }
+        document::Link { rel: "stylesheet", href: CSS_INPUT }
+        document::Link { rel: "stylesheet", href: CSS_LABEL }
+        document::Link { rel: "stylesheet", href: CSS_NAVBAR }
+        document::Link { rel: "stylesheet", href: CSS_SEARCHABLE_SELECT }
+        document::Link { rel: "stylesheet", href: CSS_SELECT }
+        document::Link { rel: "stylesheet", href: CSS_SKELETON }
+        document::Link { rel: "stylesheet", href: CSS_TABLE }
+        document::Link { rel: "stylesheet", href: CSS_TABS }
+        document::Link { rel: "stylesheet", href: CSS_TOAST }
+        document::Link { rel: "stylesheet", href: CSS_TOOLTIP }
+        document::Link { rel: "stylesheet", href: CSS_HEADER }
+        document::Link { rel: "stylesheet", href: CSS_SIDEBAR }
+        document::Link { rel: "stylesheet", href: CSS_SETTINGS_MENU }
+        document::Link { rel: "stylesheet", href: CSS_THEME_SWITCHER }
+        document::Link { rel: "stylesheet", href: CSS_DEFAULT_LAYOUT }
+        document::Link { rel: "stylesheet", href: CSS_DASHBOARD }
+        document::Link { rel: "stylesheet", href: CSS_SELECT_WORKSPACE }
+    }
+}
+
 /// Global shared state for the currently running timesheet.
 /// Provided by the top-level `Layout` and consumed by Sidebar, Dashboard, and Timesheets.
 pub type RunningTimer = Signal<Option<api::timesheet::TimesheetDto>>;

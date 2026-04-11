@@ -13,9 +13,9 @@ impl MigrationTrait for Migration {
         let conn = manager.get_connection();
 
         for (col, default) in [
-            ("timezone", "UTC"),
+            ("timezone", "Europe/Berlin"),
             ("date_format", "%Y-%m-%d"),
-            ("currency", "USD"),
+            ("currency", "EUR"),
             ("week_start", "monday"),
         ] {
             let sql = if db == sea_orm::DatabaseBackend::Sqlite {

@@ -53,9 +53,9 @@ impl Aggregate for Workspace {
             (None, WorkspaceEvent::Created { id, name }) => Ok(Self {
                 id,
                 name,
-                timezone: "UTC".to_string(),
+                timezone: "Europe/Berlin".to_string(),
                 date_format: "%Y-%m-%d".to_string(),
-                currency: "USD".to_string(),
+                currency: "EUR".to_string(),
                 week_start: "monday".to_string(),
             }),
             (Some(_), WorkspaceEvent::Created { .. }) => Err(Error::AlreadyExists),

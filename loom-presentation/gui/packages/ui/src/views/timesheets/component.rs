@@ -42,9 +42,10 @@ pub fn Timesheets() -> Element {
         if let Ok(list) = api::timesheet::list_timesheets().await {
             timesheets.set(list);
         }
-        if let Ok(r) = api::timesheet::running_timesheet().await {
-            running.set(r);
-        }
+        // Do not re-fetch running_timesheet here: on_start and on_stop manage
+        // the running signal optimistically. Re-fetching would race against
+        // the projection daemon and could overwrite a just-started timer with
+        // a stale None from the server.
     };
 
     rsx! {

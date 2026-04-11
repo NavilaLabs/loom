@@ -147,7 +147,7 @@ impl RowToView<AnyRow> for UserRepository {
         let email: String = row.try_get("email")?;
         let timezone: String = row
             .try_get("timezone")
-            .unwrap_or_else(|_| "UTC".to_string());
+            .unwrap_or_else(|_| "Europe/Berlin".to_string());
         let date_format: String = row
             .try_get("date_format")
             .unwrap_or_else(|_| "%Y-%m-%d".to_string());
