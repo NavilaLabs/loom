@@ -8,6 +8,7 @@ RUN curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/ca
 RUN cargo binstall dioxus-cli --root /.cargo -y --force
 ENV PATH="/.cargo/bin:$PATH"
 
+ENV ENVIRONMENT=production
 ENV APP_PROJECT_ROOT="/app"
 ENV DATABASE_BASE_URI=sqlite:///app/databases
 ENV ADMIN_DATABASE_NAME=loom_admin
@@ -46,6 +47,10 @@ RUN mkdir databases
 EXPOSE 8080
 ENV PORT=8080
 ENV IP=0.0.0.0
+ENV ENVIRONMENT=production
+ENV APP_PROJECT_ROOT="/app"
+ENV DATABASE_BASE_URI=sqlite:///app/databases
+ENV ADMIN_DATABASE_NAME=loom_admin
 
 RUN chmod +x /app/entrypoint.sh
 ENTRYPOINT ["/app/entrypoint.sh"]
