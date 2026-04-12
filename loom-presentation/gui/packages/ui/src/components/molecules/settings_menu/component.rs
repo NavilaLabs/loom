@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use crate::components::atoms::dropdown_menu::{
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 };
@@ -35,7 +37,7 @@ pub fn SettingsMenu() -> Element {
         spawn(async move {
             let mut js = eval("dioxus.send(localStorage.getItem('theme') ?? 'system')");
             if let Ok(val) = js.recv::<String>().await {
-                let t = Theme::from_str(&val);
+                let t = Theme::from_str(&val).unwrap_or(Theme::System);
                 current_theme.set(t);
                 apply_theme(t);
             }

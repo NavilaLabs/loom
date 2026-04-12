@@ -16,10 +16,9 @@ use dioxus::prelude::*;
 ///
 /// Internally this stores an `Option<T>` override signal:
 /// - `None`   → the memo reads **reactively** from the workspace context,
-///              so it updates automatically when the context loads.
+///   so it updates automatically when the context loads.
 /// - `Some(v)` → the user has explicitly chosen a value; the context is
-///              ignored so subsequent context changes don't clobber the
-///              selection.
+///   ignored so subsequent context changes don't clobber the selection.
 ///
 /// ## Usage
 ///

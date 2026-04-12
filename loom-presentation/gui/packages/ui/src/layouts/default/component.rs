@@ -11,6 +11,7 @@ pub fn DefaultLayout(
     children: Element,
 ) -> Element {
     let accent = use_memo(move || accent.clone().map(WorkspaceAccent).unwrap_or_default());
+    #[allow(clippy::redundant_closure)]
     use_context_provider(move || accent());
 
     rsx! {

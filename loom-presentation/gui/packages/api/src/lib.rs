@@ -1,5 +1,4 @@
 //! This crate contains all shared fullstack server functions.
-use dioxus::prelude::*;
 
 pub mod activity;
 pub mod activity_rate;

@@ -9,11 +9,11 @@ members = [
 ]
 
 [workspace.package]
-name = "loom-gui"
 version = "0.1.0"
 edition = "2024"
 
 [workspace.dependencies]
+anyhow = "1"
 dioxus = "0.7"
 dioxus-free-icons = { version = "0.10", features = ["hero-icons-solid"] }
 dioxus-i18n = "0.5"

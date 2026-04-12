@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use crate::components::atoms::dropdown_menu::{
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 };
@@ -21,12 +23,16 @@ impl Theme {
             Self::System => "system",
         }
     }
+}
 
-    pub fn from_str(s: &str) -> Self {
+impl FromStr for Theme {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         match s {
-            "light" => Self::Light,
-            "dark" => Self::Dark,
-            _ => Self::System,
+            "light" => Ok(Self::Light),
+            "dark" => Ok(Self::Dark),
+            _ => Ok(Self::System),
         }
     }
 }
@@ -54,7 +60,7 @@ pub fn ThemeSwitcher() -> Element {
         spawn(async move {
             let mut js = eval("dioxus.send(localStorage.getItem('theme') ?? 'system')");
             if let Ok(val) = js.recv::<String>().await {
-                let theme = Theme::from_str(&val);
+                let theme = Theme::from_str(&val).unwrap_or(Theme::System);
                 current_theme.set(theme);
                 apply_to_dom(theme);
             }

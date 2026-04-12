@@ -1,2 +1,2 @@
 pub mod component;
-pub use component::*;
+pub use component::Setup;

@@ -1,5 +1,4 @@
-use dioxus::{core::AttributeValue, prelude::*};
-use dioxus_i18n::fluent::types::AnyEq;
+use dioxus::prelude::*;
 use dioxus_primitives::{
     dioxus_attributes::attributes,
     label::{self, LabelProps},
