@@ -22,17 +22,14 @@ async fn main() -> Result<()> {
     let mut admin_pool: Option<ConnectedAdminPool> = None;
     let mut is_initialized = false;
     while !is_initialized {
-        match Pool::connect_admin().await {
-            Ok(connected_pool) => {
-                admin_pool = Some(connected_pool);
-                is_initialized = true;
-            }
-            _ => {
-                warn!(
-                    "Failed establishing connection to the admin database. This is ok if your have not set up yet."
-                );
-                tokio::time::sleep(Duration::from_secs(3)).await
-            }
+        if let Ok(connected_pool) = Pool::connect_admin().await {
+            admin_pool = Some(connected_pool);
+            is_initialized = true;
+        } else {
+            warn!(
+                "Failed establishing connection to the admin database. This is ok if your have not set up yet."
+            );
+            tokio::time::sleep(Duration::from_secs(3)).await;
         }
     }
     if admin_pool.is_none() {

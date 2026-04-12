@@ -27,10 +27,13 @@ const TEST_SECRET: &[u8] = "s€cR€+".as_bytes();
 
 /// An exp value 1 hour in the future.
 fn future_exp() -> usize {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs() as usize
+    usize::try_from(
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs(),
+    )
+    .expect("timestamp fits in usize")
         + 3600
 }
 
@@ -197,10 +200,13 @@ async fn alg_none_unsigned_token_is_rejected() {
 #[with_lifecycle(test_lifecycle)]
 #[tokio::test]
 async fn token_expiring_in_one_hour_is_accepted() {
-    let exp = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs() as usize
+    let exp = usize::try_from(
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs(),
+    )
+    .expect("timestamp fits in usize")
         + 3_600;
     let token = make_hs256_token(TEST_SECRET, "user-abc", "alice@example.com", exp);
     assert!(
@@ -217,8 +223,7 @@ async fn token_expiring_in_one_hour_is_accepted() {
 async fn token_expired_one_second_ago_is_rejected() {
     // jsonwebtoken has a built-in leeway of 60 s by default, so we use a
     // timestamp well in the past (Unix epoch) to be unambiguously expired.
-    let exp = 1_u64; // 1970-01-01 00:00:01 UTC
-    let token = make_hs256_token(TEST_SECRET, "user-abc", "alice@example.com", exp as usize);
+    let token = make_hs256_token(TEST_SECRET, "user-abc", "alice@example.com", 1_usize); // 1970-01-01 00:00:01 UTC
     assert!(
         validate_token(&token).is_err(),
         "token with past expiry must be rejected"

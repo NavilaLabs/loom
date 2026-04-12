@@ -24,7 +24,6 @@ addr = "0.0.0.0"
 [bundle]
 identifier = "com.navilalabs.loom"
 publisher = "NavilaLabs UG (haftungsbeschränkt)"
-icon = ["assets/favicon.svg"]
 copyright = "Copyright © 2025 NavilaLabs UG (haftungsbeschränkt). All rights reserved."
 category = "Business"
 short_description = "Time tracking and project management."

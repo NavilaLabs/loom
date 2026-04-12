@@ -1,3 +1,5 @@
+#![allow(clippy::missing_errors_doc)]
+
 pub mod auth;
 pub mod authorization;
 pub mod error;
