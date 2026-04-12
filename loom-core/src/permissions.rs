@@ -29,7 +29,7 @@ pub const TIMESHEET_EXPORT: &str = "timesheet.export";
 pub const TAG_MANAGE: &str = "tag.manage";
 pub const RATE_MANAGE: &str = "rate.manage";
 
-/// Every non-admin permission that must be seeded in the database.
+/// Every permission that must be seeded in the database.
 /// Used by migrations and initial setup logic.
 pub const ALL: &[&str] = &[
     CUSTOMER_CREATE,

@@ -1,37 +1,20 @@
 [application]
 
-# App (Project) Name
 name = "loom"
 
-# Dioxus App Default Platform
-# web, desktop, fullstack
 default_platform = "web"
 
 [web.app]
 
-# HTML title tag content
-title = "loom"
+title = "Loom"
 
 [web.watcher]
-
-# when watcher trigger, regenerate the `index.html`
 reload_html = true
 
-# include `assets` in web platform
 [web.resource]
-
-# CSS style file
-#style = ["/tailwind.css"]
-
-
-# Javascript code file
-# "https://cdn.tailwindcss.com/3.4.5"
 script = []
 
 [web.resource.dev]
-
-# Javascript code file
-# serve: [dev-server] only
 script = []
 
 [serve]
@@ -39,6 +22,22 @@ port = 8080
 addr = "0.0.0.0"
 
 [bundle]
-identifier = "com.navilalabs"
+identifier = "com.navilalabs.loom"
 publisher = "NavilaLabs UG (haftungsbeschränkt)"
 icon = ["assets/favicon.svg"]
+copyright = "Copyright © 2025 NavilaLabs UG (haftungsbeschränkt). All rights reserved."
+category = "Business"
+short_description = "Time tracking and project management."
+long_description = """
+Loom is a self-hosted time tracking and project management tool for teams.
+Track time against customers, projects, and activities; manage timesheets;
+and get an overview of your team's work in one place.
+"""
+icon = ["packages/ui/assets/favicon.svg"]
+
+[bundle.macos]
+minimum_system_version = "13.0"
+
+[bundle.windows]
+allow_downgrades = true
+# webview_install_mode = { type = "DownloadBootstrapper", silent = true }

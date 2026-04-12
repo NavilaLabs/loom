@@ -1,4 +1,4 @@
-//! Shared validation utilities used by both loom controllers and the GUI frontend.
+//! Shared validation utilities used by both controllers and the GUI frontend.
 
 pub use validator::{Validate, ValidationErrors};
 
